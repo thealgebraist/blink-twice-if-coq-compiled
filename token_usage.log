@@ -4938,3 +4938,163 @@
   }
 }
 ---
+{
+  "timestamp": "2026-10-30 21:08:06",
+  "model": "gemini-4-argon",
+  "wave": 35,
+  "iteration": 4,
+  "theme": "CSS Selectors 4, Specificity & Style Invalidation",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent465",
+      "file": "agent465_selector_specificity_tuple.md",
+      "elapsed_sec": 17.72,
+      "chars": 4238,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1195,
+      "total_tokens": 1247
+    },
+    {
+      "id": "agent466",
+      "file": "agent466_is_not_max_specificity.md",
+      "elapsed_sec": 24.3,
+      "chars": 6904,
+      "prompt_tokens": 54,
+      "candidates_tokens": 1983,
+      "total_tokens": 2037
+    },
+    {
+      "id": "agent467",
+      "file": "agent467_where_zero_specificity.md",
+      "elapsed_sec": 20.32,
+      "chars": 5365,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1427,
+      "total_tokens": 1479
+    },
+    {
+      "id": "agent468",
+      "file": "agent468_has_relative_selector.md",
+      "elapsed_sec": 25.7,
+      "chars": 6842,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1596,
+      "total_tokens": 1647
+    },
+    {
+      "id": "agent469",
+      "file": "agent469_nth_child_progression.md",
+      "elapsed_sec": 10.69,
+      "chars": 2519,
+      "prompt_tokens": 57,
+      "candidates_tokens": 783,
+      "total_tokens": 840
+    },
+    {
+      "id": "agent470",
+      "file": "agent470_dir_selector_matching.md",
+      "elapsed_sec": 21.03,
+      "chars": 5527,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1428,
+      "total_tokens": 1480
+    },
+    {
+      "id": "agent471",
+      "file": "agent471_class_invalidation_bitset.md",
+      "elapsed_sec": 18.97,
+      "chars": 6465,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1683,
+      "total_tokens": 1734
+    },
+    {
+      "id": "agent472",
+      "file": "agent472_id_invalidation_propagation.md",
+      "elapsed_sec": 23.33,
+      "chars": 5706,
+      "prompt_tokens": 48,
+      "candidates_tokens": 1293,
+      "total_tokens": 1341
+    },
+    {
+      "id": "agent473",
+      "file": "agent473_ruleset_bucket_hashing.md",
+      "elapsed_sec": 25.96,
+      "chars": 6500,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1745,
+      "total_tokens": 1795
+    },
+    {
+      "id": "agent474",
+      "file": "agent474_cascade_origin_priority.md",
+      "elapsed_sec": 20.95,
+      "chars": 5475,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1382,
+      "total_tokens": 1432
+    },
+    {
+      "id": "agent475",
+      "file": "agent475_shadow_dom_cascade_order.md",
+      "elapsed_sec": 26.6,
+      "chars": 7350,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1827,
+      "total_tokens": 1878
+    },
+    {
+      "id": "agent476",
+      "file": "agent476_bloom_filter_fast_reject.md",
+      "elapsed_sec": 50.61,
+      "chars": 5842,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1383,
+      "total_tokens": 1436
+    },
+    {
+      "id": "agent477",
+      "file": "agent477_media_query_evaluation.md",
+      "elapsed_sec": 31.36,
+      "chars": 7650,
+      "prompt_tokens": 49,
+      "candidates_tokens": 1909,
+      "total_tokens": 1958
+    },
+    {
+      "id": "agent478",
+      "file": "agent478_container_query_evaluation.md",
+      "elapsed_sec": 20.51,
+      "chars": 5363,
+      "prompt_tokens": 48,
+      "candidates_tokens": 1383,
+      "total_tokens": 1431
+    },
+    {
+      "id": "agent479",
+      "file": "agent479_computed_style_equality.md",
+      "elapsed_sec": 24.21,
+      "chars": 5942,
+      "prompt_tokens": 49,
+      "candidates_tokens": 1433,
+      "total_tokens": 1482
+    },
+    {
+      "id": "agent480",
+      "file": "agent480_display_contents_suppression.md",
+      "elapsed_sec": 26.08,
+      "chars": 6703,
+      "prompt_tokens": 54,
+      "candidates_tokens": 1599,
+      "total_tokens": 1653
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 821,
+    "candidates_tokens": 24049,
+    "total_tokens": 24870
+  }
+}
+---

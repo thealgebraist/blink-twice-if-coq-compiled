@@ -4298,3 +4298,163 @@
   }
 }
 ---
+{
+  "timestamp": "2026-10-30 19:49:32",
+  "model": "gemini-4-argon",
+  "wave": 31,
+  "iteration": 8,
+  "theme": "Compositor, Paint Artifacts & Capstone Ultra-Soundness Semantics",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent401",
+      "file": "agent401_transform_composition.md",
+      "elapsed_sec": 18.45,
+      "chars": 4318,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1265,
+      "total_tokens": 1315
+    },
+    {
+      "id": "agent402",
+      "file": "agent402_clip_intersection.md",
+      "elapsed_sec": 22.96,
+      "chars": 5589,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1436,
+      "total_tokens": 1489
+    },
+    {
+      "id": "agent403",
+      "file": "agent403_effect_opacity.md",
+      "elapsed_sec": 21.98,
+      "chars": 5800,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1409,
+      "total_tokens": 1460
+    },
+    {
+      "id": "agent404",
+      "file": "agent404_paint_chunk_bounds.md",
+      "elapsed_sec": 21.15,
+      "chars": 5000,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1224,
+      "total_tokens": 1276
+    },
+    {
+      "id": "agent405",
+      "file": "agent405_raster_invalidation.md",
+      "elapsed_sec": 30.89,
+      "chars": 7993,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1867,
+      "total_tokens": 1917
+    },
+    {
+      "id": "agent406",
+      "file": "agent406_cull_rect.md",
+      "elapsed_sec": 34.39,
+      "chars": 8075,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1941,
+      "total_tokens": 1994
+    },
+    {
+      "id": "agent407",
+      "file": "agent407_display_item_list.md",
+      "elapsed_sec": 25.82,
+      "chars": 5812,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1502,
+      "total_tokens": 1553
+    },
+    {
+      "id": "agent408",
+      "file": "agent408_rgba_packing.md",
+      "elapsed_sec": 22.56,
+      "chars": 4048,
+      "prompt_tokens": 55,
+      "candidates_tokens": 1411,
+      "total_tokens": 1466
+    },
+    {
+      "id": "agent409",
+      "file": "agent409_rgba_unpacking.md",
+      "elapsed_sec": 28.04,
+      "chars": 5307,
+      "prompt_tokens": 56,
+      "candidates_tokens": 1973,
+      "total_tokens": 2029
+    },
+    {
+      "id": "agent410",
+      "file": "agent410_alpha_premultiplication.md",
+      "elapsed_sec": 28.08,
+      "chars": 6178,
+      "prompt_tokens": 53,
+      "candidates_tokens": 2024,
+      "total_tokens": 2077
+    },
+    {
+      "id": "agent411",
+      "file": "agent411_blend_mode_normal.md",
+      "elapsed_sec": 31.73,
+      "chars": 6394,
+      "prompt_tokens": 54,
+      "candidates_tokens": 2217,
+      "total_tokens": 2271
+    },
+    {
+      "id": "agent412",
+      "file": "agent412_tile_grid_coverage.md",
+      "elapsed_sec": 25.55,
+      "chars": 6774,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1594,
+      "total_tokens": 1645
+    },
+    {
+      "id": "agent413",
+      "file": "agent413_occlusion_culling.md",
+      "elapsed_sec": 30.1,
+      "chars": 7334,
+      "prompt_tokens": 49,
+      "candidates_tokens": 1865,
+      "total_tokens": 1914
+    },
+    {
+      "id": "agent414",
+      "file": "agent414_scroll_clamping.md",
+      "elapsed_sec": 31.05,
+      "chars": 6770,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1693,
+      "total_tokens": 1745
+    },
+    {
+      "id": "agent415",
+      "file": "agent415_compositor_commit.md",
+      "elapsed_sec": 26.27,
+      "chars": 5942,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1495,
+      "total_tokens": 1546
+    },
+    {
+      "id": "agent416",
+      "file": "agent416_ultra_soundness.md",
+      "elapsed_sec": 40.52,
+      "chars": 9866,
+      "prompt_tokens": 62,
+      "candidates_tokens": 2871,
+      "total_tokens": 2933
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 843,
+    "candidates_tokens": 27787,
+    "total_tokens": 28630
+  }
+}
+---

@@ -2338,3 +2338,163 @@
   }
 }
 ---
+{
+  "timestamp": "2026-10-30 18:46:53",
+  "model": "gemini-4-argon",
+  "wave": 20,
+  "iteration": 5,
+  "theme": "CSS Box Model & Intrinsic Sizing Mechanics (Inline Margin Auto, Self-Collapsing Margin Struts, Border-Box Subtraction, Percent Padding Inline Basis, Min-Content Text Run, Max-Content Soft Hyphen, Replaced Aspect Ratio, Inline-Block Baseline Overflow, Percent Margin Inline Basis, Fit-Content Clamp, Min Overrides Max Sizing, BFC Margin Isolation, Negative Margin Algebra, Overflow Clip Geometry, Box Strut Mapping, Indefinite Percent Height)",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent225",
+      "file": "agent225_inline_margin_auto.md",
+      "elapsed_sec": 36.71,
+      "chars": 11589,
+      "prompt_tokens": 146,
+      "candidates_tokens": 3500,
+      "total_tokens": 3646
+    },
+    {
+      "id": "agent226",
+      "file": "agent226_self_collapsing_margin.md",
+      "elapsed_sec": 36.35,
+      "chars": 10918,
+      "prompt_tokens": 150,
+      "candidates_tokens": 3500,
+      "total_tokens": 3650
+    },
+    {
+      "id": "agent227",
+      "file": "agent227_box_sizing_border_box.md",
+      "elapsed_sec": 21.37,
+      "chars": 6455,
+      "prompt_tokens": 145,
+      "candidates_tokens": 1788,
+      "total_tokens": 1933
+    },
+    {
+      "id": "agent228",
+      "file": "agent228_percent_padding_inline_basis.md",
+      "elapsed_sec": 23.24,
+      "chars": 8481,
+      "prompt_tokens": 145,
+      "candidates_tokens": 2488,
+      "total_tokens": 2633
+    },
+    {
+      "id": "agent229",
+      "file": "agent229_min_content_text_run.md",
+      "elapsed_sec": 25.95,
+      "chars": 6502,
+      "prompt_tokens": 141,
+      "candidates_tokens": 1875,
+      "total_tokens": 2016
+    },
+    {
+      "id": "agent230",
+      "file": "agent230_max_content_soft_hyphen.md",
+      "elapsed_sec": 32.88,
+      "chars": 8917,
+      "prompt_tokens": 142,
+      "candidates_tokens": 2735,
+      "total_tokens": 2877
+    },
+    {
+      "id": "agent231",
+      "file": "agent231_replaced_aspect_ratio.md",
+      "elapsed_sec": 15.3,
+      "chars": 3854,
+      "prompt_tokens": 129,
+      "candidates_tokens": 1276,
+      "total_tokens": 1405
+    },
+    {
+      "id": "agent232",
+      "file": "agent232_inline_block_baseline_overflow.md",
+      "elapsed_sec": 24.7,
+      "chars": 7661,
+      "prompt_tokens": 142,
+      "candidates_tokens": 2151,
+      "total_tokens": 2293
+    },
+    {
+      "id": "agent233",
+      "file": "agent233_percent_margin_inline_basis.md",
+      "elapsed_sec": 22.14,
+      "chars": 6492,
+      "prompt_tokens": 130,
+      "candidates_tokens": 1849,
+      "total_tokens": 1979
+    },
+    {
+      "id": "agent234",
+      "file": "agent234_fit_content_clamp.md",
+      "elapsed_sec": 30.39,
+      "chars": 8628,
+      "prompt_tokens": 158,
+      "candidates_tokens": 2912,
+      "total_tokens": 3070
+    },
+    {
+      "id": "agent235",
+      "file": "agent235_min_overrides_max_sizing.md",
+      "elapsed_sec": 21.1,
+      "chars": 5456,
+      "prompt_tokens": 133,
+      "candidates_tokens": 1735,
+      "total_tokens": 1868
+    },
+    {
+      "id": "agent236",
+      "file": "agent236_bfc_margin_isolation.md",
+      "elapsed_sec": 32.96,
+      "chars": 10681,
+      "prompt_tokens": 125,
+      "candidates_tokens": 3121,
+      "total_tokens": 3246
+    },
+    {
+      "id": "agent237",
+      "file": "agent237_negative_margin_algebra.md",
+      "elapsed_sec": 35.88,
+      "chars": 9487,
+      "prompt_tokens": 119,
+      "candidates_tokens": 3221,
+      "total_tokens": 3340
+    },
+    {
+      "id": "agent238",
+      "file": "agent238_overflow_clip_geometry.md",
+      "elapsed_sec": 30.36,
+      "chars": 8521,
+      "prompt_tokens": 121,
+      "candidates_tokens": 2668,
+      "total_tokens": 2789
+    },
+    {
+      "id": "agent239",
+      "file": "agent239_box_strut_mapping.md",
+      "elapsed_sec": 33.17,
+      "chars": 10237,
+      "prompt_tokens": 135,
+      "candidates_tokens": 3249,
+      "total_tokens": 3384
+    },
+    {
+      "id": "agent240",
+      "file": "agent240_indefinite_percent_height.md",
+      "elapsed_sec": 19.4,
+      "chars": 5325,
+      "prompt_tokens": 152,
+      "candidates_tokens": 1517,
+      "total_tokens": 1669
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 2213,
+    "candidates_tokens": 39585,
+    "total_tokens": 41798
+  }
+}
+---

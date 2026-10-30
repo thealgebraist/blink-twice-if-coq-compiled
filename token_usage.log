@@ -3778,3 +3778,363 @@
   }
 }
 ---
+{
+  "timestamp": "2026-10-30 19:38:50",
+  "model": "gemini-4-argon",
+  "wave": 29,
+  "iteration": 6,
+  "theme": "Blink MathML Core Layout Semantics (Display Mode, Token Sizing, Fraction Bar, Fraction Gap, Superscript Shift, Subscript Drop, SubSup Gap, UnderOver Centering, UnderOver Gap, UnderOver Limits, Radical Symbol, Root Index, Op Vertical Stretch, Op Horizontal Stretch, Table Baseline, Scriptlevel Scaling)",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent369",
+      "file": "agent369_mathml_display_mode.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent370",
+      "file": "agent370_mathml_token_sizing.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent371",
+      "file": "agent371_mathml_fraction_bar.md",
+      "elapsed_sec": 13.8,
+      "chars": 3313,
+      "prompt_tokens": 53,
+      "candidates_tokens": 805,
+      "total_tokens": 858
+    },
+    {
+      "id": "agent372",
+      "file": "agent372_mathml_fraction_gap.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent373",
+      "file": "agent373_mathml_superscript_shift.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent374",
+      "file": "agent374_mathml_subscript_drop.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent375",
+      "file": "agent375_mathml_subsup_gap.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent376",
+      "file": "agent376_mathml_under_over_centering.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent377",
+      "file": "agent377_mathml_under_over_gap.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent378",
+      "file": "agent378_mathml_under_over_limits.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent379",
+      "file": "agent379_mathml_radical_symbol.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent380",
+      "file": "agent380_mathml_root_index.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent381",
+      "file": "agent381_mathml_op_vertical_stretch.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent382",
+      "file": "agent382_mathml_op_horizontal_stretch.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent383",
+      "file": "agent383_mathml_table_baseline.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent384",
+      "file": "agent384_mathml_scriptlevel_scaling.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 53,
+    "candidates_tokens": 805,
+    "total_tokens": 858
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 19:39:58",
+  "model": "gemini-4-argon",
+  "wave": 29,
+  "iteration": 6,
+  "theme": "Blink MathML Core Layout Semantics (Display Mode, Token Sizing, Fraction Bar, Fraction Gap, Superscript Shift, Subscript Drop, SubSup Gap, UnderOver Centering, UnderOver Gap, UnderOver Limits, Radical Symbol, Root Index, Op Vertical Stretch, Op Horizontal Stretch, Table Baseline, Scriptlevel Scaling)",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent369",
+      "file": "agent369_mathml_display_mode.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent370",
+      "file": "agent370_mathml_token_sizing.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -8577572257984841830', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent371",
+      "file": "agent371_mathml_fraction_bar.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -8577572257984841830', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent372",
+      "file": "agent372_mathml_fraction_gap.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -8577572257984841830', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent373",
+      "file": "agent373_mathml_superscript_shift.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -8577572257984841830', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent374",
+      "file": "agent374_mathml_subscript_drop.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -8577572257984841830', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent375",
+      "file": "agent375_mathml_subsup_gap.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent376",
+      "file": "agent376_mathml_under_over_centering.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -8577572257984841830', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent377",
+      "file": "agent377_mathml_under_over_gap.md",
+      "elapsed_sec": 20.26,
+      "chars": 4973,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1299,
+      "total_tokens": 1351
+    },
+    {
+      "id": "agent378",
+      "file": "agent378_mathml_under_over_limits.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent379",
+      "file": "agent379_mathml_radical_symbol.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent380",
+      "file": "agent380_mathml_root_index.md",
+      "elapsed_sec": 23.98,
+      "chars": 5837,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1603,
+      "total_tokens": 1655
+    },
+    {
+      "id": "agent381",
+      "file": "agent381_mathml_op_vertical_stretch.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent382",
+      "file": "agent382_mathml_op_horizontal_stretch.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -8577572257984841830', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent383",
+      "file": "agent383_mathml_table_baseline.md",
+      "elapsed_sec": 28.87,
+      "chars": 6948,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1805,
+      "total_tokens": 1857
+    },
+    {
+      "id": "agent384",
+      "file": "agent384_mathml_scriptlevel_scaling.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -8577572257984841830', 'status': 'PERMISSION_DENIED'}}"
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 156,
+    "candidates_tokens": 4707,
+    "total_tokens": 4863
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 19:44:10",
+  "model": "gemini-4-argon",
+  "wave": 29,
+  "iteration": 6,
+  "theme": "Blink MathML Core Layout Semantics (Display Mode, Token Sizing, Fraction Bar, Fraction Gap, Superscript Shift, Subscript Drop, SubSup Gap, UnderOver Centering, UnderOver Gap, UnderOver Limits, Radical Symbol, Root Index, Op Vertical Stretch, Op Horizontal Stretch, Table Baseline, Scriptlevel Scaling)",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent369",
+      "file": "agent369_mathml_display_mode.md",
+      "elapsed_sec": 20.95,
+      "chars": 5726,
+      "prompt_tokens": 54,
+      "candidates_tokens": 1438,
+      "total_tokens": 1492
+    },
+    {
+      "id": "agent370",
+      "file": "agent370_mathml_token_sizing.md",
+      "elapsed_sec": 23.06,
+      "chars": 5515,
+      "prompt_tokens": 56,
+      "candidates_tokens": 1490,
+      "total_tokens": 1546
+    },
+    {
+      "id": "agent371",
+      "file": "agent371_mathml_fraction_bar.md",
+      "elapsed_sec": 20.54,
+      "chars": 4463,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1233,
+      "total_tokens": 1286
+    },
+    {
+      "id": "agent372",
+      "file": "agent372_mathml_fraction_gap.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -4063440326151462841', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent373",
+      "file": "agent373_mathml_superscript_shift.md",
+      "elapsed_sec": 21.17,
+      "chars": 5284,
+      "prompt_tokens": 55,
+      "candidates_tokens": 1325,
+      "total_tokens": 1380
+    },
+    {
+      "id": "agent374",
+      "file": "agent374_mathml_subscript_drop.md",
+      "elapsed_sec": 21.61,
+      "chars": 5542,
+      "prompt_tokens": 55,
+      "candidates_tokens": 1435,
+      "total_tokens": 1490
+    },
+    {
+      "id": "agent375",
+      "file": "agent375_mathml_subsup_gap.md",
+      "elapsed_sec": 27.13,
+      "chars": 6095,
+      "prompt_tokens": 54,
+      "candidates_tokens": 1530,
+      "total_tokens": 1584
+    },
+    {
+      "id": "agent376",
+      "file": "agent376_mathml_under_over_centering.md",
+      "elapsed_sec": 16.02,
+      "chars": 4229,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1059,
+      "total_tokens": 1111
+    },
+    {
+      "id": "agent377",
+      "file": "agent377_mathml_under_over_gap.md",
+      "error": "403 PERMISSION_DENIED. {'error': {'code': 403, 'message': 'Spend cap breached for project: projects/605622730560 for service: generativelanguage.googleapis.com. Correlation id: -8577572257984841830', 'status': 'PERMISSION_DENIED'}}"
+    },
+    {
+      "id": "agent378",
+      "file": "agent378_mathml_under_over_limits.md",
+      "elapsed_sec": 20.11,
+      "chars": 4943,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1404,
+      "total_tokens": 1457
+    },
+    {
+      "id": "agent379",
+      "file": "agent379_mathml_radical_symbol.md",
+      "elapsed_sec": 31.89,
+      "chars": 7909,
+      "prompt_tokens": 54,
+      "candidates_tokens": 2127,
+      "total_tokens": 2181
+    },
+    {
+      "id": "agent380",
+      "file": "agent380_mathml_root_index.md",
+      "elapsed_sec": 21.53,
+      "chars": 5907,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1624,
+      "total_tokens": 1676
+    },
+    {
+      "id": "agent381",
+      "file": "agent381_mathml_op_vertical_stretch.md",
+      "elapsed_sec": 25.95,
+      "chars": 6767,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1678,
+      "total_tokens": 1729
+    },
+    {
+      "id": "agent382",
+      "file": "agent382_mathml_op_horizontal_stretch.md",
+      "elapsed_sec": 24.83,
+      "chars": 5919,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1424,
+      "total_tokens": 1475
+    },
+    {
+      "id": "agent383",
+      "file": "agent383_mathml_table_baseline.md",
+      "elapsed_sec": 21.17,
+      "chars": 5826,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1420,
+      "total_tokens": 1472
+    },
+    {
+      "id": "agent384",
+      "file": "agent384_mathml_scriptlevel_scaling.md",
+      "elapsed_sec": 27.76,
+      "chars": 7374,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1960,
+      "total_tokens": 2013
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 745,
+    "candidates_tokens": 21147,
+    "total_tokens": 21892
+  }
+}
+---

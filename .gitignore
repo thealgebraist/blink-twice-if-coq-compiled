@@ -36,6 +36,7 @@ meta_proof_checker
 !token_usage.log
 *.out
 *.toc
+paper_page*.png
 
 # Large raw raster files
 *.ppm

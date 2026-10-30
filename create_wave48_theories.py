@@ -377,3 +377,4 @@ for filename, content in theories.items():
     print(f"Generated {filename}")
 
 print(f"Successfully generated all {len(theories)} Wave 48 theories.")
+

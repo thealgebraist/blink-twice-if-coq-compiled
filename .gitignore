@@ -52,3 +52,4 @@ paper_page*.png
 Thumbs.db
 .lia.cache
 .*.cache
+render_nontrivial_formal

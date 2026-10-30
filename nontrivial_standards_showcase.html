@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Blink Nontrivial Standards Showcase</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 800px;
+      height: 600px;
+      background: #ffffff;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      margin: 8px;
+    }
+    header#header-block {
+      display: block;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      height: 44px;
+      background: #1e293b;
+      border-bottom: 4px solid #3b82f6;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 40px;
+      padding-left: 12px;
+    }
+    div#grid-container {
+      display: grid;
+      grid-template-columns: 251px 251px 250px;
+      column-gap: 16px;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      height: 90px;
+    }
+    .grid-card {
+      height: 90px;
+      border-radius: 4px;
+      padding: 10px;
+      font-size: 13px;
+    }
+    .card-1 {
+      background: #e0e7ff;
+      border: 1px solid #6366f1;
+      color: #3730a3;
+    }
+    .card-2 {
+      background: #d1fae5;
+      border: 1px solid #10b981;
+      color: #065f46;
+    }
+    .card-3 {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      color: #92400e;
+    }
+    div#flex-strip {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      height: 48px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 0 12px;
+      gap: 16px;
+    }
+    .badge {
+      height: 32px;
+      line-height: 32px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 4px;
+    }
+    .badge-1 { width: 90px;  background: #3b82f6; }
+    .badge-2 { width: 110px; background: #8b5cf6; }
+    .badge-3 { width: 120px; background: #ec4899; }
+    
+    table#data-table {
+      display: table;
+      width: 784px;
+      height: 60px;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      border-collapse: collapse;
+      border: 1px solid #cbd5e1;
+      font-size: 13px;
+    }
+    table#data-table tr.header-row {
+      height: 30px;
+      background: #334155;
+      color: #ffffff;
+    }
+    table#data-table tr.data-row {
+      height: 30px;
+      color: #1e293b;
+    }
+    table#data-table td, table#data-table th {
+      padding-left: 8px;
+      text-align: left;
+    }
+    th.col1, td.col1 { width: 235px; }
+    th.col2, td.col2 { width: 352px; }
+    th.col3, td.col3 { width: 197px; }
+    td.col1 { background: #f1f5f9; }
+    td.col2 { background: #ffffff; }
+    td.col3 { background: #f1f5f9; }
+
+    div#metric-bar {
+      display: block;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      width: 784px;
+      height: 24px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    div#metric-fill {
+      width: 548px; /* 70% of 784 */
+      height: 24px;
+      background: #0ea5e9;
+    }
+
+    div#controls-box {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      width: 784px;
+      height: 52px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 0 16px;
+      gap: 16px;
+    }
+    button.btn-primary {
+      width: 110px;
+      height: 36px;
+      background: #2563eb;
+      border: 2px solid #1e293b;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button.btn-secondary {
+      width: 100px;
+      height: 36px;
+      background: #ffffff;
+      border: 1px solid #94a3b8;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header id="header-block">BGS-Spec Verified Standards Pipeline</header>
+  
+  <div id="grid-container">
+    <div class="grid-card card-1">Card A (Subgrid 1)</div>
+    <div class="grid-card card-2">Card B (Subgrid 2)</div>
+    <div class="grid-card card-3">Card C (Subgrid 3)</div>
+  </div>
+
+  <div id="flex-strip">
+    <div class="badge badge-1">Status: OK</div>
+    <div class="badge badge-2">Type: Layout</div>
+    <div class="badge badge-3">Verified: 0 Admits</div>
+  </div>
+
+  <table id="data-table">
+    <tr class="header-row">
+      <th class="col1">Metric (30%)</th>
+      <th class="col2">Formal Invariant (45%)</th>
+      <th class="col3">Verification (25%)</th>
+    </tr>
+    <tr class="data-row">
+      <td class="col1">Fractional Grid</td>
+      <td class="col2">∑ f(w_i) ≤ Available Space</td>
+      <td class="col3">Rocq / Coq 9.3.0</td>
+    </tr>
+  </table>
+
+  <div id="metric-bar">
+    <div id="metric-fill"></div>
+  </div>
+
+  <div id="controls-box">
+    <button class="btn-primary">Execute</button>
+    <button class="btn-secondary">Inspect</button>
+  </div>
+</body>
+</html>

@@ -272,3 +272,4 @@ Theorem nontrivial_showcase_raster_pixel_exact :
 Proof.
   vm_compute. repeat split; reflexivity.
 Qed.
+

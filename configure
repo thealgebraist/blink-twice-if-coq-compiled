@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -e
+
+# Detect python in .venv if present
+if [ -x ".venv/bin/python3" ]; then
+    PYTHON=".venv/bin/python3"
+else
+    PYTHON="python3"
+fi
+
+exec "$PYTHON" configure.py "$@"

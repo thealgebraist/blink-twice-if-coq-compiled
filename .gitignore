@@ -40,6 +40,12 @@ meta_proof_checker
 # Large raw raster files
 *.ppm
 
+# Ninja build artifacts & markers
+.ninja_log
+.ninja_deps
+.admits_verified
+.engine_tested
+
 # OS artifacts
 .DS_Store
 Thumbs.db

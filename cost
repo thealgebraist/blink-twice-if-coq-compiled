@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+import json
+
+with open('token_usage.log', 'r') as f:
+    content = f.read()
+
+decoder = json.JSONDecoder()
+idx = 0
+total_prompt = 0
+total_candidates = 0
+total_overall = 0
+total_agents = 0
+
+while idx < len(content):
+    content_sub = content[idx:].lstrip()
+    if not content_sub:
+        break
+    idx = len(content) - len(content_sub)
+    try:
+        obj, end_idx = decoder.raw_decode(content_sub)
+        idx += end_idx
+        if 'agents' in obj:
+            for ag in obj['agents']:
+                total_agents += 1
+                total_prompt += ag.get('prompt_tokens', 0)
+                total_candidates += ag.get('candidates_tokens', 0)
+                total_overall += ag.get('total_tokens', 0)
+    except json.JSONDecodeError:
+        idx += 1
+
+cost_flash = (total_prompt / 1e6) * 0.10 + (total_candidates / 1e6) * 0.40
+cost_pro = (total_prompt / 1e6) * 1.25 + (total_candidates / 1e6) * 5.00
+
+print("=== Gemini Real-Time Spend & Balance ===")
+print(f"Total Agent Calls:     {total_agents}")
+print(f"Prompt Tokens:         {total_prompt:,}")
+print(f"Output Tokens:         {total_candidates:,}")
+print(f"Total Tokens:          {total_overall:,}")
+print()
+print("At Flash Rates ($0.10 / $0.40 per M):")
+print(f"  Spent:     ${cost_flash:.4f}")
+print(f"  Remaining: ${400 - cost_flash:.4f} of $400.00 ({(400 - cost_flash)/400*100:.2f}%)")
+print()
+print("At Pro Rates ($1.25 / $5.00 per M):")
+print(f"  Spent:     ${cost_pro:.4f}")
+print(f"  Remaining: ${400 - cost_pro:.4f} of $400.00 ({(400 - cost_pro)/400*100:.2f}%)")

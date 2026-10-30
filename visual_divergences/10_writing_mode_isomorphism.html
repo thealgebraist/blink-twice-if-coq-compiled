@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Divergence 10: Writing Mode Coordinate Isomorphism</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 32px;
+  }
+  .header {
+    margin-bottom: 24px;
+    border-bottom: 2px solid #334155;
+    padding-bottom: 16px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: #3b82f6;
+    color: white;
+    margin-bottom: 8px;
+  }
+  h1 { font-size: 24px; color: #f8fafc; margin-bottom: 6px; }
+  p.subtitle { color: #94a3b8; font-size: 14px; }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+  }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card h2 { font-size: 16px; color: #38bdf8; margin-bottom: 12px; }
+
+  .demo-area {
+    background: #090d16;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px;
+    height: 190px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .box-vrl {
+    writing-mode: vertical-rl;
+    height: 140px;
+    width: 60px;
+    border: 2px solid #3b82f6;
+    background: rgba(59, 130, 246, 0.15);
+    padding: 8px;
+    font-size: 14px;
+    color: #93c5fd;
+  }
+
+  .box-srl {
+    writing-mode: sideways-rl;
+    height: 140px;
+    width: 60px;
+    border: 2px solid #ec4899;
+    background: rgba(236, 72, 153, 0.15);
+    padding: 8px;
+    font-size: 14px;
+    color: #f472b6;
+  }
+
+  .annotation {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="badge">Divergence 8.2: Writing Modes</span>
+  <h1>W3C CSS Writing Modes 3 vs. Blink Box Geometry Isomorphism</h1>
+  <p class="subtitle">
+    W3C defines <code>vertical-rl</code> and <code>sideways-rl</code> as distinct semantic modes. At the 2D layout geometry level, Blink's <code>WritingModeConverter</code> treats them as mathematically identical affine transformations; their differences are deferred entirely to glyph rotation.
+  </p>
+</div>
+
+<div class="comparison-grid">
+  <!-- vertical-rl -->
+  <div class="card">
+    <h2>writing-mode: vertical-rl (Upright CJK / Baseline)</h2>
+    <div class="demo-area">
+      <div class="box-vrl">
+        Blink 垂直
+      </div>
+      <div style="margin-left: 20px; font-size: 12px; color: #94a3b8;">
+        Dimensions: 60px &times; 140px<br>
+        Origin: Top-Right<br>
+        Baselines: Central for CJK
+      </div>
+    </div>
+    <div class="annotation" style="background: rgba(59, 130, 246, 0.15); border-left: 4px solid #3b82f6; color: #93c5fd;">
+      &check; <strong>Box Geometry:</strong> Identical bounding box (60&times;140). Proven isomorphic in <code>BlinkWritingModeConverter.v</code>.
+    </div>
+  </div>
+
+  <!-- sideways-rl -->
+  <div class="card">
+    <h2>writing-mode: sideways-rl (Rotated 90&deg; Clockwise)</h2>
+    <div class="demo-area">
+      <div class="box-srl">
+        Blink 垂直
+      </div>
+      <div style="margin-left: 20px; font-size: 12px; color: #94a3b8;">
+        Dimensions: 60px &times; 140px<br>
+        Origin: Top-Right<br>
+        Baselines: Rotated 90&deg; Alphabetic
+      </div>
+    </div>
+    <div class="annotation" style="background: rgba(236, 72, 153, 0.15); border-left: 4px solid #ec4899; color: #f472b6;">
+      &cross; <strong>Visual Divergence:</strong> Latin and CJK text rotated 90&deg; clockwise, while physical box dimensions remain 100% invariant.
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+

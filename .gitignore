@@ -1,0 +1,45 @@
+# Security & API credentials
+key.txt
+*.key.txt
+*.key
+*.pem
+*.env
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# Rocq / Coq compilation outputs & auxiliary files
+*.vo
+*.vok
+*.vos
+*.glob
+*.aux
+.*.aux
+.coq-native/
+.coqdeps.d
+
+# C / C++ build outputs & binaries
+*.o
+*.dylib
+*.so
+*.a
+blink_formal_runner
+benchmark_fastpaths
+benchmark_margin_fastpaths
+benchmark_shadow_fastpaths
+meta_proof_checker
+
+# LaTeX build artifacts
+*.log
+!token_usage.log
+*.out
+*.toc
+
+# Large raw raster files
+*.ppm
+
+# OS artifacts
+.DS_Store
+Thumbs.db

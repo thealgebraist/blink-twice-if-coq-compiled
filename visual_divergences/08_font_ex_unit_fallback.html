@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Divergence 8: Font 1ex Fallback Discrepancy</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 32px;
+  }
+  .header {
+    margin-bottom: 24px;
+    border-bottom: 2px solid #334155;
+    padding-bottom: 16px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: #a855f7;
+    color: white;
+    margin-bottom: 8px;
+  }
+  h1 { font-size: 24px; color: #f8fafc; margin-bottom: 6px; }
+  p.subtitle { color: #94a3b8; font-size: 14px; }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+  }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card h2 { font-size: 16px; color: #38bdf8; margin-bottom: 12px; }
+
+  .demo-area {
+    background: #090d16;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 20px;
+    height: 190px;
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+  }
+
+  .pillar-spec {
+    width: 90px;
+    height: 100px; /* 10 * 0.5 * 20px = 100px (5em) */
+    background: #10b981;
+    border: 2px solid #34d399;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #064e3b;
+  }
+
+  .pillar-blink {
+    width: 90px;
+    height: 80px; /* 10 * 0.5 * (0.8 * 20px) = 80px (4em) */
+    background: #ef4444;
+    border: 2px solid #f87171;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #450a0a;
+  }
+
+  .deficit-marker {
+    height: 20px;
+    width: 90px;
+    border: 2px dashed #f59e0b;
+    background: rgba(245, 158, 11, 0.2);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fbbf24;
+  }
+
+  .annotation {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="badge">Divergence 7.1: Typographic Fallbacks</span>
+  <h1>CSS Fonts 4 &sect;5 (0.5 &times; em) vs. Blink SimpleFontData (0.5 &times; ascent)</h1>
+  <p class="subtitle">
+    When the 'x' glyph is missing from a font, CSS Fonts 4 mandates falling back to <code>0.5 &times; font-size</code> (0.5em). Chromium Blink falls back to <code>0.5 &times; ascent</code>. For standard fonts where ascent is 80% of em, this causes a 20% height deficit.
+  </p>
+</div>
+
+<div class="comparison-grid">
+  <!-- Spec Card -->
+  <div class="card">
+    <h2>W3C CSS Fonts 4 &sect;5 Fallback (100px)</h2>
+    <div class="demo-area">
+      <div class="pillar-spec">
+        <span>Spec: 10ex</span>
+        <span>100px (5em)</span>
+      </div>
+      <div style="font-size: 12px; color: #94a3b8;">
+        Formula: <code>10 &times; (0.5 &times; 20px) = 100px</code>
+      </div>
+    </div>
+    <div class="annotation" style="background: rgba(16, 185, 129, 0.15); border-left: 4px solid #10b981; color: #6ee7b7;">
+      &check; <strong>Normative Dimension:</strong> Strictly scales with the declared font-size (em metric).
+    </div>
+  </div>
+
+  <!-- Blink Card -->
+  <div class="card">
+    <h2>Chromium Blink (simple_font_data.cc: 80px)</h2>
+    <div class="demo-area">
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div class="deficit-marker">-20px Deficit</div>
+        <div class="pillar-blink">
+          <span>Blink: 10ex</span>
+          <span>80px (4em)</span>
+        </div>
+      </div>
+      <div style="font-size: 12px; color: #ef4444;">
+        Formula: <code>10 &times; (0.5 &times; 16px) = 80px</code>
+      </div>
+    </div>
+    <div class="annotation" style="background: rgba(239, 68, 68, 0.15); border-left: 4px solid #ef4444; color: #fca5a5;">
+      &cross; <strong>20% Deficit Error:</strong> In <code>simple_font_data.cc</code>, Blink uses <code>0.5 * ascent</code>. Modeled in <code>BlinkCSSUnitResolutionSemantics.v</code>.
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+

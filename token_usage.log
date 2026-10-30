@@ -1,0 +1,2180 @@
+{
+  "timestamp": "2026-10-29 23:04:21",
+  "model": "gemini-4-argon",
+  "thinking_budget": 1024,
+  "agents": [
+    {
+      "id": "agent1",
+      "file": "agent1_scrollable_overflow.md",
+      "elapsed_sec": 43.28,
+      "chars": 12499,
+      "prompt_tokens": 227,
+      "candidates_tokens": 3500,
+      "total_tokens": 3727
+    },
+    {
+      "id": "agent2",
+      "file": "agent2_writing_modes.md",
+      "elapsed_sec": 37.69,
+      "chars": 10592,
+      "prompt_tokens": 278,
+      "candidates_tokens": 3500,
+      "total_tokens": 3778
+    },
+    {
+      "id": "agent3",
+      "file": "agent3_media_queries.md",
+      "elapsed_sec": 46.69,
+      "chars": 11868,
+      "prompt_tokens": 290,
+      "candidates_tokens": 3500,
+      "total_tokens": 3790
+    },
+    {
+      "id": "agent4",
+      "file": "agent4_list_markers.md",
+      "elapsed_sec": 46.93,
+      "chars": 13871,
+      "prompt_tokens": 274,
+      "candidates_tokens": 3500,
+      "total_tokens": 3774
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 1069,
+    "candidates_tokens": 14000,
+    "total_tokens": 15069
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 02:51:03",
+  "model": "gemini-4-argon",
+  "thinking_budget": 1024,
+  "agents": [
+    {
+      "id": "agent1",
+      "file": "agent1_multicol_column_balancing.md",
+      "elapsed_sec": 52.49,
+      "chars": 12221,
+      "prompt_tokens": 312,
+      "candidates_tokens": 3500,
+      "total_tokens": 3812
+    },
+    {
+      "id": "agent2",
+      "file": "agent2_subgrid.md",
+      "elapsed_sec": 48.76,
+      "chars": 11697,
+      "prompt_tokens": 258,
+      "candidates_tokens": 3500,
+      "total_tokens": 3758
+    },
+    {
+      "id": "agent3",
+      "file": "agent3_sticky_positioning.md",
+      "elapsed_sec": 50.61,
+      "chars": 11842,
+      "prompt_tokens": 228,
+      "candidates_tokens": 3500,
+      "total_tokens": 3728
+    },
+    {
+      "id": "agent4",
+      "file": "agent4_baseline_alignment.md",
+      "elapsed_sec": 50.63,
+      "chars": 13105,
+      "prompt_tokens": 268,
+      "candidates_tokens": 3500,
+      "total_tokens": 3768
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 1066,
+    "candidates_tokens": 14000,
+    "total_tokens": 15066
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 02:56:14",
+  "model": "gemini-4-argon",
+  "thinking_budget": 1024,
+  "agents": [
+    {
+      "id": "agent1",
+      "file": "agent1_counter_styles.md",
+      "elapsed_sec": 37.73,
+      "chars": 12895,
+      "prompt_tokens": 178,
+      "candidates_tokens": 3500,
+      "total_tokens": 3678
+    },
+    {
+      "id": "agent2",
+      "file": "agent2_flex_wrap.md",
+      "elapsed_sec": 42.2,
+      "chars": 10238,
+      "prompt_tokens": 217,
+      "candidates_tokens": 3500,
+      "total_tokens": 3717
+    },
+    {
+      "id": "agent3",
+      "file": "agent3_masonry.md",
+      "elapsed_sec": 48.45,
+      "chars": 12323,
+      "prompt_tokens": 172,
+      "candidates_tokens": 3500,
+      "total_tokens": 3672
+    },
+    {
+      "id": "agent4",
+      "file": "agent4_anchor_query.md",
+      "elapsed_sec": 49.39,
+      "chars": 13826,
+      "prompt_tokens": 167,
+      "candidates_tokens": 3500,
+      "total_tokens": 3667
+    },
+    {
+      "id": "agent5",
+      "file": "agent5_shape_outside.md",
+      "elapsed_sec": 43.96,
+      "chars": 11390,
+      "prompt_tokens": 168,
+      "candidates_tokens": 3500,
+      "total_tokens": 3668
+    },
+    {
+      "id": "agent6",
+      "file": "agent6_transform_origin.md",
+      "elapsed_sec": 39.87,
+      "chars": 11103,
+      "prompt_tokens": 173,
+      "candidates_tokens": 3500,
+      "total_tokens": 3673
+    },
+    {
+      "id": "agent7",
+      "file": "agent7_bidi_resolution.md",
+      "elapsed_sec": 46.2,
+      "chars": 10717,
+      "prompt_tokens": 176,
+      "candidates_tokens": 3500,
+      "total_tokens": 3676
+    },
+    {
+      "id": "agent8",
+      "file": "agent8_css_containment.md",
+      "elapsed_sec": 49.32,
+      "chars": 13624,
+      "prompt_tokens": 189,
+      "candidates_tokens": 3500,
+      "total_tokens": 3689
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 1440,
+    "candidates_tokens": 28000,
+    "total_tokens": 29440
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 03:00:31",
+  "model": "gemini-4-argon",
+  "wave": 6,
+  "thinking_budget": 1024,
+  "agents": [
+    {
+      "id": "agent9",
+      "file": "agent9_svg_text.md",
+      "elapsed_sec": 46.91,
+      "chars": 11914,
+      "prompt_tokens": 205,
+      "candidates_tokens": 3500,
+      "total_tokens": 3705
+    },
+    {
+      "id": "agent10",
+      "file": "agent10_form_control.md",
+      "elapsed_sec": 50.29,
+      "chars": 14047,
+      "prompt_tokens": 192,
+      "candidates_tokens": 3500,
+      "total_tokens": 3692
+    },
+    {
+      "id": "agent11",
+      "file": "agent11_calc_size.md",
+      "elapsed_sec": 43.52,
+      "chars": 11740,
+      "prompt_tokens": 225,
+      "candidates_tokens": 3500,
+      "total_tokens": 3725
+    },
+    {
+      "id": "agent12",
+      "file": "agent12_grid_placement.md",
+      "elapsed_sec": 48.39,
+      "chars": 11985,
+      "prompt_tokens": 187,
+      "candidates_tokens": 3500,
+      "total_tokens": 3687
+    },
+    {
+      "id": "agent13",
+      "file": "agent13_view_transition.md",
+      "elapsed_sec": 49.47,
+      "chars": 12215,
+      "prompt_tokens": 185,
+      "candidates_tokens": 3500,
+      "total_tokens": 3685
+    },
+    {
+      "id": "agent14",
+      "file": "agent14_flex_order.md",
+      "elapsed_sec": 48.87,
+      "chars": 13006,
+      "prompt_tokens": 186,
+      "candidates_tokens": 3500,
+      "total_tokens": 3686
+    },
+    {
+      "id": "agent15",
+      "file": "agent15_table_borders.md",
+      "elapsed_sec": 44.76,
+      "chars": 12276,
+      "prompt_tokens": 214,
+      "candidates_tokens": 3500,
+      "total_tokens": 3714
+    },
+    {
+      "id": "agent16",
+      "file": "agent16_min_max_sizes.md",
+      "elapsed_sec": 46.58,
+      "chars": 11364,
+      "prompt_tokens": 202,
+      "candidates_tokens": 3500,
+      "total_tokens": 3702
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 1596,
+    "candidates_tokens": 28000,
+    "total_tokens": 29596
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 03:19:30",
+  "model": "gemini-4-argon",
+  "wave": 7,
+  "theme": "HTML Table Formalization Suite (table, tr, td, th)",
+  "thinking_budget": 1024,
+  "agents": [
+    {
+      "id": "agent17",
+      "file": "agent17_table_grid_map.md",
+      "elapsed_sec": 43.94,
+      "chars": 11567,
+      "prompt_tokens": 239,
+      "candidates_tokens": 3500,
+      "total_tokens": 3739
+    },
+    {
+      "id": "agent18",
+      "file": "agent18_table_columns.md",
+      "elapsed_sec": 40.95,
+      "chars": 11802,
+      "prompt_tokens": 222,
+      "candidates_tokens": 3500,
+      "total_tokens": 3722
+    },
+    {
+      "id": "agent19",
+      "file": "agent19_table_row.md",
+      "elapsed_sec": 43.54,
+      "chars": 11833,
+      "prompt_tokens": 203,
+      "candidates_tokens": 3500,
+      "total_tokens": 3703
+    },
+    {
+      "id": "agent20",
+      "file": "agent20_table_cell.md",
+      "elapsed_sec": 42.04,
+      "chars": 11717,
+      "prompt_tokens": 269,
+      "candidates_tokens": 3500,
+      "total_tokens": 3769
+    },
+    {
+      "id": "agent21",
+      "file": "agent21_table_section.md",
+      "elapsed_sec": 42.57,
+      "chars": 11573,
+      "prompt_tokens": 219,
+      "candidates_tokens": 3500,
+      "total_tokens": 3719
+    },
+    {
+      "id": "agent22",
+      "file": "agent22_table_rowspan.md",
+      "elapsed_sec": 40.38,
+      "chars": 11806,
+      "prompt_tokens": 240,
+      "candidates_tokens": 3500,
+      "total_tokens": 3740
+    },
+    {
+      "id": "agent23",
+      "file": "agent23_table_separated_borders.md",
+      "elapsed_sec": 41.77,
+      "chars": 11182,
+      "prompt_tokens": 243,
+      "candidates_tokens": 3500,
+      "total_tokens": 3743
+    },
+    {
+      "id": "agent24",
+      "file": "agent24_table_min_max.md",
+      "elapsed_sec": 41.8,
+      "chars": 11344,
+      "prompt_tokens": 240,
+      "candidates_tokens": 3500,
+      "total_tokens": 3740
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 1875,
+    "candidates_tokens": 28000,
+    "total_tokens": 29875
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 03:33:25",
+  "model": "gemini-4-argon",
+  "wave": 8,
+  "theme": "Core Layout & CSS Foundations (Floats, Flex-Basis, Ruby, Container Queries, Grid Phase 1, Hyphenation, Rect Lattice, Masonry Modes)",
+  "thinking_budget": 1024,
+  "agents": [
+    {
+      "id": "agent25",
+      "file": "agent25_float_exclusion.md",
+      "elapsed_sec": 41.41,
+      "chars": 11237,
+      "prompt_tokens": 200,
+      "candidates_tokens": 3500,
+      "total_tokens": 3700
+    },
+    {
+      "id": "agent26",
+      "file": "agent26_flex_basis.md",
+      "elapsed_sec": 46.24,
+      "chars": 12240,
+      "prompt_tokens": 205,
+      "candidates_tokens": 3500,
+      "total_tokens": 3705
+    },
+    {
+      "id": "agent27",
+      "file": "agent27_ruby_layout.md",
+      "elapsed_sec": 45.24,
+      "chars": 12619,
+      "prompt_tokens": 188,
+      "candidates_tokens": 3500,
+      "total_tokens": 3688
+    },
+    {
+      "id": "agent28",
+      "file": "agent28_container_queries.md",
+      "elapsed_sec": 46.33,
+      "chars": 12251,
+      "prompt_tokens": 179,
+      "candidates_tokens": 3500,
+      "total_tokens": 3679
+    },
+    {
+      "id": "agent29",
+      "file": "agent29_grid_track_sizing_phase1.md",
+      "elapsed_sec": 45.45,
+      "chars": 12114,
+      "prompt_tokens": 207,
+      "candidates_tokens": 3500,
+      "total_tokens": 3707
+    },
+    {
+      "id": "agent30",
+      "file": "agent30_inline_hyphenation.md",
+      "elapsed_sec": 50.79,
+      "chars": 12797,
+      "prompt_tokens": 199,
+      "candidates_tokens": 3500,
+      "total_tokens": 3699
+    },
+    {
+      "id": "agent31",
+      "file": "agent31_rect_lattice_geometry.md",
+      "elapsed_sec": 43.49,
+      "chars": 10791,
+      "prompt_tokens": 205,
+      "candidates_tokens": 3500,
+      "total_tokens": 3705
+    },
+    {
+      "id": "agent32",
+      "file": "agent32_masonry_placement_modes.md",
+      "elapsed_sec": 48.79,
+      "chars": 11689,
+      "prompt_tokens": 198,
+      "candidates_tokens": 3500,
+      "total_tokens": 3698
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 1581,
+    "candidates_tokens": 28000,
+    "total_tokens": 29581
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 03:40:28",
+  "model": "gemini-4-argon",
+  "wave": 9,
+  "theme": "16 Central Engine Areas (Custom Properties, Flex Cross, Grid Auto-Repeat, Replaced, Scroll Snap, Multicol Spanner, Stepped Math, Orthogonal, Fonts, Spacing, Filter Outsets, Pseudo Elements, Pixel Snapping, Static Position, Auto Margins, Fragment Tree)",
+  "thinking_budget": 1024,
+  "agents": [
+    {
+      "id": "agent33",
+      "file": "agent33_css_custom_properties.md",
+      "elapsed_sec": 54.37,
+      "chars": 14082,
+      "prompt_tokens": 181,
+      "candidates_tokens": 3500,
+      "total_tokens": 3681
+    },
+    {
+      "id": "agent34",
+      "file": "agent34_flex_cross_alignment.md",
+      "elapsed_sec": 39.81,
+      "chars": 12183,
+      "prompt_tokens": 244,
+      "candidates_tokens": 3500,
+      "total_tokens": 3744
+    },
+    {
+      "id": "agent35",
+      "file": "agent35_grid_auto_repeat.md",
+      "elapsed_sec": 47.26,
+      "chars": 11902,
+      "prompt_tokens": 222,
+      "candidates_tokens": 3500,
+      "total_tokens": 3722
+    },
+    {
+      "id": "agent36",
+      "file": "agent36_replaced_elements.md",
+      "elapsed_sec": 39.56,
+      "chars": 10429,
+      "prompt_tokens": 199,
+      "candidates_tokens": 3500,
+      "total_tokens": 3699
+    },
+    {
+      "id": "agent37",
+      "file": "agent37_scroll_snap.md",
+      "elapsed_sec": 77.53,
+      "chars": 12751,
+      "prompt_tokens": 182,
+      "candidates_tokens": 3500,
+      "total_tokens": 3682
+    },
+    {
+      "id": "agent38",
+      "file": "agent38_multicol_spanner.md",
+      "elapsed_sec": 44.55,
+      "chars": 13386,
+      "prompt_tokens": 196,
+      "candidates_tokens": 3500,
+      "total_tokens": 3696
+    },
+    {
+      "id": "agent39",
+      "file": "agent39_stepped_math.md",
+      "elapsed_sec": 39.29,
+      "chars": 10141,
+      "prompt_tokens": 235,
+      "candidates_tokens": 3500,
+      "total_tokens": 3735
+    },
+    {
+      "id": "agent40",
+      "file": "agent40_orthogonal_modes.md",
+      "elapsed_sec": 48.7,
+      "chars": 13707,
+      "prompt_tokens": 185,
+      "candidates_tokens": 3500,
+      "total_tokens": 3685
+    },
+    {
+      "id": "agent41",
+      "file": "agent41_font_metrics.md",
+      "elapsed_sec": 41.84,
+      "chars": 11609,
+      "prompt_tokens": 204,
+      "candidates_tokens": 3500,
+      "total_tokens": 3704
+    },
+    {
+      "id": "agent42",
+      "file": "agent42_inline_spacing.md",
+      "elapsed_sec": 43.97,
+      "chars": 12685,
+      "prompt_tokens": 170,
+      "candidates_tokens": 3500,
+      "total_tokens": 3670
+    },
+    {
+      "id": "agent43",
+      "file": "agent43_filter_outset.md",
+      "elapsed_sec": 43.79,
+      "chars": 11161,
+      "prompt_tokens": 200,
+      "candidates_tokens": 3500,
+      "total_tokens": 3700
+    },
+    {
+      "id": "agent44",
+      "file": "agent44_first_line_letter.md",
+      "elapsed_sec": 48.64,
+      "chars": 13195,
+      "prompt_tokens": 201,
+      "candidates_tokens": 3500,
+      "total_tokens": 3701
+    },
+    {
+      "id": "agent45",
+      "file": "agent45_pixel_snapping.md",
+      "elapsed_sec": 77.29,
+      "chars": 9771,
+      "prompt_tokens": 216,
+      "candidates_tokens": 3500,
+      "total_tokens": 3716
+    },
+    {
+      "id": "agent46",
+      "file": "agent46_oof_static_position.md",
+      "elapsed_sec": 46.09,
+      "chars": 12995,
+      "prompt_tokens": 191,
+      "candidates_tokens": 3500,
+      "total_tokens": 3691
+    },
+    {
+      "id": "agent47",
+      "file": "agent47_auto_margins.md",
+      "elapsed_sec": 43.39,
+      "chars": 11494,
+      "prompt_tokens": 244,
+      "candidates_tokens": 3500,
+      "total_tokens": 3744
+    },
+    {
+      "id": "agent48",
+      "file": "agent48_fragment_tree.md",
+      "elapsed_sec": 47.83,
+      "chars": 12796,
+      "prompt_tokens": 168,
+      "candidates_tokens": 3500,
+      "total_tokens": 3668
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 3238,
+    "candidates_tokens": 56000,
+    "total_tokens": 59238
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 04:06:12",
+  "model": "gemini-4-argon",
+  "wave": 10,
+  "theme": "16 Central Engine Areas (Paint Stacking, Keyframe Interpolation, Column Balancing, Text Wrap Balance, SVG ViewBox Aspect, Affine Transform Matrix, Percentage Resolution, Sticky Positioning, Canvas Backing Store, CSS Math Calc, Scrollbar Gutter, Bidi Run Reversal, List Marker Placement, Break Token Appeal, Ellipsis Truncation, Shape Outside Polygon)",
+  "thinking_budget": 1024,
+  "agents": [
+    {
+      "id": "agent49",
+      "file": "agent49_paint_layer_stacking.md",
+      "elapsed_sec": 41.94,
+      "chars": 12780,
+      "prompt_tokens": 296,
+      "candidates_tokens": 3500,
+      "total_tokens": 3796
+    },
+    {
+      "id": "agent50",
+      "file": "agent50_keyframe_interpolation.md",
+      "elapsed_sec": 38.26,
+      "chars": 9106,
+      "prompt_tokens": 281,
+      "candidates_tokens": 3500,
+      "total_tokens": 3781
+    },
+    {
+      "id": "agent51",
+      "file": "agent51_column_balancing.md",
+      "elapsed_sec": 48.55,
+      "chars": 12766,
+      "prompt_tokens": 239,
+      "candidates_tokens": 3500,
+      "total_tokens": 3739
+    },
+    {
+      "id": "agent52",
+      "file": "agent52_text_wrap_balance.md",
+      "elapsed_sec": 42.03,
+      "chars": 12188,
+      "prompt_tokens": 196,
+      "candidates_tokens": 3500,
+      "total_tokens": 3696
+    },
+    {
+      "id": "agent53",
+      "file": "agent53_svg_viewbox_aspect.md",
+      "elapsed_sec": 36.28,
+      "chars": 9940,
+      "prompt_tokens": 257,
+      "candidates_tokens": 3500,
+      "total_tokens": 3757
+    },
+    {
+      "id": "agent54",
+      "file": "agent54_transform_affine_matrix.md",
+      "elapsed_sec": 36.47,
+      "chars": 9781,
+      "prompt_tokens": 240,
+      "candidates_tokens": 3500,
+      "total_tokens": 3740
+    },
+    {
+      "id": "agent55",
+      "file": "agent55_percentage_resolution.md",
+      "elapsed_sec": 46.27,
+      "chars": 12943,
+      "prompt_tokens": 227,
+      "candidates_tokens": 3500,
+      "total_tokens": 3727
+    },
+    {
+      "id": "agent56",
+      "file": "agent56_sticky_positioning.md",
+      "elapsed_sec": 41.01,
+      "chars": 13360,
+      "prompt_tokens": 178,
+      "candidates_tokens": 3500,
+      "total_tokens": 3678
+    },
+    {
+      "id": "agent57",
+      "file": "agent57_canvas_backing_store.md",
+      "elapsed_sec": 41.48,
+      "chars": 11217,
+      "prompt_tokens": 231,
+      "candidates_tokens": 3500,
+      "total_tokens": 3731
+    },
+    {
+      "id": "agent58",
+      "file": "agent58_css_math_calc.md",
+      "elapsed_sec": 41.19,
+      "chars": 12972,
+      "prompt_tokens": 223,
+      "candidates_tokens": 3500,
+      "total_tokens": 3723
+    },
+    {
+      "id": "agent59",
+      "file": "agent59_scrollbar_gutter.md",
+      "elapsed_sec": 35.2,
+      "chars": 10726,
+      "prompt_tokens": 252,
+      "candidates_tokens": 3065,
+      "total_tokens": 3317
+    },
+    {
+      "id": "agent60",
+      "file": "agent60_bidi_run_reversal.md",
+      "elapsed_sec": 43.04,
+      "chars": 11625,
+      "prompt_tokens": 214,
+      "candidates_tokens": 3500,
+      "total_tokens": 3714
+    },
+    {
+      "id": "agent61",
+      "file": "agent61_list_marker_placement.md",
+      "elapsed_sec": 30.8,
+      "chars": 9201,
+      "prompt_tokens": 208,
+      "candidates_tokens": 2442,
+      "total_tokens": 2650
+    },
+    {
+      "id": "agent62",
+      "file": "agent62_break_token_appeal.md",
+      "elapsed_sec": 44.44,
+      "chars": 12462,
+      "prompt_tokens": 224,
+      "candidates_tokens": 3500,
+      "total_tokens": 3724
+    },
+    {
+      "id": "agent63",
+      "file": "agent63_ellipsis_truncation.md",
+      "elapsed_sec": 45.61,
+      "chars": 12505,
+      "prompt_tokens": 211,
+      "candidates_tokens": 3500,
+      "total_tokens": 3711
+    },
+    {
+      "id": "agent64",
+      "file": "agent64_shape_outside_polygon.md",
+      "elapsed_sec": 44.01,
+      "chars": 11085,
+      "prompt_tokens": 202,
+      "candidates_tokens": 3500,
+      "total_tokens": 3702
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 3679,
+    "candidates_tokens": 54507,
+    "total_tokens": 58186
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 08:49:58",
+  "model": "gemini-4-argon",
+  "wave": 11,
+  "theme": "16 Central Engine Areas (View Transitions, 2D Sticky, Inline Box Tree, Aspect Ratio Transfer, Grid Masonry 2D, Counter Style Systems, Line Break Penalty, SVG Arc-to-Bezier, BoxStrut Geometry, Text Decoration Metrics, Table Row Baseline, Flex Reverse Axis, Paint Invalidation Rect, Scroll Anchoring, Media Query Range, Subgrid Alignment)",
+  "thinking_budget": 1024,
+  "agents": [
+    {
+      "id": "agent65",
+      "file": "agent65_view_transitions.md",
+      "elapsed_sec": 43.17,
+      "chars": 11893,
+      "prompt_tokens": 199,
+      "candidates_tokens": 3500,
+      "total_tokens": 3699
+    },
+    {
+      "id": "agent66",
+      "file": "agent66_sticky_multiaxis.md",
+      "elapsed_sec": 42.72,
+      "chars": 11637,
+      "prompt_tokens": 194,
+      "candidates_tokens": 3500,
+      "total_tokens": 3694
+    },
+    {
+      "id": "agent67",
+      "file": "agent67_inline_box_tree.md",
+      "elapsed_sec": 49.09,
+      "chars": 12867,
+      "prompt_tokens": 185,
+      "candidates_tokens": 3500,
+      "total_tokens": 3685
+    },
+    {
+      "id": "agent68",
+      "file": "agent68_aspect_ratio_transfer.md",
+      "elapsed_sec": 46.59,
+      "chars": 11802,
+      "prompt_tokens": 203,
+      "candidates_tokens": 3500,
+      "total_tokens": 3703
+    },
+    {
+      "id": "agent69",
+      "file": "agent69_grid_masonry_2d.md",
+      "elapsed_sec": 46.09,
+      "chars": 11943,
+      "prompt_tokens": 184,
+      "candidates_tokens": 3500,
+      "total_tokens": 3684
+    },
+    {
+      "id": "agent70",
+      "file": "agent70_counter_style_systems.md",
+      "elapsed_sec": 40.93,
+      "chars": 11703,
+      "prompt_tokens": 208,
+      "candidates_tokens": 3500,
+      "total_tokens": 3708
+    },
+    {
+      "id": "agent71",
+      "file": "agent71_line_break_penalty.md",
+      "elapsed_sec": 47.33,
+      "chars": 11155,
+      "prompt_tokens": 171,
+      "candidates_tokens": 3500,
+      "total_tokens": 3671
+    },
+    {
+      "id": "agent72",
+      "file": "agent72_svg_arc_bezier.md",
+      "elapsed_sec": 38.5,
+      "chars": 10015,
+      "prompt_tokens": 178,
+      "candidates_tokens": 3500,
+      "total_tokens": 3678
+    },
+    {
+      "id": "agent73",
+      "file": "agent73_box_strut_geometry.md",
+      "elapsed_sec": 36.13,
+      "chars": 10963,
+      "prompt_tokens": 201,
+      "candidates_tokens": 3500,
+      "total_tokens": 3701
+    },
+    {
+      "id": "agent74",
+      "file": "agent74_text_decoration_metrics.md",
+      "elapsed_sec": 45.27,
+      "chars": 12497,
+      "prompt_tokens": 180,
+      "candidates_tokens": 3500,
+      "total_tokens": 3680
+    },
+    {
+      "id": "agent75",
+      "file": "agent75_table_row_baseline.md",
+      "elapsed_sec": 40.79,
+      "chars": 11674,
+      "prompt_tokens": 222,
+      "candidates_tokens": 3500,
+      "total_tokens": 3722
+    },
+    {
+      "id": "agent76",
+      "file": "agent76_flex_reverse_axis.md",
+      "elapsed_sec": 43.41,
+      "chars": 13045,
+      "prompt_tokens": 201,
+      "candidates_tokens": 3500,
+      "total_tokens": 3701
+    },
+    {
+      "id": "agent77",
+      "file": "agent77_paint_invalidation_rect.md",
+      "elapsed_sec": 42.54,
+      "chars": 11737,
+      "prompt_tokens": 184,
+      "candidates_tokens": 3500,
+      "total_tokens": 3684
+    },
+    {
+      "id": "agent78",
+      "file": "agent78_scroll_anchoring.md",
+      "elapsed_sec": 34.31,
+      "chars": 10391,
+      "prompt_tokens": 183,
+      "candidates_tokens": 2921,
+      "total_tokens": 3104
+    },
+    {
+      "id": "agent79",
+      "file": "agent79_media_query_range.md",
+      "elapsed_sec": 43.21,
+      "chars": 11476,
+      "prompt_tokens": 196,
+      "candidates_tokens": 3500,
+      "total_tokens": 3696
+    },
+    {
+      "id": "agent80",
+      "file": "agent80_subgrid_alignment.md",
+      "elapsed_sec": 45.46,
+      "chars": 11856,
+      "prompt_tokens": 191,
+      "candidates_tokens": 3500,
+      "total_tokens": 3691
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 3080,
+    "candidates_tokens": 55421,
+    "total_tokens": 58501
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 09:02:48",
+  "model": "gemini-4-argon",
+  "wave": 12,
+  "theme": "16 Central Engine Areas (Clip Path Clipper, Text Indent & Hanging, Flex Baseline Synthesis, Grid Track Growth, Table Border Conflict, Multicol Rule Geometry, SVG Filter Subregions, Color Interpolation & Gamut, Scroll Timeline Progress, Absolute Centering, Font Fallback Selection, Inline Fragmentation Break Tokens, SVG Marker Auto-Angle, Layout & Size Containment, Motion Path Offset, OOF Bubble Propagation)",
+  "thinking_budget": 1024,
+  "agents": [
+    {
+      "id": "agent81",
+      "file": "agent81_clip_path_clipper.md",
+      "elapsed_sec": 48.08,
+      "chars": 12289,
+      "prompt_tokens": 185,
+      "candidates_tokens": 3500,
+      "total_tokens": 3685
+    },
+    {
+      "id": "agent82",
+      "file": "agent82_text_indent_hanging.md",
+      "elapsed_sec": 47.86,
+      "chars": 12780,
+      "prompt_tokens": 179,
+      "candidates_tokens": 3500,
+      "total_tokens": 3679
+    },
+    {
+      "id": "agent83",
+      "file": "agent83_flex_baseline_synthesis.md",
+      "elapsed_sec": 41.31,
+      "chars": 12536,
+      "prompt_tokens": 198,
+      "candidates_tokens": 3500,
+      "total_tokens": 3698
+    },
+    {
+      "id": "agent84",
+      "file": "agent84_grid_track_growth.md",
+      "elapsed_sec": 45.24,
+      "chars": 11801,
+      "prompt_tokens": 188,
+      "candidates_tokens": 3500,
+      "total_tokens": 3688
+    },
+    {
+      "id": "agent85",
+      "file": "agent85_table_border_conflict.md",
+      "elapsed_sec": 46.88,
+      "chars": 11828,
+      "prompt_tokens": 212,
+      "candidates_tokens": 3500,
+      "total_tokens": 3712
+    },
+    {
+      "id": "agent86",
+      "file": "agent86_multicol_rule_geometry.md",
+      "elapsed_sec": 43.6,
+      "chars": 11694,
+      "prompt_tokens": 198,
+      "candidates_tokens": 3500,
+      "total_tokens": 3698
+    },
+    {
+      "id": "agent87",
+      "file": "agent87_svg_filter_subregion.md",
+      "elapsed_sec": 44.32,
+      "chars": 12156,
+      "prompt_tokens": 186,
+      "candidates_tokens": 3500,
+      "total_tokens": 3686
+    },
+    {
+      "id": "agent88",
+      "file": "agent88_color_interpolation.md",
+      "elapsed_sec": 47.04,
+      "chars": 10571,
+      "prompt_tokens": 204,
+      "candidates_tokens": 3500,
+      "total_tokens": 3704
+    },
+    {
+      "id": "agent89",
+      "file": "agent89_scroll_timeline_progress.md",
+      "elapsed_sec": 83.42,
+      "chars": 11274,
+      "prompt_tokens": 221,
+      "candidates_tokens": 3500,
+      "total_tokens": 3721
+    },
+    {
+      "id": "agent90",
+      "file": "agent90_absolute_centering.md",
+      "elapsed_sec": 79.22,
+      "chars": 13478,
+      "prompt_tokens": 211,
+      "candidates_tokens": 3500,
+      "total_tokens": 3711
+    },
+    {
+      "id": "agent91",
+      "file": "agent91_font_fallback_selection.md",
+      "elapsed_sec": 47.72,
+      "chars": 13097,
+      "prompt_tokens": 180,
+      "candidates_tokens": 3500,
+      "total_tokens": 3680
+    },
+    {
+      "id": "agent92",
+      "file": "agent92_inline_fragmentation.md",
+      "elapsed_sec": 69.18,
+      "chars": 11817,
+      "prompt_tokens": 187,
+      "candidates_tokens": 3500,
+      "total_tokens": 3687
+    },
+    {
+      "id": "agent93",
+      "file": "agent93_svg_marker_angle.md",
+      "elapsed_sec": 76.38,
+      "chars": 11003,
+      "prompt_tokens": 191,
+      "candidates_tokens": 3500,
+      "total_tokens": 3691
+    },
+    {
+      "id": "agent94",
+      "file": "agent94_layout_containment.md",
+      "elapsed_sec": 85.71,
+      "chars": 13492,
+      "prompt_tokens": 195,
+      "candidates_tokens": 3500,
+      "total_tokens": 3695
+    },
+    {
+      "id": "agent95",
+      "file": "agent95_motion_path_offset.md",
+      "elapsed_sec": 40.77,
+      "chars": 10509,
+      "prompt_tokens": 193,
+      "candidates_tokens": 3500,
+      "total_tokens": 3693
+    },
+    {
+      "id": "agent96",
+      "file": "agent96_oof_bubble_propagation.md",
+      "elapsed_sec": 57.65,
+      "chars": 12981,
+      "prompt_tokens": 202,
+      "candidates_tokens": 3500,
+      "total_tokens": 3702
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 3130,
+    "candidates_tokens": 56000,
+    "total_tokens": 59130
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 13:25:55",
+  "model": "gemini-4-argon",
+  "wave": 13,
+  "theme": "HTML Page with Headers, Tables, and Simple CSS (HTML Element AST, Default UA Stylesheet, CSS Length Units, Simple Cascade, Box Generation, Header Margin Collapsing, Table Column Distribution, Cell Vertical Align, Separated Borders Grid, Inline Text Runs, Text Align, Cell Non-Overlap, Viewport ICB Layout, Row Height Stacking, Fragment Tree Assembly, End-to-End Simple HTML Page Model)",
+  "thinking_budget": 512,
+  "agents": [
+    {
+      "id": "agent97",
+      "file": "agent97_html_tag_ast.md",
+      "elapsed_sec": 48.39,
+      "chars": 12061,
+      "prompt_tokens": 196,
+      "candidates_tokens": 3500,
+      "total_tokens": 3696
+    },
+    {
+      "id": "agent98",
+      "file": "agent98_html_ua_stylesheet.md",
+      "elapsed_sec": 34.76,
+      "chars": 9915,
+      "prompt_tokens": 302,
+      "candidates_tokens": 3500,
+      "total_tokens": 3802
+    },
+    {
+      "id": "agent99",
+      "file": "agent99_css_unit_resolution.md",
+      "elapsed_sec": 45.48,
+      "chars": 10797,
+      "prompt_tokens": 215,
+      "candidates_tokens": 3500,
+      "total_tokens": 3715
+    },
+    {
+      "id": "agent100",
+      "file": "agent100_simple_css_cascade.md",
+      "elapsed_sec": 41.52,
+      "chars": 12583,
+      "prompt_tokens": 190,
+      "candidates_tokens": 3500,
+      "total_tokens": 3690
+    },
+    {
+      "id": "agent101",
+      "file": "agent101_layout_box_generation.md",
+      "elapsed_sec": 42.84,
+      "chars": 12763,
+      "prompt_tokens": 235,
+      "candidates_tokens": 3500,
+      "total_tokens": 3735
+    },
+    {
+      "id": "agent102",
+      "file": "agent102_header_margin_collapsing.md",
+      "elapsed_sec": 43.03,
+      "chars": 11139,
+      "prompt_tokens": 223,
+      "candidates_tokens": 3500,
+      "total_tokens": 3723
+    },
+    {
+      "id": "agent103",
+      "file": "agent103_table_auto_column_sizing.md",
+      "elapsed_sec": 40.88,
+      "chars": 10649,
+      "prompt_tokens": 199,
+      "candidates_tokens": 3500,
+      "total_tokens": 3699
+    },
+    {
+      "id": "agent104",
+      "file": "agent104_table_cell_vertical_align.md",
+      "elapsed_sec": 39.96,
+      "chars": 11363,
+      "prompt_tokens": 201,
+      "candidates_tokens": 3500,
+      "total_tokens": 3701
+    },
+    {
+      "id": "agent105",
+      "file": "agent105_table_separated_grid.md",
+      "elapsed_sec": 49.44,
+      "chars": 10335,
+      "prompt_tokens": 271,
+      "candidates_tokens": 3500,
+      "total_tokens": 3771
+    },
+    {
+      "id": "agent106",
+      "file": "agent106_inline_text_run_layout.md",
+      "elapsed_sec": 39.99,
+      "chars": 11498,
+      "prompt_tokens": 225,
+      "candidates_tokens": 3500,
+      "total_tokens": 3725
+    },
+    {
+      "id": "agent107",
+      "file": "agent107_text_align_geometry.md",
+      "elapsed_sec": 33.61,
+      "chars": 9817,
+      "prompt_tokens": 233,
+      "candidates_tokens": 3025,
+      "total_tokens": 3258
+    },
+    {
+      "id": "agent108",
+      "file": "agent108_table_cell_non_overlap.md",
+      "elapsed_sec": 37.71,
+      "chars": 9354,
+      "prompt_tokens": 244,
+      "candidates_tokens": 3500,
+      "total_tokens": 3744
+    },
+    {
+      "id": "agent109",
+      "file": "agent109_viewport_icb_layout.md",
+      "elapsed_sec": 34.1,
+      "chars": 11255,
+      "prompt_tokens": 168,
+      "candidates_tokens": 3170,
+      "total_tokens": 3338
+    },
+    {
+      "id": "agent110",
+      "file": "agent110_table_row_height_accumulation.md",
+      "elapsed_sec": 41.59,
+      "chars": 11411,
+      "prompt_tokens": 201,
+      "candidates_tokens": 3467,
+      "total_tokens": 3668
+    },
+    {
+      "id": "agent111",
+      "file": "agent111_page_fragment_assembly.md",
+      "elapsed_sec": 46.5,
+      "chars": 13969,
+      "prompt_tokens": 176,
+      "candidates_tokens": 3500,
+      "total_tokens": 3676
+    },
+    {
+      "id": "agent112",
+      "file": "agent112_simple_html_page_model.md",
+      "elapsed_sec": 38.94,
+      "chars": 9841,
+      "prompt_tokens": 221,
+      "candidates_tokens": 3500,
+      "total_tokens": 3721
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 3500,
+    "candidates_tokens": 55162,
+    "total_tokens": 58662
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 15:16:13",
+  "model": "gemini-4-argon",
+  "wave": 14,
+  "theme": "Bottom-Up Formalization of Composite Web Page (Dynamic M x N Tables, Colspan/Rowspan, Paragraphs, Lists, Box-Sizing, Borders, Padding, Background Clip, Text Decoration, Font Weight/Style, Letter/Word Spacing, Line Box Stacking, Overflow Clipping, Replaced Images, Nested Tables, Captions, Sections thead/tbody/tfoot, Color Alpha Blending, BFC Isolation, Float Exclusion, Clearance, Inline-Block, Relative Position, Sticky Constraints, Stacking Context Tree, Visibility, White-Space Collapsing, Block Height Clamping, Block Width Clamping, Form Controls, Document Fragment Hierarchy, Composite Web Page Model)",
+  "thinking_budget": 512,
+  "agents": [
+    {
+      "id": "agent113",
+      "file": "agent113_table_dynamic_grid.md",
+      "elapsed_sec": 40.77,
+      "chars": 11210,
+      "prompt_tokens": 174,
+      "candidates_tokens": 3500,
+      "total_tokens": 3674
+    },
+    {
+      "id": "agent114",
+      "file": "agent114_table_colspan_rowspan.md",
+      "elapsed_sec": 27.92,
+      "chars": 7205,
+      "prompt_tokens": 176,
+      "candidates_tokens": 2454,
+      "total_tokens": 2630
+    },
+    {
+      "id": "agent115",
+      "file": "agent115_html_paragraph_layout.md",
+      "elapsed_sec": 53.32,
+      "chars": 9723,
+      "prompt_tokens": 159,
+      "candidates_tokens": 3123,
+      "total_tokens": 3282
+    },
+    {
+      "id": "agent116",
+      "file": "agent116_html_list_layout.md",
+      "elapsed_sec": 37.4,
+      "chars": 11483,
+      "prompt_tokens": 162,
+      "candidates_tokens": 3500,
+      "total_tokens": 3662
+    },
+    {
+      "id": "agent117",
+      "file": "agent117_css_box_sizing.md",
+      "elapsed_sec": 31.35,
+      "chars": 10089,
+      "prompt_tokens": 160,
+      "candidates_tokens": 2989,
+      "total_tokens": 3149
+    },
+    {
+      "id": "agent118",
+      "file": "agent118_css_border_box.md",
+      "elapsed_sec": 33.04,
+      "chars": 9752,
+      "prompt_tokens": 145,
+      "candidates_tokens": 2993,
+      "total_tokens": 3138
+    },
+    {
+      "id": "agent119",
+      "file": "agent119_css_padding_geometry.md",
+      "elapsed_sec": 37.39,
+      "chars": 10686,
+      "prompt_tokens": 147,
+      "candidates_tokens": 3362,
+      "total_tokens": 3509
+    },
+    {
+      "id": "agent120",
+      "file": "agent120_css_background_clip.md",
+      "elapsed_sec": 38.66,
+      "chars": 11104,
+      "prompt_tokens": 128,
+      "candidates_tokens": 3500,
+      "total_tokens": 3628
+    },
+    {
+      "id": "agent121",
+      "file": "agent121_text_decoration.md",
+      "elapsed_sec": 30.79,
+      "chars": 8384,
+      "prompt_tokens": 139,
+      "candidates_tokens": 2688,
+      "total_tokens": 2827
+    },
+    {
+      "id": "agent122",
+      "file": "agent122_css_font_weight_style.md",
+      "elapsed_sec": 38.86,
+      "chars": 10858,
+      "prompt_tokens": 162,
+      "candidates_tokens": 3500,
+      "total_tokens": 3662
+    },
+    {
+      "id": "agent123",
+      "file": "agent123_css_spacing.md",
+      "elapsed_sec": 43.19,
+      "chars": 11115,
+      "prompt_tokens": 149,
+      "candidates_tokens": 3500,
+      "total_tokens": 3649
+    },
+    {
+      "id": "agent124",
+      "file": "agent124_line_box_stacking.md",
+      "elapsed_sec": 39.26,
+      "chars": 11495,
+      "prompt_tokens": 158,
+      "candidates_tokens": 3500,
+      "total_tokens": 3658
+    },
+    {
+      "id": "agent125",
+      "file": "agent125_overflow_clipping.md",
+      "elapsed_sec": 42.51,
+      "chars": 12071,
+      "prompt_tokens": 120,
+      "candidates_tokens": 3500,
+      "total_tokens": 3620
+    },
+    {
+      "id": "agent126",
+      "file": "agent126_replaced_element.md",
+      "elapsed_sec": 37.8,
+      "chars": 10056,
+      "prompt_tokens": 145,
+      "candidates_tokens": 3500,
+      "total_tokens": 3645
+    },
+    {
+      "id": "agent127",
+      "file": "agent127_nested_table_layout.md",
+      "elapsed_sec": 43.79,
+      "chars": 12333,
+      "prompt_tokens": 143,
+      "candidates_tokens": 3500,
+      "total_tokens": 3643
+    },
+    {
+      "id": "agent128",
+      "file": "agent128_table_caption_layout.md",
+      "elapsed_sec": 28.47,
+      "chars": 7811,
+      "prompt_tokens": 141,
+      "candidates_tokens": 2248,
+      "total_tokens": 2389
+    },
+    {
+      "id": "agent129",
+      "file": "agent129_table_section_stacking.md",
+      "elapsed_sec": 38.39,
+      "chars": 10486,
+      "prompt_tokens": 164,
+      "candidates_tokens": 3500,
+      "total_tokens": 3664
+    },
+    {
+      "id": "agent130",
+      "file": "agent130_css_color_alpha_blending.md",
+      "elapsed_sec": 36.05,
+      "chars": 7596,
+      "prompt_tokens": 171,
+      "candidates_tokens": 2562,
+      "total_tokens": 2733
+    },
+    {
+      "id": "agent131",
+      "file": "agent131_bfc_isolation.md",
+      "elapsed_sec": 31.9,
+      "chars": 9171,
+      "prompt_tokens": 144,
+      "candidates_tokens": 2677,
+      "total_tokens": 2821
+    },
+    {
+      "id": "agent132",
+      "file": "agent132_float_exclusion.md",
+      "elapsed_sec": 36.05,
+      "chars": 10268,
+      "prompt_tokens": 132,
+      "candidates_tokens": 2988,
+      "total_tokens": 3120
+    },
+    {
+      "id": "agent133",
+      "file": "agent133_clearance_computation.md",
+      "elapsed_sec": 39.12,
+      "chars": 11576,
+      "prompt_tokens": 139,
+      "candidates_tokens": 3290,
+      "total_tokens": 3429
+    },
+    {
+      "id": "agent134",
+      "file": "agent134_inline_block_layout.md",
+      "elapsed_sec": 43.05,
+      "chars": 12877,
+      "prompt_tokens": 158,
+      "candidates_tokens": 3500,
+      "total_tokens": 3658
+    },
+    {
+      "id": "agent135",
+      "file": "agent135_relative_position_offset.md",
+      "elapsed_sec": 34.15,
+      "chars": 9771,
+      "prompt_tokens": 143,
+      "candidates_tokens": 2705,
+      "total_tokens": 2848
+    },
+    {
+      "id": "agent136",
+      "file": "agent136_sticky_constraint.md",
+      "elapsed_sec": 32.65,
+      "chars": 10277,
+      "prompt_tokens": 151,
+      "candidates_tokens": 2989,
+      "total_tokens": 3140
+    },
+    {
+      "id": "agent137",
+      "file": "agent137_stacking_tree.md",
+      "elapsed_sec": 43.77,
+      "chars": 11470,
+      "prompt_tokens": 150,
+      "candidates_tokens": 3500,
+      "total_tokens": 3650
+    },
+    {
+      "id": "agent138",
+      "file": "agent138_css_visibility.md",
+      "elapsed_sec": 35.02,
+      "chars": 10134,
+      "prompt_tokens": 145,
+      "candidates_tokens": 2841,
+      "total_tokens": 2986
+    },
+    {
+      "id": "agent139",
+      "file": "agent139_white_space_collapsing.md",
+      "elapsed_sec": 36.05,
+      "chars": 8993,
+      "prompt_tokens": 135,
+      "candidates_tokens": 2630,
+      "total_tokens": 2765
+    },
+    {
+      "id": "agent140",
+      "file": "agent140_block_height_clamping.md",
+      "elapsed_sec": 31.75,
+      "chars": 7517,
+      "prompt_tokens": 164,
+      "candidates_tokens": 2458,
+      "total_tokens": 2622
+    },
+    {
+      "id": "agent141",
+      "file": "agent141_block_width_clamping.md",
+      "elapsed_sec": 24.66,
+      "chars": 6702,
+      "prompt_tokens": 160,
+      "candidates_tokens": 2334,
+      "total_tokens": 2494
+    },
+    {
+      "id": "agent142",
+      "file": "agent142_html_form_control_layout.md",
+      "elapsed_sec": 43.54,
+      "chars": 12132,
+      "prompt_tokens": 134,
+      "candidates_tokens": 3500,
+      "total_tokens": 3634
+    },
+    {
+      "id": "agent143",
+      "file": "agent143_document_fragment_hierarchy.md",
+      "elapsed_sec": 45.0,
+      "chars": 13151,
+      "prompt_tokens": 138,
+      "candidates_tokens": 3500,
+      "total_tokens": 3638
+    },
+    {
+      "id": "agent144",
+      "file": "agent144_composite_web_page_model.md",
+      "elapsed_sec": 43.03,
+      "chars": 9340,
+      "prompt_tokens": 207,
+      "candidates_tokens": 3500,
+      "total_tokens": 3707
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 4843,
+    "candidates_tokens": 99831,
+    "total_tokens": 104674
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 16:59:31",
+  "model": "gemini-4-argon",
+  "wave": 15,
+  "theme": "Bottom-Up Formalization of Interactive Web Page Subsystems (Flex Multi-Line Wrap, Grid 2 Subgrid Axis, Subpixel Layout Snapping, Affine Transform 2D, BiDi Neutral Resolution, Text Hyphenation Breaks, Table Percent Columns, CSS Containment Layout/Size, Clip Path Polygon, Scroll Snap Alignment, CSS Filter Color Matrix, Multicol Column Spanners, Form Button Sizing, CSS Mask Alpha Composition, Outside List Marker Alignment, Capstone Interactive Page Pipeline)",
+  "thinking_budget": 512,
+  "agents": [
+    {
+      "id": "agent145",
+      "file": "agent145_flex_multiline_wrap.md",
+      "elapsed_sec": 41.69,
+      "chars": 11212,
+      "prompt_tokens": 180,
+      "candidates_tokens": 3500,
+      "total_tokens": 3680
+    },
+    {
+      "id": "agent146",
+      "file": "agent146_grid_subgrid_axis.md",
+      "elapsed_sec": 44.73,
+      "chars": 12167,
+      "prompt_tokens": 151,
+      "candidates_tokens": 3500,
+      "total_tokens": 3651
+    },
+    {
+      "id": "agent147",
+      "file": "agent147_subpixel_layout_snapping.md",
+      "elapsed_sec": 31.15,
+      "chars": 7633,
+      "prompt_tokens": 196,
+      "candidates_tokens": 2666,
+      "total_tokens": 2862
+    },
+    {
+      "id": "agent148",
+      "file": "agent148_affine_transform_2d.md",
+      "elapsed_sec": 40.13,
+      "chars": 5595,
+      "prompt_tokens": 180,
+      "candidates_tokens": 2312,
+      "total_tokens": 2492
+    },
+    {
+      "id": "agent149",
+      "file": "agent149_bidi_neutral_resolution.md",
+      "elapsed_sec": 41.62,
+      "chars": 11185,
+      "prompt_tokens": 192,
+      "candidates_tokens": 3471,
+      "total_tokens": 3663
+    },
+    {
+      "id": "agent150",
+      "file": "agent150_text_hyphenation_break.md",
+      "elapsed_sec": 46.27,
+      "chars": 12266,
+      "prompt_tokens": 161,
+      "candidates_tokens": 3500,
+      "total_tokens": 3661
+    },
+    {
+      "id": "agent151",
+      "file": "agent151_table_percent_column_sizing.md",
+      "elapsed_sec": 55.36,
+      "chars": 10896,
+      "prompt_tokens": 169,
+      "candidates_tokens": 3500,
+      "total_tokens": 3669
+    },
+    {
+      "id": "agent152",
+      "file": "agent152_css_containment_layout_size.md",
+      "elapsed_sec": 61.02,
+      "chars": 13363,
+      "prompt_tokens": 153,
+      "candidates_tokens": 3500,
+      "total_tokens": 3653
+    },
+    {
+      "id": "agent153",
+      "file": "agent153_clip_path_polygon.md",
+      "elapsed_sec": 38.0,
+      "chars": 10579,
+      "prompt_tokens": 164,
+      "candidates_tokens": 3500,
+      "total_tokens": 3664
+    },
+    {
+      "id": "agent154",
+      "file": "agent154_scroll_snap_alignment.md",
+      "elapsed_sec": 50.61,
+      "chars": 12176,
+      "prompt_tokens": 160,
+      "candidates_tokens": 3500,
+      "total_tokens": 3660
+    },
+    {
+      "id": "agent155",
+      "file": "agent155_css_filter_color_matrix.md",
+      "elapsed_sec": 36.79,
+      "chars": 9727,
+      "prompt_tokens": 175,
+      "candidates_tokens": 3500,
+      "total_tokens": 3675
+    },
+    {
+      "id": "agent156",
+      "file": "agent156_multicol_column_spanner.md",
+      "elapsed_sec": 40.73,
+      "chars": 11959,
+      "prompt_tokens": 167,
+      "candidates_tokens": 3500,
+      "total_tokens": 3667
+    },
+    {
+      "id": "agent157",
+      "file": "agent157_form_button_sizing.md",
+      "elapsed_sec": 44.88,
+      "chars": 12845,
+      "prompt_tokens": 170,
+      "candidates_tokens": 3500,
+      "total_tokens": 3670
+    },
+    {
+      "id": "agent158",
+      "file": "agent158_css_mask_alpha_composition.md",
+      "elapsed_sec": 31.14,
+      "chars": 8317,
+      "prompt_tokens": 188,
+      "candidates_tokens": 2832,
+      "total_tokens": 3020
+    },
+    {
+      "id": "agent159",
+      "file": "agent159_outside_list_marker_alignment.md",
+      "elapsed_sec": 32.17,
+      "chars": 9971,
+      "prompt_tokens": 160,
+      "candidates_tokens": 2707,
+      "total_tokens": 2867
+    },
+    {
+      "id": "agent160",
+      "file": "agent160_interactive_page_pipeline.md",
+      "elapsed_sec": 43.26,
+      "chars": 11321,
+      "prompt_tokens": 161,
+      "candidates_tokens": 3500,
+      "total_tokens": 3661
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 2727,
+    "candidates_tokens": 52488,
+    "total_tokens": 55215
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 17:45:49",
+  "model": "gemini-4-argon",
+  "wave": 16,
+  "iteration": 1,
+  "theme": "Advanced CSS Grid & Flexbox Constraints (Auto-Repeat, Dense Placement, Min/Max Track Contributions, Gap Distribution, Baseline Alignment, Min-Size Auto, Reverse Axis, Cross Stretch, Fit-Content Clamp, Span Overlap, Main Auto Margins, Cross Auto Margins, Item Stretch, Aspect Ratio Stretch, Flex Break Tokens, Grid Break Tokens)",
+  "thinking_budget": 512,
+  "agents": [
+    {
+      "id": "agent161",
+      "file": "agent161_grid_auto_repeat.md",
+      "elapsed_sec": 43.21,
+      "chars": 11936,
+      "prompt_tokens": 182,
+      "candidates_tokens": 3500,
+      "total_tokens": 3682
+    },
+    {
+      "id": "agent162",
+      "file": "agent162_grid_dense_placement.md",
+      "elapsed_sec": 39.83,
+      "chars": 10889,
+      "prompt_tokens": 136,
+      "candidates_tokens": 3500,
+      "total_tokens": 3636
+    },
+    {
+      "id": "agent163",
+      "file": "agent163_grid_min_max_content.md",
+      "elapsed_sec": 34.76,
+      "chars": 10202,
+      "prompt_tokens": 137,
+      "candidates_tokens": 2854,
+      "total_tokens": 2991
+    },
+    {
+      "id": "agent164",
+      "file": "agent164_grid_gap_distribution.md",
+      "elapsed_sec": 36.86,
+      "chars": 10626,
+      "prompt_tokens": 172,
+      "candidates_tokens": 3211,
+      "total_tokens": 3383
+    },
+    {
+      "id": "agent165",
+      "file": "agent165_flex_baseline_alignment.md",
+      "elapsed_sec": 29.69,
+      "chars": 9106,
+      "prompt_tokens": 162,
+      "candidates_tokens": 2691,
+      "total_tokens": 2853
+    },
+    {
+      "id": "agent166",
+      "file": "agent166_flex_min_size_auto.md",
+      "elapsed_sec": 27.13,
+      "chars": 7267,
+      "prompt_tokens": 146,
+      "candidates_tokens": 2122,
+      "total_tokens": 2268
+    },
+    {
+      "id": "agent167",
+      "file": "agent167_flex_reverse_axis.md",
+      "elapsed_sec": 38.6,
+      "chars": 10841,
+      "prompt_tokens": 131,
+      "candidates_tokens": 3466,
+      "total_tokens": 3597
+    },
+    {
+      "id": "agent168",
+      "file": "agent168_flex_cross_stretch.md",
+      "elapsed_sec": 26.72,
+      "chars": 7900,
+      "prompt_tokens": 153,
+      "candidates_tokens": 2386,
+      "total_tokens": 2539
+    },
+    {
+      "id": "agent169",
+      "file": "agent169_grid_fit_content_clamp.md",
+      "elapsed_sec": 33.16,
+      "chars": 8845,
+      "prompt_tokens": 145,
+      "candidates_tokens": 2496,
+      "total_tokens": 2641
+    },
+    {
+      "id": "agent170",
+      "file": "agent170_grid_span_overlap.md",
+      "elapsed_sec": 32.42,
+      "chars": 8876,
+      "prompt_tokens": 144,
+      "candidates_tokens": 2676,
+      "total_tokens": 2820
+    },
+    {
+      "id": "agent171",
+      "file": "agent171_flex_auto_margin_main.md",
+      "elapsed_sec": 27.64,
+      "chars": 8233,
+      "prompt_tokens": 153,
+      "candidates_tokens": 2638,
+      "total_tokens": 2791
+    },
+    {
+      "id": "agent172",
+      "file": "agent172_flex_auto_margin_cross.md",
+      "elapsed_sec": 44.43,
+      "chars": 11559,
+      "prompt_tokens": 137,
+      "candidates_tokens": 3500,
+      "total_tokens": 3637
+    },
+    {
+      "id": "agent173",
+      "file": "agent173_grid_item_stretch.md",
+      "elapsed_sec": 25.19,
+      "chars": 7358,
+      "prompt_tokens": 160,
+      "candidates_tokens": 2273,
+      "total_tokens": 2433
+    },
+    {
+      "id": "agent174",
+      "file": "agent174_grid_aspect_ratio_stretch.md",
+      "elapsed_sec": 40.05,
+      "chars": 11119,
+      "prompt_tokens": 140,
+      "candidates_tokens": 3500,
+      "total_tokens": 3640
+    },
+    {
+      "id": "agent175",
+      "file": "agent175_flex_fragment_break.md",
+      "elapsed_sec": 43.16,
+      "chars": 13008,
+      "prompt_tokens": 138,
+      "candidates_tokens": 3500,
+      "total_tokens": 3638
+    },
+    {
+      "id": "agent176",
+      "file": "agent176_grid_fragment_break.md",
+      "elapsed_sec": 44.15,
+      "chars": 12117,
+      "prompt_tokens": 131,
+      "candidates_tokens": 3500,
+      "total_tokens": 3631
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 2367,
+    "candidates_tokens": 47813,
+    "total_tokens": 50180
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 17:50:58",
+  "model": "gemini-4-argon",
+  "wave": 17,
+  "iteration": 2,
+  "theme": "CSS Text, Font Shaping & Typography Engine (HarfBuzz Glyph Advance, Font Half-Leading, ShapeResult Run Split, Inline Box Vertical Align, Tab Stop Expansion, Ruby Annotation Placement, TextOffsetRange Slice, East Asian Width, Text Ellipsis Truncation, Font Fallback Chain, Inline Item Classification, BiDi Rule L1, Inline Break Tokens, Hyphen Line Breaking, Text Justification, Font Matching Distance)",
+  "thinking_budget": 512,
+  "agents": [
+    {
+      "id": "agent177",
+      "file": "agent177_harfbuzz_glyph_advance.md",
+      "elapsed_sec": 41.36,
+      "chars": 11502,
+      "prompt_tokens": 137,
+      "candidates_tokens": 3441,
+      "total_tokens": 3578
+    },
+    {
+      "id": "agent178",
+      "file": "agent178_font_metrics_half_leading.md",
+      "elapsed_sec": 26.01,
+      "chars": 7358,
+      "prompt_tokens": 169,
+      "candidates_tokens": 2117,
+      "total_tokens": 2286
+    },
+    {
+      "id": "agent179",
+      "file": "agent179_shape_result_run_split.md",
+      "elapsed_sec": 30.32,
+      "chars": 8770,
+      "prompt_tokens": 146,
+      "candidates_tokens": 2734,
+      "total_tokens": 2880
+    },
+    {
+      "id": "agent180",
+      "file": "agent180_inline_box_vertical_align.md",
+      "elapsed_sec": 31.72,
+      "chars": 9925,
+      "prompt_tokens": 136,
+      "candidates_tokens": 2881,
+      "total_tokens": 3017
+    },
+    {
+      "id": "agent181",
+      "file": "agent181_text_tab_stop_advance.md",
+      "elapsed_sec": 18.6,
+      "chars": 5215,
+      "prompt_tokens": 161,
+      "candidates_tokens": 1602,
+      "total_tokens": 1763
+    },
+    {
+      "id": "agent182",
+      "file": "agent182_ruby_annotation_placement.md",
+      "elapsed_sec": 35.24,
+      "chars": 9751,
+      "prompt_tokens": 135,
+      "candidates_tokens": 2837,
+      "total_tokens": 2972
+    },
+    {
+      "id": "agent183",
+      "file": "agent183_text_offset_range_slice.md",
+      "elapsed_sec": 24.82,
+      "chars": 7560,
+      "prompt_tokens": 126,
+      "candidates_tokens": 2430,
+      "total_tokens": 2556
+    },
+    {
+      "id": "agent184",
+      "file": "agent184_east_asian_width_spacing.md",
+      "elapsed_sec": 24.52,
+      "chars": 7236,
+      "prompt_tokens": 137,
+      "candidates_tokens": 2215,
+      "total_tokens": 2352
+    },
+    {
+      "id": "agent185",
+      "file": "agent185_text_ellipsis_truncation.md",
+      "elapsed_sec": 25.11,
+      "chars": 8228,
+      "prompt_tokens": 139,
+      "candidates_tokens": 2491,
+      "total_tokens": 2630
+    },
+    {
+      "id": "agent186",
+      "file": "agent186_font_fallback_chain.md",
+      "elapsed_sec": 32.66,
+      "chars": 10108,
+      "prompt_tokens": 119,
+      "candidates_tokens": 2797,
+      "total_tokens": 2916
+    },
+    {
+      "id": "agent187",
+      "file": "agent187_inline_item_classification.md",
+      "elapsed_sec": 41.89,
+      "chars": 11471,
+      "prompt_tokens": 137,
+      "candidates_tokens": 3443,
+      "total_tokens": 3580
+    },
+    {
+      "id": "agent188",
+      "file": "agent188_bidi_visual_reorder_l1.md",
+      "elapsed_sec": 40.0,
+      "chars": 11936,
+      "prompt_tokens": 136,
+      "candidates_tokens": 3500,
+      "total_tokens": 3636
+    },
+    {
+      "id": "agent189",
+      "file": "agent189_inline_break_token_offset.md",
+      "elapsed_sec": 38.49,
+      "chars": 11504,
+      "prompt_tokens": 135,
+      "candidates_tokens": 3500,
+      "total_tokens": 3635
+    },
+    {
+      "id": "agent190",
+      "file": "agent190_shaping_line_breaker_hyphen.md",
+      "elapsed_sec": 24.9,
+      "chars": 7720,
+      "prompt_tokens": 135,
+      "candidates_tokens": 2175,
+      "total_tokens": 2310
+    },
+    {
+      "id": "agent191",
+      "file": "agent191_text_justify_inter_word.md",
+      "elapsed_sec": 24.35,
+      "chars": 7115,
+      "prompt_tokens": 148,
+      "candidates_tokens": 2090,
+      "total_tokens": 2238
+    },
+    {
+      "id": "agent192",
+      "file": "agent192_font_matching_distance.md",
+      "elapsed_sec": 26.5,
+      "chars": 7811,
+      "prompt_tokens": 141,
+      "candidates_tokens": 2497,
+      "total_tokens": 2638
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 2237,
+    "candidates_tokens": 42750,
+    "total_tokens": 44987
+  }
+}
+---
+{
+  "timestamp": "2026-10-30 17:54:41",
+  "model": "gemini-4-argon",
+  "wave": 18,
+  "iteration": 3,
+  "theme": "CSS Positioned Layout, Transforms & Multi-Column (Absolute Insets Resolution, Auto Margins Centering, Multicol Balancing, Column Rule Placement, 3D Matrix Multiplication, Perspective Projection, Transform Point Mapping, Column Break Avoidance, Fixed Viewport Resolution, Logical Offset Mapping, Orthogonal Size Transposition, 2D Rotation Determinant, 2D Skew Matrix, Sticky Scroller Chains, Column Fill Balance, Box Sides Rotation)",
+  "thinking_budget": 512,
+  "agents": [
+    {
+      "id": "agent193",
+      "file": "agent193_absolute_insets_resolution.md",
+      "elapsed_sec": 33.09,
+      "chars": 10108,
+      "prompt_tokens": 152,
+      "candidates_tokens": 2821,
+      "total_tokens": 2973
+    },
+    {
+      "id": "agent194",
+      "file": "agent194_absolute_auto_margins.md",
+      "elapsed_sec": 25.87,
+      "chars": 7520,
+      "prompt_tokens": 136,
+      "candidates_tokens": 2335,
+      "total_tokens": 2471
+    },
+    {
+      "id": "agent195",
+      "file": "agent195_multicol_balancing.md",
+      "elapsed_sec": 24.28,
+      "chars": 6352,
+      "prompt_tokens": 137,
+      "candidates_tokens": 2165,
+      "total_tokens": 2302
+    },
+    {
+      "id": "agent196",
+      "file": "agent196_multicol_column_rule.md",
+      "elapsed_sec": 21.48,
+      "chars": 5937,
+      "prompt_tokens": 141,
+      "candidates_tokens": 1864,
+      "total_tokens": 2005
+    },
+    {
+      "id": "agent197",
+      "file": "agent197_transform_matrix_3d.md",
+      "elapsed_sec": 46.41,
+      "chars": 8173,
+      "prompt_tokens": 127,
+      "candidates_tokens": 3500,
+      "total_tokens": 3627
+    },
+    {
+      "id": "agent198",
+      "file": "agent198_perspective_projection.md",
+      "elapsed_sec": 29.4,
+      "chars": 7585,
+      "prompt_tokens": 129,
+      "candidates_tokens": 2532,
+      "total_tokens": 2661
+    },
+    {
+      "id": "agent199",
+      "file": "agent199_transform_state_point_map.md",
+      "elapsed_sec": 29.13,
+      "chars": 8452,
+      "prompt_tokens": 157,
+      "candidates_tokens": 2928,
+      "total_tokens": 3085
+    },
+    {
+      "id": "agent200",
+      "file": "agent200_multicol_break_avoidance.md",
+      "elapsed_sec": 22.84,
+      "chars": 6091,
+      "prompt_tokens": 136,
+      "candidates_tokens": 1863,
+      "total_tokens": 1999
+    },
+    {
+      "id": "agent201",
+      "file": "agent201_fixed_position_viewport.md",
+      "elapsed_sec": 17.5,
+      "chars": 4256,
+      "prompt_tokens": 130,
+      "candidates_tokens": 1198,
+      "total_tokens": 1328
+    },
+    {
+      "id": "agent202",
+      "file": "agent202_logical_offset_mapping.md",
+      "elapsed_sec": 32.98,
+      "chars": 7962,
+      "prompt_tokens": 150,
+      "candidates_tokens": 2258,
+      "total_tokens": 2408
+    },
+    {
+      "id": "agent203",
+      "file": "agent203_logical_size_orthogonal.md",
+      "elapsed_sec": 21.0,
+      "chars": 8062,
+      "prompt_tokens": 130,
+      "candidates_tokens": 2277,
+      "total_tokens": 2407
+    },
+    {
+      "id": "agent204",
+      "file": "agent204_transform_rotation_2d.md",
+      "elapsed_sec": 65.86,
+      "chars": 6574,
+      "prompt_tokens": 141,
+      "candidates_tokens": 2430,
+      "total_tokens": 2571
+    },
+    {
+      "id": "agent205",
+      "file": "agent205_transform_skew_2d.md",
+      "elapsed_sec": 23.03,
+      "chars": 6483,
+      "prompt_tokens": 140,
+      "candidates_tokens": 2410,
+      "total_tokens": 2550
+    },
+    {
+      "id": "agent206",
+      "file": "agent206_sticky_scroller_chain.md",
+      "elapsed_sec": 30.3,
+      "chars": 9604,
+      "prompt_tokens": 129,
+      "candidates_tokens": 2842,
+      "total_tokens": 2971
+    },
+    {
+      "id": "agent207",
+      "file": "agent207_multicol_column_fill.md",
+      "elapsed_sec": 31.96,
+      "chars": 6909,
+      "prompt_tokens": 137,
+      "candidates_tokens": 2127,
+      "total_tokens": 2264
+    },
+    {
+      "id": "agent208",
+      "file": "agent208_box_sides_rotation.md",
+      "elapsed_sec": 29.6,
+      "chars": 8495,
+      "prompt_tokens": 160,
+      "candidates_tokens": 2700,
+      "total_tokens": 2860
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 2232,
+    "candidates_tokens": 38250,
+    "total_tokens": 40482
+  }
+}
+---

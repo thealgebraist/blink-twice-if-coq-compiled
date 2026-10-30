@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Blink Interactive Formal Verification Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 800px;
+      height: 600px;
+      background: #ffffff;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    body {
+      margin: 8px;
+    }
+    h1#h1-header {
+      display: block;
+      margin-top: 21px;
+      margin-bottom: 21px;
+      height: 38px;
+      line-height: 38px;
+      background: #202124;
+      color: #ffffff;
+      font-size: 24px;
+      padding-left: 8px;
+    }
+    p#p-para {
+      display: block;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      height: 19px;
+      line-height: 19px;
+      background: #3c4043;
+      color: #ffffff;
+      font-size: 14px;
+      padding-left: 8px;
+    }
+    div#flex-box {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      height: 60px;
+      background: #e8f0fe;
+    }
+    .flex-line {
+      width: 100%;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      color: #1a73e8;
+    }
+    table#table-box {
+      display: table;
+      width: 784px; /* 800 - 16 */
+      height: 25px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      border-collapse: collapse;
+      border: 1px solid #dadce0;
+    }
+    table#table-box td.col1 {
+      width: 40%;
+      background: #f1f3f4;
+      height: 25px;
+      padding-left: 8px;
+    }
+    table#table-box td.col2 {
+      width: 60%;
+      background: #ffffff;
+      height: 25px;
+      padding-left: 8px;
+    }
+    ul#list-box {
+      display: block;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      height: 40px;
+      list-style-position: outside;
+      background: #f1f3f4;
+      padding-left: 20px;
+    }
+    ul#list-box li {
+      height: 40px;
+      line-height: 40px;
+    }
+    button#form-btn {
+      display: inline-block;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      width: 76px;  /* 60 + 2*6 + 2*2 */
+      height: 32px; /* 16 + 2*6 + 2*2 */
+      padding: 6px;
+      border: 2px solid #202124;
+      background: #1a73e8;
+      color: #ffffff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="h1-header">Header 1</h1>
+  <p id="p-para">Paragraph Text</p>
+  <div id="flex-box">
+    <div class="flex-line">Flex Line 1</div>
+    <div class="flex-line">Flex Line 2</div>
+  </div>
+  <table id="table-box">
+    <tr>
+      <td class="col1">Column 1 (40%)</td>
+      <td class="col2">Column 2 (60%)</td>
+    </tr>
+  </table>
+  <ul id="list-box">
+    <li>List Item 1</li>
+  </ul>
+  <button id="form-btn">Submit</button>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const ids = ['h1-header', 'p-para', 'flex-box', 'table-box', 'list-box', 'form-btn'];
+      const rects = {};
+      ids.forEach(id => {
+        const r = document.getElementById(id).getBoundingClientRect();
+        rects[id] = { x: Math.round(r.x), y: Math.round(r.y), width: Math.round(r.width), height: Math.round(r.height) };
+      });
+      const c1 = document.querySelector('td.col1').getBoundingClientRect();
+      const c2 = document.querySelector('td.col2').getBoundingClientRect();
+      rects['col1'] = { x: Math.round(c1.x), y: Math.round(c1.y), width: Math.round(c1.width), height: Math.round(c1.height) };
+      rects['col2'] = { x: Math.round(c2.x), y: Math.round(c2.y), width: Math.round(c2.width), height: Math.round(c2.height) };
+      
+      const outDiv = document.createElement('pre');
+      outDiv.id = 'layout-measurements';
+      outDiv.textContent = JSON.stringify(rects, null, 2);
+      document.body.appendChild(outDiv);
+    });
+  </script>
+</body>
+</html>

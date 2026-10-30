@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Divergence 7: Float Max-Content Defect</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 32px;
+  }
+  .header {
+    margin-bottom: 24px;
+    border-bottom: 2px solid #334155;
+    padding-bottom: 16px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: #eab308;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+  h1 { font-size: 24px; color: #f8fafc; margin-bottom: 6px; }
+  p.subtitle { color: #94a3b8; font-size: 14px; }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+  }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card h2 { font-size: 16px; color: #38bdf8; margin-bottom: 12px; }
+
+  .demo-area {
+    background: #090d16;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 20px;
+    height: 180px;
+  }
+
+  .float-container {
+    width: max-content;
+    border: 2px dashed #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    padding: 8px;
+    position: relative;
+  }
+  .float-child {
+    float: left;
+    width: 80px;
+    height: 40px;
+    background: #3b82f6;
+    color: white;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+  }
+  .negative-child {
+    margin-left: -30px; /* Negative margin pulls max-content down */
+    width: 100px;
+    height: 40px;
+    background: #ef4444;
+    color: white;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+  }
+
+  .annotation {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="badge">Divergence 6.1: Intrinsic Sizing Defect</span>
+  <h1>CSS Box Sizing 3 Invariant Violation: min-content &le; max-content</h1>
+  <p class="subtitle">
+    In CSS Box Sizing 3, min-content must never exceed max-content. In Blink's <code>BlockLayoutAlgorithm::ComputeMinMaxSizes</code>, un-cleared floats accumulate additively for max-size while min-size encompasses, which can produce <code>min_size > max_size</code> under negative child margins.
+  </p>
+</div>
+
+<div class="comparison-grid">
+  <!-- Spec Card -->
+  <div class="card">
+    <h2>CSS Box Sizing 3 (&forall; Box, min &le; max)</h2>
+    <div class="demo-area">
+      <div style="font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+        <p>Theoretical Constraint: <code>min-content &le; max-content</code></p>
+        <p style="margin-top: 8px; font-family: monospace; color: #10b981;">
+          min_size = Encompass(Floats) = 100px<br>
+          max_size = &sum; Add(Floats, Content - Margins) = 70px<br>
+          &rArr; Contradiction! min (100px) &gt; max (70px)!
+        </p>
+      </div>
+    </div>
+    <div class="annotation" style="background: rgba(16, 185, 129, 0.15); border-left: 4px solid #10b981; color: #6ee7b7;">
+      &check; <strong>Normative Invariant:</strong> Standard demands monotonic size ordering for all valid layout states.
+    </div>
+  </div>
+
+  <!-- Blink Card -->
+  <div class="card">
+    <h2>Chromium Blink (block_layout_algorithm.cc)</h2>
+    <div class="demo-area">
+      <div class="float-container">
+        <div class="float-child">Float 80px</div>
+        <div class="negative-child">-30px Margin</div>
+        <div style="clear: both;"></div>
+      </div>
+      <div style="font-size: 11px; color: #f59e0b; margin-top: 8px;">
+        Blink Patch: <code>max_size = std::max(min_size, max_size)</code> enforced at exit!
+      </div>
+    </div>
+    <div class="annotation" style="background: rgba(239, 68, 68, 0.15); border-left: 4px solid #ef4444; color: #fca5a5;">
+      &cross; <strong>Engine Patch:</strong> Blink contains an explicit post-hoc clamp at line 1450 to patch this mathematical defect. Proven in <code>BlinkMinMaxSizes.v</code>.
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+

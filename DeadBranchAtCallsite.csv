@@ -1,0 +1,3 @@
+Callsite_FlexItem_ResolvedMain	MinimumValueForLength	Branch_IndefiniteMaxCheck	Definite context eliminates sentinel guard
+Callsite_Button_InsetShadow	ComputeShadowOutsets	Branch_ZeroOffsetCheck	Inset shadow bypasses offset calculation entirely
+Callsite_Standard_Paragraph_Margins	MarginStrut_Append	Branch_NegativeMargin	Positive definite margins eliminate negative margin branch

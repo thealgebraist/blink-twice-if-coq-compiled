@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Divergence 2: Quirks Mode Margin Dropping</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 32px;
+  }
+  .header {
+    margin-bottom: 24px;
+    border-bottom: 2px solid #334155;
+    padding-bottom: 16px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: #f59e0b;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+  h1 { font-size: 24px; color: #f8fafc; margin-bottom: 6px; }
+  p.subtitle { color: #94a3b8; font-size: 14px; }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+  }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card h2 { font-size: 16px; color: #38bdf8; margin-bottom: 12px; }
+
+  /* Frame boxes */
+  .frame-container {
+    background: #0b1120;
+    border: 2px solid #64748b;
+    border-radius: 8px;
+    height: 180px;
+    position: relative;
+    overflow: hidden;
+  }
+  .label-tag {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-family: monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #334155;
+    color: #94a3b8;
+  }
+
+  /* Standards Box Simulation */
+  .standards-body {
+    border: 2px solid #3b82f6;
+    margin: 8px;
+    height: 140px;
+    background: rgba(59, 130, 246, 0.05);
+    position: relative;
+  }
+  .standards-p {
+    margin-top: 24px; /* 1.5em UA margin */
+    background: #3b82f6;
+    color: white;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 4px;
+  }
+  .gap-indicator {
+    position: absolute;
+    top: 0;
+    left: 8px;
+    width: 24px;
+    height: 24px;
+    background: rgba(16, 185, 129, 0.3);
+    border: 1px dashed #10b981;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: #34d399;
+    font-family: monospace;
+  }
+
+  /* Quirks Box Simulation */
+  .quirks-body {
+    border: 2px solid #ef4444;
+    margin: 8px;
+    height: 140px;
+    background: rgba(239, 68, 68, 0.05);
+    position: relative;
+  }
+  .quirks-p {
+    margin-top: 0px !important; /* Discarded by Blink MarginStrut */
+    background: #ef4444;
+    color: white;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 4px;
+  }
+
+  .annotation {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="badge">Divergence 3.1: Block Margin Collapsing</span>
+  <h1>Normative CSS 2.1 &sect;8.3.1 vs. WHATWG Quirks Mode Margin Dropping</h1>
+  <p class="subtitle">
+    In standards mode, container-start vertical margins push the first child down. In Quirks Mode (and in table cells &lt;td&gt;), Blink LayoutNG's <code>MarginStrut</code> drops quirky margins entirely.
+  </p>
+</div>
+
+<div class="comparison-grid">
+  <!-- Standards Card -->
+  <div class="card">
+    <h2>W3C CSS 2.1 &sect;8.3.1 (Standards Mode)</h2>
+    <div class="frame-container">
+      <span class="label-tag">&lt;!DOCTYPE html&gt;</span>
+      <div class="standards-body">
+        <div class="gap-indicator">24px</div>
+        <div class="standards-p" style="margin-left: 36px;">
+          &lt;p&gt; Paragraph with 24px margin-top
+        </div>
+      </div>
+    </div>
+    <div class="annotation" style="background: rgba(16, 185, 129, 0.15); border-left: 4px solid #10b981; color: #6ee7b7;">
+      &check; <strong>Normative Behavior:</strong> The 24px margin is preserved, creating vertical breathing room between the container's inner border edge and the paragraph.
+    </div>
+  </div>
+
+  <!-- Quirks Card -->
+  <div class="card">
+    <h2>Chromium Blink Quirks Mode (MarginStrut.cc)</h2>
+    <div class="frame-container">
+      <span class="label-tag">No DOCTYPE (Quirks)</span>
+      <div class="quirks-body">
+        <div class="quirks-p">
+          &lt;p&gt; Paragraph touches top border flush (0px gap!)
+        </div>
+      </div>
+    </div>
+    <div class="annotation" style="background: rgba(239, 68, 68, 0.15); border-left: 4px solid #ef4444; color: #fca5a5;">
+      &cross; <strong>Divergence Error:</strong> In <code>margin_strut.cc</code>, <code>is_quirky_container_start</code> triggers: 24px margin is dropped to 0px! Modeled in <code>BlinkMarginStrut.v</code>.
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+

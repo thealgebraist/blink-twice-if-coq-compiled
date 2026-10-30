@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Divergence 4: CSS Grid Track Clamping & Zero-Span Bug</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 32px;
+  }
+  .header {
+    margin-bottom: 24px;
+    border-bottom: 2px solid #334155;
+    padding-bottom: 16px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: #06b6d4;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+  h1 { font-size: 24px; color: #f8fafc; margin-bottom: 6px; }
+  p.subtitle { color: #94a3b8; font-size: 14px; }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+  }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card h2 { font-size: 16px; color: #38bdf8; margin-bottom: 12px; }
+
+  .diagram-box {
+    background: #090d16;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px;
+    height: 160px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .lattice-line {
+    height: 4px;
+    background: #475569;
+    width: 100%;
+    position: relative;
+    margin: 20px 0;
+  }
+  .bound-marker {
+    position: absolute;
+    right: 40px;
+    top: -24px;
+    font-size: 11px;
+    color: #ef4444;
+    border-right: 2px dashed #ef4444;
+    height: 52px;
+    padding-right: 6px;
+  }
+  .span-box-spec {
+    position: absolute;
+    right: -20px;
+    top: -14px;
+    height: 32px;
+    width: 80px;
+    background: rgba(16, 185, 129, 0.4);
+    border: 2px solid #10b981;
+    border-radius: 4px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a7f3d0;
+  }
+  .span-box-blink {
+    position: absolute;
+    right: 40px;
+    top: -14px;
+    height: 32px;
+    width: 60px;
+    background: rgba(239, 68, 68, 0.4);
+    border: 2px solid #ef4444;
+    border-radius: 4px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fca5a5;
+  }
+
+  .annotation {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="badge">Divergence 4.2: Grid Line Limits</span>
+  <h1>W3C CSS Grid 1 &sect;8.3 Infinite Lattice vs. Blink kGridMaxTracks (100,000)</h1>
+  <p class="subtitle">
+    The W3C specification permits unbounded grid placement. To avoid memory exhaustion, Blink clamps tracks to 100,000. Clamping <code>grid-column: 150000 / span 5</code> requires specialized span recovery to prevent a zero-span collapse bug.
+  </p>
+</div>
+
+<div class="comparison-grid">
+  <!-- Spec Card -->
+  <div class="card">
+    <h2>W3C CSS Grid 1 &sect;8.3 (Unbounded &Zopf; &times; &Zopf;)</h2>
+    <div class="diagram-box">
+      <div class="lattice-line">
+        <div class="span-box-spec">Span 5: [150k, 150005)</div>
+      </div>
+      <div style="font-size: 11px; color: #94a3b8; font-family: monospace;">Line Index: ... &rarr; 100,000 &rarr; 150,000 &rarr; &infin;</div>
+    </div>
+    <div class="annotation" style="background: rgba(16, 185, 129, 0.15); border-left: 4px solid #10b981; color: #6ee7b7;">
+      &check; <strong>Completeness:</strong> Tracks extend arbitrarily without boundary deformation or span truncation.
+    </div>
+  </div>
+
+  <!-- Blink Card -->
+  <div class="card">
+    <h2>Chromium Blink (grid_line_resolver.cc)</h2>
+    <div class="diagram-box">
+      <div class="lattice-line">
+        <div class="bound-marker">kGridMaxTracks = 100,000</div>
+        <div class="span-box-blink">Clamped: [99999, 100k)</div>
+      </div>
+      <div style="font-size: 11px; color: #ef4444; font-family: monospace;">Clamped Ceiling: 100,000 (Span truncated to 1)</div>
+    </div>
+    <div class="annotation" style="background: rgba(239, 68, 68, 0.15); border-left: 4px solid #ef4444; color: #fca5a5;">
+      &cross; <strong>Clamping Distortion:</strong> Items past 100,000 are clamped; span is artificially truncated to 1 to satisfy <code>span &ge; 1</code>. Modeled in <code>BlinkGridPlacement.v</code>.
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+

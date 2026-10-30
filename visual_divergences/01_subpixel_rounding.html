@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Divergence 1: Subpixel Precision & Fixed-Point Rounding</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 32px;
+  }
+  .header {
+    margin-bottom: 24px;
+    border-bottom: 2px solid #334155;
+    padding-bottom: 16px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #ef4444;
+    color: white;
+    margin-bottom: 8px;
+  }
+  h1 { font-size: 24px; color: #f8fafc; margin-bottom: 6px; }
+  p.subtitle { color: #94a3b8; font-size: 14px; }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+  }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card h2 { font-size: 16px; color: #38bdf8; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  .card .desc { font-size: 13px; color: #cbd5e1; margin-bottom: 16px; line-height: 1.5; }
+
+  .canvas-box {
+    background: #090d16;
+    border: 2px dashed #475569;
+    padding: 24px;
+    border-radius: 8px;
+    position: relative;
+  }
+  .ruler {
+    font-family: monospace;
+    font-size: 11px;
+    color: #f59e0b;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Demonstration containers */
+  .container-ideal {
+    width: 300px;
+    height: 60px;
+    background: #334155;
+    display: flex;
+    position: relative;
+  }
+  .box-ideal {
+    width: 33.333333%;
+    height: 100%;
+    border-right: 1px solid rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .b1 { background: #3b82f6; }
+  .b2 { background: #8b5cf6; }
+  .b3 { background: #ec4899; }
+
+  /* Blink Subpixel Representation */
+  .container-blink {
+    width: 300px;
+    height: 60px;
+    background: #dc2626; /* Red highlight visible if seam appears */
+    display: flex;
+    position: relative;
+  }
+  /* In Blink 26.6 LayoutUnit: 300 / 3 = 100.0, but for width: 100px with fractional calc(100px / 3) = 33.328125px */
+  .box-subpixel-test {
+    width: 33.328125px; /* Exact 26.6 representation of 33.3333px: 33 + 21/64 = 33.328125 */
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .container-pixel-jitter {
+    width: 100px;
+    height: 60px;
+    background: #ef4444;
+    display: flex;
+    margin-top: 12px;
+  }
+  .box-jitter {
+    width: 33.328125px;
+    height: 100%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+  }
+
+  .annotation {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: rgba(239, 68, 68, 0.15);
+    border-left: 4px solid #ef4444;
+    font-size: 12px;
+    color: #fca5a5;
+    line-height: 1.5;
+  }
+  .code-cite {
+    font-family: monospace;
+    background: #0f172a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #38bdf8;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="badge">Divergence 2.1: Numeric Representation</span>
+  <h1>Fixed-Point 26.6 (LayoutUnit) vs. Continuous Reals (&real;)</h1>
+  <p class="subtitle">
+    W3C CSS Values 4 &sect;5 mandates exact continuous arithmetic. Chromium Blink implements lengths in 26.6 signed fixed-point (denominator 64, &epsilon; = 0.015625px), causing truncation and subpixel seam gaps.
+  </p>
+</div>
+
+<div class="comparison-grid">
+  <!-- Spec Card -->
+  <div class="card">
+    <h2>
+      <span>W3C CSS Values 4 &sect;5 Ideal (&real;)</span>
+      <span style="color: #10b981; font-size: 12px;">Associative Field</span>
+    </h2>
+    <div class="desc">
+      In continuous real mathematics, three equal <code>calc(100% / 3)</code> children exactly tile a 100% container with 0px remainder:
+      <br><code>1/3 + 1/3 + 1/3 = 1.0 (Exact 0px gap)</code>.
+    </div>
+    <div class="canvas-box">
+      <div class="ruler"><span>0px</span><span>33.33px</span><span>66.66px</span><span>100px</span></div>
+      <div class="container-pixel-jitter" style="background: #334155;">
+        <div class="box-jitter b1" style="width: 33.333333%;">33.33%</div>
+        <div class="box-jitter b2" style="width: 33.333333%;">33.33%</div>
+        <div class="box-jitter b3" style="width: 33.333333%;">33.33%</div>
+      </div>
+    </div>
+    <div class="annotation" style="border-left-color: #10b981; background: rgba(16, 185, 129, 0.1); color: #6ee7b7;">
+      &check; Continuous summation guarantees complete containment with zero background seam leakage.
+    </div>
+  </div>
+
+  <!-- Blink Card -->
+  <div class="card">
+    <h2>
+      <span>Chromium Blink 26.6 LayoutUnit</span>
+      <span style="color: #ef4444; font-size: 12px;">Non-Associative Truncation</span>
+    </h2>
+    <div class="desc">
+      Blink stores lengths in 64ths of a pixel: <code>33.3333px &rarr; 33 + 21/64 = 33.328125px</code>.
+      <br>Three boxes sum to <code>99.984375px</code>, exposing a <strong>0.015625px to 1px red seam</strong> at container edge!
+    </div>
+    <div class="canvas-box">
+      <div class="ruler"><span>0px</span><span>33.328px</span><span>66.656px</span><span>99.984px &larr; GAP!</span></div>
+      <div class="container-pixel-jitter">
+        <div class="box-jitter b1">33.328px</div>
+        <div class="box-jitter b2">33.328px</div>
+        <div class="box-jitter b3">33.328px</div>
+      </div>
+    </div>
+    <div class="annotation">
+      &cross; <strong>Visual Error:</strong> Red background bleed at right edge. Truncation error in <span class="code-cite">layout_unit.h</span> accumulates. Formally modeled in <span class="code-cite">BlinkLayoutUnit.v</span>.
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+

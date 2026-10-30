@@ -1,0 +1,109 @@
+// blink_regimes.dl
+// Soufflé Datalog Specification for Blink Layout Function Regime Detection
+// and Dead Branch Elimination
+
+.decl FunctionParam(func: symbol, param: symbol, type_name: symbol)
+.decl SentinelVar(func: symbol, param: symbol, sentinel_val: number)
+.decl CallerContext(callsite_id: symbol, func: symbol, param: symbol, property_name: symbol)
+.decl GuardedBranch(func: symbol, branch_id: symbol, checked_param: symbol, checked_val: number)
+.decl DeadBranchAtCallsite(callsite_id: symbol, func: symbol, branch_id: symbol, reason: symbol)
+.decl SpecializationOpportunity(callsite_id: symbol, func: symbol, regime_name: symbol, specialized_code: symbol)
+
+// 1. Facts from Blink AST
+FunctionParam("MinimumValueForLength", "length", "Length").
+FunctionParam("MinimumValueForLength", "maximum_value", "LayoutUnit").
+SentinelVar("MinimumValueForLength", "maximum_value", -64).
+
+FunctionParam("InlineSizeFromAspectRatio", "border_padding", "BoxStrut").
+FunctionParam("InlineSizeFromAspectRatio", "aspect_ratio", "LogicalSize").
+FunctionParam("InlineSizeFromAspectRatio", "box_sizing", "EBoxSizing").
+FunctionParam("InlineSizeFromAspectRatio", "block_size", "LayoutUnit").
+
+FunctionParam("ClampSizeToMinAndMax", "min_size", "LayoutUnit").
+FunctionParam("ClampSizeToMinAndMax", "max_size", "LayoutUnit").
+SentinelVar("ClampSizeToMinAndMax", "min_size", -64).
+SentinelVar("ClampSizeToMinAndMax", "max_size", -64).
+
+FunctionParam("ComputeShadowOutsets", "style", "ShadowStyle").
+FunctionParam("ComputeShadowOutsets", "offset_x", "LayoutUnit").
+FunctionParam("ComputeShadowOutsets", "offset_y", "LayoutUnit").
+GuardedBranch("ComputeShadowOutsets", "Branch_InsetShadow", "style", 1).
+GuardedBranch("ComputeShadowOutsets", "Branch_ZeroOffsetCheck", "offset_x", 0).
+
+FunctionParam("MarginStrut_Append", "val", "LayoutUnit").
+FunctionParam("MarginStrut_Append", "is_quirk", "bool").
+GuardedBranch("MarginStrut_Append", "Branch_NegativeMargin", "val", -1).
+
+GuardedBranch("MinimumValueForLength", "Branch_IndefiniteMaxCheck", "maximum_value", -64).
+GuardedBranch("ClampSizeToMinAndMax", "Branch_MaxIndefiniteCheck", "max_size", -64).
+GuardedBranch("ClampSizeToMinAndMax", "Branch_MinIndefiniteCheck", "min_size", -64).
+
+// 2. Real-world Callsites in Blink LayoutNG & Block Layout
+CallerContext("Callsite_FlexItem_ResolvedMain", "MinimumValueForLength", "maximum_value", "DefinitePositive").
+CallerContext("Callsite_FlexItem_ResolvedMain", "MinimumValueForLength", "length", "Fixed").
+
+CallerContext("Callsite_Image_Replaced_Layout", "InlineSizeFromAspectRatio", "border_padding", "ZeroPadding").
+CallerContext("Callsite_Image_Replaced_Layout", "InlineSizeFromAspectRatio", "aspect_ratio", "SquareRatio").
+CallerContext("Callsite_Image_Replaced_Layout", "InlineSizeFromAspectRatio", "box_sizing", "ContentBox").
+
+CallerContext("Callsite_Image_BorderBox_NoPadding", "InlineSizeFromAspectRatio", "border_padding", "ZeroPadding").
+CallerContext("Callsite_Image_BorderBox_NoPadding", "InlineSizeFromAspectRatio", "aspect_ratio", "SquareRatio").
+CallerContext("Callsite_Image_BorderBox_NoPadding", "InlineSizeFromAspectRatio", "box_sizing", "BorderBox").
+
+CallerContext("Callsite_Standard_FlexItem", "ClampSizeToMinAndMax", "min_size", "Zero").
+CallerContext("Callsite_Standard_FlexItem", "ClampSizeToMinAndMax", "max_size", "Indefinite").
+
+CallerContext("Callsite_Button_InsetShadow", "ComputeShadowOutsets", "style", "Inset").
+
+CallerContext("Callsite_Card_Elevation_ZeroOffset", "ComputeShadowOutsets", "style", "Normal").
+CallerContext("Callsite_Card_Elevation_ZeroOffset", "ComputeShadowOutsets", "offset_x", "Zero").
+CallerContext("Callsite_Card_Elevation_ZeroOffset", "ComputeShadowOutsets", "offset_y", "Zero").
+
+// Callsite 7: Standard Paragraph Block Flow (CSS Standard positive margins e.g. 1em)
+CallerContext("Callsite_Standard_Paragraph_Margins", "MarginStrut_Append", "val", "PositiveDefinite").
+CallerContext("Callsite_Standard_Paragraph_Margins", "MarginStrut_Append", "is_quirk", "false").
+
+// 3. Datalog Rules for Dead Branch Elimination & Regime Inference
+DeadBranchAtCallsite(callsite, func, branch, "Definite context eliminates sentinel guard") :-
+    CallerContext(callsite, func, param, "DefinitePositive"),
+    GuardedBranch(func, branch, param, -64).
+
+DeadBranchAtCallsite(callsite, "ComputeShadowOutsets", "Branch_ZeroOffsetCheck", "Inset shadow bypasses offset calculation entirely") :-
+    CallerContext(callsite, "ComputeShadowOutsets", "style", "Inset").
+
+DeadBranchAtCallsite(callsite, "MarginStrut_Append", "Branch_NegativeMargin", "Positive definite margins eliminate negative margin branch") :-
+    CallerContext(callsite, "MarginStrut_Append", "val", "PositiveDefinite").
+
+// Specializations
+SpecializationOpportunity(callsite, "MinimumValueForLength", "FixedLength_Identity", "length.Value()") :-
+    CallerContext(callsite, "MinimumValueForLength", "length", "Fixed").
+
+SpecializationOpportunity(callsite, "InlineSizeFromAspectRatio", "Square_ContentBox_Identity", "block_size") :-
+    CallerContext(callsite, "InlineSizeFromAspectRatio", "aspect_ratio", "SquareRatio"),
+    CallerContext(callsite, "InlineSizeFromAspectRatio", "box_sizing", "ContentBox").
+
+SpecializationOpportunity(callsite, "InlineSizeFromAspectRatio", "Square_BorderBox_ZeroPadding_Identity", "block_size") :-
+    CallerContext(callsite, "InlineSizeFromAspectRatio", "aspect_ratio", "SquareRatio"),
+    CallerContext(callsite, "InlineSizeFromAspectRatio", "box_sizing", "BorderBox"),
+    CallerContext(callsite, "InlineSizeFromAspectRatio", "border_padding", "ZeroPadding").
+
+SpecializationOpportunity(callsite, "ClampSizeToMinAndMax", "Default_Box_FastPath", "content_size + border_padding") :-
+    CallerContext(callsite, "ClampSizeToMinAndMax", "min_size", "Zero"),
+    CallerContext(callsite, "ClampSizeToMinAndMax", "max_size", "Indefinite").
+
+SpecializationOpportunity(callsite, "ComputeShadowOutsets", "InsetShadow_ZeroExpansion", "Outsets{0, 0, 0, 0}") :-
+    CallerContext(callsite, "ComputeShadowOutsets", "style", "Inset").
+
+SpecializationOpportunity(callsite, "ComputeShadowOutsets", "Symmetric_ZeroOffset_UniformExpansion", "Outsets{extent, extent, extent, extent}") :-
+    CallerContext(callsite, "ComputeShadowOutsets", "style", "Normal"),
+    CallerContext(callsite, "ComputeShadowOutsets", "offset_x", "Zero"),
+    CallerContext(callsite, "ComputeShadowOutsets", "offset_y", "Zero").
+
+// Specialization 7: Pure Positive Block Margin Collapsing
+SpecializationOpportunity(callsite, "MarginStrut", "PurePositive_MarginCollapsing", "std::max(positive_margin, quirky_positive_margin)") :-
+    CallerContext(callsite, "MarginStrut_Append", "val", "PositiveDefinite"),
+    CallerContext(callsite, "MarginStrut_Append", "is_quirk", "false").
+
+// Output Relations
+.output DeadBranchAtCallsite
+.output SpecializationOpportunity

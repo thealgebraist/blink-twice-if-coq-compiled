@@ -19,7 +19,7 @@ while idx < len(content):
     try:
         obj, end_idx = decoder.raw_decode(content_sub)
         idx += end_idx
-        if 'agents' in obj:
+        if isinstance(obj, dict) and 'agents' in obj:
             for ag in obj['agents']:
                 total_agents += 1
                 total_prompt += ag.get('prompt_tokens', 0)

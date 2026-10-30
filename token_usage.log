@@ -2498,3 +2498,163 @@
   }
 }
 ---
+{
+  "timestamp": "2026-10-30 18:51:20",
+  "model": "gemini-4-argon",
+  "wave": 21,
+  "iteration": 6,
+  "theme": "Paint Layer, Stacking & Compositing Pipeline (Stacking Context 7 Phases, Negative Z-Index Sorting, Positive Z-Index Sorting, Paint Invalidation Clamping, Compositing Promotion Triggers, Cull Rect Paint Skipping, Backdrop Filter Outsets, Opacity Multiplier Compounding, Transform Property Tree Concat, Clip Path Winding, Box Reflection Geometry, Outline Offset Geometry, Scroll Hit-Test Mapping, Filter Drop-Shadow Bounds, Blend Mode Isolation, Paint Chunk State Deduplication)",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent241",
+      "file": "agent241_stacking_tree_traversal.md",
+      "elapsed_sec": 37.74,
+      "chars": 11073,
+      "prompt_tokens": 156,
+      "candidates_tokens": 3500,
+      "total_tokens": 3656
+    },
+    {
+      "id": "agent242",
+      "file": "agent242_negative_z_index_sorting.md",
+      "elapsed_sec": 39.49,
+      "chars": 10744,
+      "prompt_tokens": 136,
+      "candidates_tokens": 3500,
+      "total_tokens": 3636
+    },
+    {
+      "id": "agent243",
+      "file": "agent243_positive_z_index_sorting.md",
+      "elapsed_sec": 39.42,
+      "chars": 10680,
+      "prompt_tokens": 136,
+      "candidates_tokens": 3500,
+      "total_tokens": 3636
+    },
+    {
+      "id": "agent244",
+      "file": "agent244_paint_invalidation_clamping.md",
+      "elapsed_sec": 34.85,
+      "chars": 9202,
+      "prompt_tokens": 127,
+      "candidates_tokens": 2844,
+      "total_tokens": 2971
+    },
+    {
+      "id": "agent245",
+      "file": "agent245_compositing_promotion.md",
+      "elapsed_sec": 24.7,
+      "chars": 8222,
+      "prompt_tokens": 119,
+      "candidates_tokens": 2165,
+      "total_tokens": 2284
+    },
+    {
+      "id": "agent246",
+      "file": "agent246_cull_rect_culling.md",
+      "elapsed_sec": 28.0,
+      "chars": 10510,
+      "prompt_tokens": 126,
+      "candidates_tokens": 3500,
+      "total_tokens": 3626
+    },
+    {
+      "id": "agent247",
+      "file": "agent247_backdrop_filter_outset.md",
+      "elapsed_sec": 21.12,
+      "chars": 6035,
+      "prompt_tokens": 127,
+      "candidates_tokens": 1853,
+      "total_tokens": 1980
+    },
+    {
+      "id": "agent248",
+      "file": "agent248_opacity_multiplier_chain.md",
+      "elapsed_sec": 33.34,
+      "chars": 8795,
+      "prompt_tokens": 146,
+      "candidates_tokens": 3024,
+      "total_tokens": 3170
+    },
+    {
+      "id": "agent249",
+      "file": "agent249_transform_property_tree_concat.md",
+      "elapsed_sec": 21.06,
+      "chars": 5808,
+      "prompt_tokens": 139,
+      "candidates_tokens": 1984,
+      "total_tokens": 2123
+    },
+    {
+      "id": "agent250",
+      "file": "agent250_clip_path_non_zero_winding.md",
+      "elapsed_sec": 24.86,
+      "chars": 9273,
+      "prompt_tokens": 137,
+      "candidates_tokens": 2731,
+      "total_tokens": 2868
+    },
+    {
+      "id": "agent251",
+      "file": "agent251_box_reflection_geometry.md",
+      "elapsed_sec": 23.68,
+      "chars": 6876,
+      "prompt_tokens": 124,
+      "candidates_tokens": 2140,
+      "total_tokens": 2264
+    },
+    {
+      "id": "agent252",
+      "file": "agent252_outline_offset_geometry.md",
+      "elapsed_sec": 35.71,
+      "chars": 8286,
+      "prompt_tokens": 121,
+      "candidates_tokens": 2564,
+      "total_tokens": 2685
+    },
+    {
+      "id": "agent253",
+      "file": "agent253_scroll_hit_test_mapping.md",
+      "elapsed_sec": 29.35,
+      "chars": 8847,
+      "prompt_tokens": 137,
+      "candidates_tokens": 2790,
+      "total_tokens": 2927
+    },
+    {
+      "id": "agent254",
+      "file": "agent254_filter_drop_shadow_bounds.md",
+      "elapsed_sec": 27.7,
+      "chars": 8180,
+      "prompt_tokens": 143,
+      "candidates_tokens": 2679,
+      "total_tokens": 2822
+    },
+    {
+      "id": "agent255",
+      "file": "agent255_blend_mode_isolation.md",
+      "elapsed_sec": 44.22,
+      "chars": 12938,
+      "prompt_tokens": 131,
+      "candidates_tokens": 3500,
+      "total_tokens": 3631
+    },
+    {
+      "id": "agent256",
+      "file": "agent256_paint_chunk_state_dedup.md",
+      "elapsed_sec": 32.67,
+      "chars": 9804,
+      "prompt_tokens": 124,
+      "candidates_tokens": 3088,
+      "total_tokens": 3212
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 2129,
+    "candidates_tokens": 45362,
+    "total_tokens": 47491
+  }
+}
+---

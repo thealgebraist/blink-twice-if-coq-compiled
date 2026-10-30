@@ -200,3 +200,4 @@ if __name__ == '__main__':
     print(f"Candidate Tokens:  {total_c}")
     print(f"Total Tokens Used: {total_t}")
     print("Appended log entry to token_usage.log.")
+

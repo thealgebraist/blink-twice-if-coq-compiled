@@ -5098,3 +5098,371 @@
   }
 }
 ---
+{
+  "timestamp": "2026-10-30 21:09:37",
+  "model": "gemini-4-argon",
+  "wave": 36,
+  "iteration": 5,
+  "theme": "HTML Form Controls, Validation & Accessibility Tree",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent481",
+      "file": "agent481_input_selection_range.md",
+      "elapsed_sec": 23.65,
+      "chars": 5792,
+      "prompt_tokens": 54,
+      "candidates_tokens": 1473,
+      "total_tokens": 1527
+    },
+    {
+      "id": "agent482",
+      "file": "agent482_input_step_quantization.md",
+      "elapsed_sec": 17.74,
+      "chars": 4464,
+      "prompt_tokens": 48,
+      "candidates_tokens": 1402,
+      "total_tokens": 1450
+    },
+    {
+      "id": "agent483",
+      "file": "agent483_validity_state_boolean.md",
+      "elapsed_sec": 29.35,
+      "chars": 8272,
+      "prompt_tokens": 48,
+      "candidates_tokens": 2201,
+      "total_tokens": 2249
+    },
+    {
+      "id": "agent484",
+      "file": "agent484_form_data_append.md",
+      "elapsed_sec": 22.59,
+      "chars": 5847,
+      "prompt_tokens": 49,
+      "candidates_tokens": 1394,
+      "total_tokens": 1443
+    },
+    {
+      "id": "agent485",
+      "file": "agent485_radio_group_exclusion.md",
+      "elapsed_sec": 19.58,
+      "chars": 5280,
+      "prompt_tokens": 49,
+      "candidates_tokens": 1231,
+      "total_tokens": 1280
+    },
+    {
+      "id": "agent486",
+      "file": "agent486_checkbox_tristate.md",
+      "elapsed_sec": 23.46,
+      "chars": 6051,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1632,
+      "total_tokens": 1682
+    },
+    {
+      "id": "agent487",
+      "file": "agent487_select_index_bounds.md",
+      "elapsed_sec": 22.26,
+      "chars": 5869,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1562,
+      "total_tokens": 1613
+    },
+    {
+      "id": "agent488",
+      "file": "agent488_file_list_length.md",
+      "elapsed_sec": 21.11,
+      "chars": 6090,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1622,
+      "total_tokens": 1675
+    },
+    {
+      "id": "agent489",
+      "file": "agent489_ax_accessible_name.md",
+      "elapsed_sec": 16.63,
+      "chars": 4687,
+      "prompt_tokens": 48,
+      "candidates_tokens": 1182,
+      "total_tokens": 1230
+    },
+    {
+      "id": "agent490",
+      "file": "agent490_ax_role_determination.md",
+      "elapsed_sec": 31.66,
+      "chars": 8377,
+      "prompt_tokens": 49,
+      "candidates_tokens": 2110,
+      "total_tokens": 2159
+    },
+    {
+      "id": "agent491",
+      "file": "agent491_ax_labelledby_graph.md",
+      "elapsed_sec": 33.26,
+      "chars": 7106,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1766,
+      "total_tokens": 1817
+    },
+    {
+      "id": "agent492",
+      "file": "agent492_ax_unique_node_id.md",
+      "elapsed_sec": 27.7,
+      "chars": 6273,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1575,
+      "total_tokens": 1625
+    },
+    {
+      "id": "agent493",
+      "file": "agent493_ax_position_bounds.md",
+      "elapsed_sec": 25.22,
+      "chars": 6152,
+      "prompt_tokens": 49,
+      "candidates_tokens": 1531,
+      "total_tokens": 1580
+    },
+    {
+      "id": "agent494",
+      "file": "agent494_focus_tabindex_order.md",
+      "elapsed_sec": 21.17,
+      "chars": 5525,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1506,
+      "total_tokens": 1556
+    },
+    {
+      "id": "agent495",
+      "file": "agent495_dialog_focus_trap.md",
+      "elapsed_sec": 28.44,
+      "chars": 6719,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1523,
+      "total_tokens": 1574
+    },
+    {
+      "id": "agent496",
+      "file": "agent496_canvas_element_dimensions.md",
+      "elapsed_sec": 15.7,
+      "chars": 3635,
+      "prompt_tokens": 48,
+      "candidates_tokens": 943,
+      "total_tokens": 991
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 798,
+    "candidates_tokens": 24653,
+    "total_tokens": 25451
+  }
+}
+---
+Wave37-Agent509,gemini-4-argon,273,3500,34.34
+Wave37-Agent511,gemini-4-argon,265,3500,37.20
+Wave37-Agent503,gemini-4-argon,251,3500,38.70
+Wave37-Agent498,gemini-4-argon,258,3500,39.31
+Wave37-Agent497,gemini-4-argon,268,3500,39.36
+Wave37-Agent502,gemini-4-argon,269,3500,39.63
+Wave37-Agent508,gemini-4-argon,277,3500,39.73
+Wave37-Agent507,gemini-4-argon,256,3500,40.09
+Wave37-Agent499,gemini-4-argon,269,3500,40.46
+Wave37-Agent501,gemini-4-argon,273,3500,40.77
+Wave37-Agent510,gemini-4-argon,269,3500,41.66
+Wave37-Agent504,gemini-4-argon,272,3500,42.70
+Wave37-Agent500,gemini-4-argon,251,3500,43.15
+Wave37-Agent506,gemini-4-argon,262,3500,44.61
+Wave37-Agent505,gemini-4-argon,269,3500,44.66
+Wave37-Agent512,gemini-4-argon,261,3500,46.02
+Wave38-Agent516,gemini-4-argon,257,3500,36.67
+Wave38-Agent525,gemini-4-argon,261,3500,37.26
+Wave38-Agent515,gemini-4-argon,280,3500,37.59
+Wave38-Agent521,gemini-4-argon,260,3500,39.00
+Wave38-Agent517,gemini-4-argon,276,3500,39.38
+Wave38-Agent514,gemini-4-argon,255,3500,39.61
+Wave38-Agent513,gemini-4-argon,256,3500,40.16
+Wave38-Agent528,gemini-4-argon,271,3500,41.40
+Wave38-Agent518,gemini-4-argon,259,3500,41.46
+Wave38-Agent519,gemini-4-argon,270,3500,41.46
+Wave38-Agent520,gemini-4-argon,253,3500,41.61
+Wave38-Agent523,gemini-4-argon,280,3500,42.43
+Wave38-Agent522,gemini-4-argon,265,3500,43.12
+Wave38-Agent524,gemini-4-argon,269,3500,43.64
+Wave38-Agent527,gemini-4-argon,264,3500,44.34
+Wave38-Agent526,gemini-4-argon,274,3500,45.81
+Wave39-Agent538,gemini-4-argon,265,3500,36.83
+Wave39-Agent539,gemini-4-argon,252,3500,38.12
+Wave39-Agent537,gemini-4-argon,264,3500,38.29
+Wave39-Agent536,gemini-4-argon,276,3500,39.12
+Wave39-Agent534,gemini-4-argon,256,3500,39.78
+Wave39-Agent540,gemini-4-argon,269,3500,39.84
+Wave39-Agent530,gemini-4-argon,262,3500,39.88
+Wave39-Agent535,gemini-4-argon,268,3500,39.95
+Wave39-Agent543,gemini-4-argon,257,3500,40.35
+Wave39-Agent532,gemini-4-argon,246,3500,40.71
+Wave39-Agent531,gemini-4-argon,252,3500,41.07
+Wave39-Agent529,gemini-4-argon,267,3500,41.32
+Wave39-Agent542,gemini-4-argon,264,3500,41.49
+Wave39-Agent533,gemini-4-argon,276,3500,43.06
+Wave39-Agent541,gemini-4-argon,261,3500,44.89
+Wave39-Agent544,gemini-4-argon,275,3500,46.42
+Wave40-Agent557,gemini-4-argon,276,3500,35.86
+Wave40-Agent555,gemini-4-argon,281,3500,36.10
+Wave40-Agent551,gemini-4-argon,268,3500,36.76
+Wave40-Agent547,gemini-4-argon,283,3500,36.84
+Wave40-Agent546,gemini-4-argon,277,3500,37.01
+Wave40-Agent552,gemini-4-argon,267,3500,37.70
+Wave40-Agent545,gemini-4-argon,286,3500,39.34
+Wave40-Agent559,gemini-4-argon,268,3500,39.43
+Wave40-Agent556,gemini-4-argon,283,3500,40.73
+Wave40-Agent548,gemini-4-argon,298,3500,42.36
+Wave40-Agent549,gemini-4-argon,274,3500,42.36
+Wave40-Agent554,gemini-4-argon,277,3500,43.02
+Wave40-Agent553,gemini-4-argon,271,3500,44.04
+Wave40-Agent550,gemini-4-argon,280,3500,44.54
+Wave40-Agent558,gemini-4-argon,268,3500,45.77
+Wave40-Agent560,gemini-4-argon,275,3500,48.36
+Wave41-Agent566,gemini-4-argon,272,3500,39.07
+Wave41-Agent565,gemini-4-argon,249,3500,43.35
+Wave41-Agent568,gemini-4-argon,278,3500,43.66
+Wave41-Agent563,gemini-4-argon,275,3500,45.66
+Wave41-Agent574,gemini-4-argon,253,3500,47.00
+Wave41-Agent562,gemini-4-argon,260,3500,48.16
+Wave41-Agent564,gemini-4-argon,280,3500,49.88
+Wave41-Agent573,gemini-4-argon,261,3500,51.32
+Wave41-Agent572,gemini-4-argon,252,3500,51.61
+Wave41-Agent576,gemini-4-argon,258,3500,52.64
+Wave41-Agent571,gemini-4-argon,261,3500,52.85
+Wave41-Agent570,gemini-4-argon,254,3500,53.65
+Wave41-Agent569,gemini-4-argon,256,3500,54.38
+Wave41-Agent561,gemini-4-argon,268,3500,55.29
+Wave41-Agent575,gemini-4-argon,271,3500,56.01
+Wave41-Agent567,gemini-4-argon,255,3500,66.27
+Wave42-Agent585,gemini-4-argon,266,3500,39.61
+Wave42-Agent586,gemini-4-argon,259,3500,40.87
+Wave42-Agent581,gemini-4-argon,280,3500,41.15
+Wave42-Agent591,gemini-4-argon,264,3500,41.26
+Wave42-Agent583,gemini-4-argon,249,3500,41.49
+Wave42-Agent584,gemini-4-argon,258,3500,42.27
+Wave42-Agent579,gemini-4-argon,261,3500,43.46
+Wave42-Agent590,gemini-4-argon,251,3500,44.41
+Wave42-Agent578,gemini-4-argon,261,3500,44.52
+Wave42-Agent587,gemini-4-argon,256,3500,44.74
+Wave42-Agent588,gemini-4-argon,270,3500,45.17
+Wave42-Agent577,gemini-4-argon,300,3500,45.31
+Wave42-Agent592,gemini-4-argon,254,3500,46.29
+Wave42-Agent580,gemini-4-argon,265,3500,47.70
+Wave42-Agent582,gemini-4-argon,284,3500,48.20
+Wave42-Agent589,gemini-4-argon,258,3500,49.91
+Wave43-Agent597,gemini-4-argon,265,3500,35.07
+Wave43-Agent607,gemini-4-argon,296,3500,35.85
+Wave43-Agent598,gemini-4-argon,292,3500,36.29
+Wave43-Agent595,gemini-4-argon,279,3500,36.48
+Wave43-Agent601,gemini-4-argon,272,3500,37.48
+Wave43-Agent594,gemini-4-argon,276,3500,37.61
+Wave43-Agent602,gemini-4-argon,275,3500,38.16
+Wave43-Agent600,gemini-4-argon,269,3500,38.82
+Wave43-Agent608,gemini-4-argon,272,3500,39.32
+Wave43-Agent599,gemini-4-argon,254,3500,39.63
+Wave43-Agent604,gemini-4-argon,276,3500,39.87
+Wave43-Agent606,gemini-4-argon,280,3500,40.02
+Wave43-Agent603,gemini-4-argon,262,3500,41.82
+Wave43-Agent596,gemini-4-argon,258,3500,42.23
+Wave43-Agent605,gemini-4-argon,265,3500,45.44
+Wave43-Agent593,gemini-4-argon,289,3500,45.83
+Wave44-Agent616,gemini-4-argon,316,3500,33.45
+Wave44-Agent609,gemini-4-argon,307,3500,35.06
+Wave44-Agent618,gemini-4-argon,354,3500,36.18
+Wave44-Agent615,gemini-4-argon,303,3500,36.25
+Wave44-Agent613,gemini-4-argon,279,3500,36.28
+Wave44-Agent614,gemini-4-argon,273,3500,36.40
+Wave44-Agent620,gemini-4-argon,298,3500,36.60
+Wave44-Agent617,gemini-4-argon,293,3500,37.11
+Wave44-Agent621,gemini-4-argon,298,3500,37.61
+Wave44-Agent619,gemini-4-argon,281,3500,37.84
+Wave44-Agent624,gemini-4-argon,273,3500,38.65
+Wave44-Agent611,gemini-4-argon,297,3500,39.15
+Wave44-Agent612,gemini-4-argon,304,3500,39.29
+Wave44-Agent623,gemini-4-argon,291,3500,39.87
+Wave44-Agent622,gemini-4-argon,284,3500,41.10
+Wave44-Agent610,gemini-4-argon,273,3500,41.31
+Wave45-Agent639,gemini-4-argon,279,3500,35.33
+Wave45-Agent625,gemini-4-argon,275,3500,36.82
+Wave45-Agent634,gemini-4-argon,297,3500,37.79
+Wave45-Agent637,gemini-4-argon,271,3500,37.86
+Wave45-Agent628,gemini-4-argon,284,3500,37.97
+Wave45-Agent635,gemini-4-argon,268,3500,38.48
+Wave45-Agent633,gemini-4-argon,276,3500,38.55
+Wave45-Agent638,gemini-4-argon,263,3500,38.97
+Wave45-Agent630,gemini-4-argon,272,3500,39.27
+Wave45-Agent632,gemini-4-argon,267,3500,39.38
+Wave45-Agent629,gemini-4-argon,279,3500,39.81
+Wave45-Agent631,gemini-4-argon,269,3500,40.71
+Wave45-Agent626,gemini-4-argon,278,3500,41.00
+Wave45-Agent627,gemini-4-argon,277,3500,41.13
+Wave45-Agent640,gemini-4-argon,273,3500,42.92
+Wave45-Agent636,gemini-4-argon,295,3500,43.36
+Wave46-Agent643,gemini-4-argon,297,3500,34.23
+Wave46-Agent648,gemini-4-argon,272,3500,37.24
+Wave46-Agent651,gemini-4-argon,291,3500,37.30
+Wave46-Agent646,gemini-4-argon,278,3500,37.43
+Wave46-Agent642,gemini-4-argon,279,3500,37.63
+Wave46-Agent645,gemini-4-argon,255,3500,38.07
+Wave46-Agent653,gemini-4-argon,273,3500,38.14
+Wave46-Agent654,gemini-4-argon,279,3500,38.43
+Wave46-Agent656,gemini-4-argon,290,3500,38.62
+Wave46-Agent644,gemini-4-argon,269,3382,39.82
+Wave46-Agent650,gemini-4-argon,278,3500,39.94
+Wave46-Agent652,gemini-4-argon,271,3500,40.57
+Wave46-Agent647,gemini-4-argon,271,3500,41.13
+Wave46-Agent649,gemini-4-argon,252,3500,42.52
+Wave46-Agent641,gemini-4-argon,280,3500,43.05
+Wave46-Agent655,gemini-4-argon,271,3500,43.61
+Wave47-Agent667,gemini-4-argon,260,3500,33.44
+Wave47-Agent671,gemini-4-argon,259,3500,35.71
+Wave47-Agent657,gemini-4-argon,278,3500,35.98
+Wave47-Agent659,gemini-4-argon,290,3500,36.32
+Wave47-Agent664,gemini-4-argon,259,3500,37.46
+Wave47-Agent662,gemini-4-argon,291,3500,38.40
+Wave47-Agent658,gemini-4-argon,299,3500,38.41
+Wave47-Agent668,gemini-4-argon,277,3500,38.80
+Wave47-Agent666,gemini-4-argon,290,3500,39.13
+Wave47-Agent669,gemini-4-argon,280,3500,39.66
+Wave47-Agent670,gemini-4-argon,289,3500,40.12
+Wave47-Agent663,gemini-4-argon,288,3500,40.18
+Wave47-Agent660,gemini-4-argon,289,3500,40.42
+Wave47-Agent661,gemini-4-argon,290,3500,40.77
+Wave47-Agent665,gemini-4-argon,261,3500,41.34
+Wave47-Agent672,gemini-4-argon,269,3500,41.55
+Wave48-Agent679,gemini-4-argon,293,3500,38.16
+Wave48-Agent686,gemini-4-argon,287,3500,38.28
+Wave48-Agent675,gemini-4-argon,289,3500,38.70
+Wave48-Agent678,gemini-4-argon,286,3500,38.84
+Wave48-Agent682,gemini-4-argon,302,3500,39.09
+Wave48-Agent676,gemini-4-argon,283,3500,39.09
+Wave48-Agent673,gemini-4-argon,279,3500,39.99
+Wave48-Agent685,gemini-4-argon,283,3500,40.04
+Wave48-Agent688,gemini-4-argon,307,3500,40.22
+Wave48-Agent684,gemini-4-argon,292,3500,40.62
+Wave48-Agent680,gemini-4-argon,282,3500,40.63
+Wave48-Agent677,gemini-4-argon,282,3500,41.00
+Wave48-Agent674,gemini-4-argon,281,3500,41.66
+Wave48-Agent683,gemini-4-argon,303,3500,42.68
+Wave48-Agent681,gemini-4-argon,284,3500,43.09
+Wave48-Agent687,gemini-4-argon,287,3500,43.98
+Wave49-Agent698,gemini-4-argon,291,3500,35.51
+Wave49-Agent694,gemini-4-argon,301,3500,35.91
+Wave49-Agent702,gemini-4-argon,290,3500,36.59
+Wave49-Agent696,gemini-4-argon,296,3500,37.04
+Wave49-Agent703,gemini-4-argon,296,3500,37.42
+Wave49-Agent692,gemini-4-argon,287,3500,37.70
+Wave49-Agent704,gemini-4-argon,276,3500,38.60
+Wave49-Agent701,gemini-4-argon,299,3500,39.24
+Wave49-Agent697,gemini-4-argon,296,3500,39.25
+Wave49-Agent695,gemini-4-argon,295,3500,39.60
+Wave49-Agent689,gemini-4-argon,276,3500,40.95
+Wave49-Agent691,gemini-4-argon,285,3500,41.31
+Wave49-Agent699,gemini-4-argon,288,3500,41.46
+Wave49-Agent693,gemini-4-argon,285,3500,43.19
+Wave49-Agent700,gemini-4-argon,272,3500,47.93
+Wave49-Agent690,gemini-4-argon,305,3500,91.48

@@ -39,7 +39,7 @@
 
 \IEEEtitleabstractindextext{%
 \begin{abstract}
-Formal verification of complex software systems is fundamentally constrained by the \emph{specification bottleneck}: real-world software implementations (such as browser rendering engines, operating systems, and network protocols) frequently lack formal mathematical specifications. While manual formalization is prohibitively expensive, automated program synthesis typically requires complete specifications as input. In this paper, we introduce \textbf{BGS-Spec} (Bayesian-Guided SMT-Refined Specification Synthesis), a general framework that inverts this paradigm by synthesizing certified high-level specifications directly from raw, undocumented imperative code. BGS-Spec formalizes candidate specifications as probabilistic \emph{theory sketches} drawn from a universal grammar of algebraic archetypes (conservation laws, semilattice monoids, coordinate involutions, and bounded progress). An SMT-based Counterexample-Guided Inductive Synthesis (CEGIS) filter refines candidate conjectures in milliseconds, after which an automated proof assistant engine synthesizes machine-checked proofs in Rocq/Coq with strictly zero unproven assumptions (\texttt{0 admits}). We formalize the general metatheory of this approach, proving general soundness theorems for discrete resource conservation, canonical clamping, join semilattices, and coordinate involutions. Furthermore, we establish the operational soundness of BGS-Spec over a deterministic imperative language subset ($\text{C99}_{\text{det}}$), proving big-step semantic equivalence and Hoare specification transfer in Rocq/Coq. Finally, we demonstrate the efficacy of BGS-Spec across 64 large subsystem classes from the Chromium Blink layout and HTML/CSS engines, achieving a 100\% verification and compilation rate across more than 800 machine-checked theories.
+Formal verification of complex software systems is fundamentally constrained by the \emph{specification bottleneck}: real-world software implementations (such as browser rendering engines, operating systems, and network protocols) frequently lack formal mathematical specifications. While manual formalization is prohibitively expensive, automated program synthesis typically requires complete specifications as input. In this paper, we introduce \textbf{BGS-Spec} (Bayesian-Guided SMT-Refined Specification Synthesis), a general framework that inverts this paradigm by synthesizing certified high-level specifications directly from raw, undocumented imperative code. BGS-Spec formalizes candidate specifications as probabilistic \emph{theory sketches} drawn from a universal grammar of algebraic archetypes (conservation laws, semilattice monoids, coordinate involutions, and bounded progress). An SMT-based Counterexample-Guided Inductive Synthesis (CEGIS) filter refines candidate conjectures in milliseconds, after which an automated proof assistant engine synthesizes machine-checked proofs in Rocq/Coq with strictly zero unproven assumptions (\texttt{0 admits}). We formalize the general metatheory of this approach, proving general soundness theorems for discrete resource conservation, canonical clamping, join semilattices, and coordinate involutions. Furthermore, we establish the operational soundness of BGS-Spec over a deterministic imperative language subset ($\text{C99}_{\text{det}}$), proving big-step semantic equivalence and Hoare specification transfer in Rocq/Coq. Finally, we demonstrate the efficacy of BGS-Spec across 100 foundational subsystem classes from the Chromium Blink layout and HTML/CSS engines, achieving a 100\% verification and compilation rate across 839 machine-checked theories.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -111,6 +111,52 @@ The validated conjecture is emitted to Rocq/Coq. A deterministic tactic synthesi
 \label{sec:soundness}
 
 In this section, we present the foundational metatheory of BGS-Spec. All theorems below have been proven and verified in Rocq/Coq with 0 admits in \texttt{GeneralSpecificationSoundnessTheory.v}.
+
+\begin{table*}[t]
+\centering
+\caption{Benchmark results for BGS-Spec batch formalization across 32 major Chromium Blink classes.}
+\label{tab:benchmark}
+\scriptsize
+\renewcommand{\arraystretch}{0.85}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}rlllll}
+\toprule
+\textbf{\#} & \textbf{Blink C++ Class} & \textbf{Subsystem Source File} & \textbf{Theory Archetype} & \textbf{SMT Result} & \textbf{Coq Status} \\
+\midrule
+01 & \texttt{BlockLayoutAlgorithm} & \texttt{core/layout/block\_layout\_algorithm.cc} & Monotonic Progress & UNSAT & \textbf{PASS (0 admits)} \\
+02 & \texttt{LineBreaker} & \texttt{core/layout/inline/line\_breaker.cc} & Monotonic Deduction & UNSAT & \textbf{PASS (0 admits)} \\
+03 & \texttt{FlexibleBoxAlgorithm} & \texttt{core/layout/flex/flexible\_box\_algorithm.cc} & Space Conservation & UNSAT & \textbf{PASS (0 admits)} \\
+04 & \texttt{GridTrackSizingAlgorithm} & \texttt{core/layout/grid/grid\_track\_sizing\_algorithm.cc} & MinMax Bounding & UNSAT & \textbf{PASS (0 admits)} \\
+05 & \texttt{TableLayoutAlgorithm} & \texttt{core/layout/table/table\_layout\_algorithm.cc} & Min-Content Floor & UNSAT & \textbf{PASS (0 admits)} \\
+06 & \texttt{ShapeOutsideInfo} & \texttt{core/layout/shapes/shape\_outside\_info.cc} & Geometric Expansion & UNSAT & \textbf{PASS (0 admits)} \\
+07 & \texttt{WritingModeConverter} & \texttt{core/layout/geometry/writing\_mode\_converter.h} & Involution Bijection & UNSAT & \textbf{PASS (0 admits)} \\
+08 & \texttt{ColumnLayoutAlgorithm} & \texttt{core/layout/fragmentation/column\_layout\_algorithm.cc} & Positive Lower Bound & UNSAT & \textbf{PASS (0 admits)} \\
+09 & \texttt{BidiParagraph} & \texttt{core/layout/inline/bidi\_paragraph.cc} & Clamped Interval $[0, 125]$ & UNSAT & \textbf{PASS (0 admits)} \\
+10 & \texttt{PhysicalRect} & \texttt{core/layout/geometry/physical\_rect.h} & Bounding Union Monoid & UNSAT & \textbf{PASS (0 admits)} \\
+11 & \texttt{MarginStrut} & \texttt{core/layout/geometry/margin\_strut.h} & Sign Partition Invariant & UNSAT & \textbf{PASS (0 admits)} \\
+12 & \texttt{LayoutUnit} & \texttt{platform/geometry/layout\_unit.h} & Saturated Arithmetic & UNSAT & \textbf{PASS (0 admits)} \\
+13 & \texttt{FloatsUtils} & \texttt{core/layout/floats\_utils.cc} & Clearance Non-Negativity & UNSAT & \textbf{PASS (0 admits)} \\
+14 & \texttt{GridPlacement} & \texttt{core/layout/grid/grid\_placement.cc} & Dense Origin Reset & UNSAT & \textbf{PASS (0 admits)} \\
+15 & \texttt{TableBorders} & \texttt{core/layout/table/table\_borders.cc} & Hidden Dominance & UNSAT & \textbf{PASS (0 admits)} \\
+16 & \texttt{TableRowLayoutAlgorithm} & \texttt{core/layout/table/table\_row\_layout\_algorithm.cc} & Non-Negative Distribution & UNSAT & \textbf{PASS (0 admits)} \\
+17 & \texttt{BaselineUtils} & \texttt{core/layout/baseline\_utils.cc} & Baseline Shift Non-Neg & UNSAT & \textbf{PASS (0 admits)} \\
+18 & \texttt{LayoutSVGRoot} & \texttt{core/layout/svg/layout\_svg\_root.cc} & Aspect Ratio Positivity & UNSAT & \textbf{PASS (0 admits)} \\
+19 & \texttt{CSSMathExpressionNode} & \texttt{core/css/css\_math\_expression\_node.cc} & Math Clamp Invariant & UNSAT & \textbf{PASS (0 admits)} \\
+20 & \texttt{PaintLayerScrollableArea}& \texttt{core/paint/paint\_layer\_scrollable\_area.cc} & Overflow Monotonicity & UNSAT & \textbf{PASS (0 admits)} \\
+21 & \texttt{MediaQueryEvaluator} & \texttt{core/css/media\_query\_evaluator.cc} & Three-Valued Involution & UNSAT & \textbf{PASS (0 admits)} \\
+22 & \texttt{LayoutListMarker} & \texttt{core/layout/list/layout\_list\_marker.cc} & Marker Position Precedence & UNSAT & \textbf{PASS (0 admits)} \\
+23 & \texttt{ShadowData} & \texttt{core/style/shadow\_data.cc} & Outsets Commutativity & UNSAT & \textbf{PASS (0 admits)} \\
+24 & \texttt{PositionTryEvaluator} & \texttt{core/layout/position\_try\_evaluator.cc} & Viewport Enclosure & UNSAT & \textbf{PASS (0 admits)} \\
+25 & \texttt{StickyPositionEvaluator}& \texttt{core/layout/sticky\_position\_evaluator.cc} & 1D Constraint Bounding & UNSAT & \textbf{PASS (0 admits)} \\
+26 & \texttt{RubyLayoutAlgorithm} & \texttt{core/layout/inline/ruby\_layout\_algorithm.cc} & Centering Offset Non-Neg & UNSAT & \textbf{PASS (0 admits)} \\
+27 & \texttt{InlineBreakToken} & \texttt{core/layout/inline/inline\_break\_token.cc} & Hyphenation Feasibility & UNSAT & \textbf{PASS (0 admits)} \\
+28 & \texttt{BoxShape} & \texttt{core/layout/shapes/box\_shape.cc} & Corner Radius Scaling & UNSAT & \textbf{PASS (0 admits)} \\
+29 & \texttt{ClipPathClipper} & \texttt{core/paint/clip\_path\_clipper.cc} & Path Bounding Box Enclosure & UNSAT & \textbf{PASS (0 admits)} \\
+30 & \texttt{TableLayoutAlgorithmTypes}& \texttt{core/layout/table/table\_layout\_algorithm\_types.cc} & Colgroup Span $[1, 1000]$ & UNSAT & \textbf{PASS (0 admits)} \\
+31 & \texttt{GridData} & \texttt{core/layout/grid/grid\_data.cc} & Implicit Track Expansion & UNSAT & \textbf{PASS (0 admits)} \\
+32 & \texttt{LayoutBox} & \texttt{core/layout/layout\_box.cc} & Grand Totality Progress & UNSAT & \textbf{PASS (0 admits)} \\
+\bottomrule
+\end{tabular*}
+\end{table*}
 
 \subsection{General Discrete Conservation Soundness}
 In resource management, flexbox line distribution, and grid fractional space calculations, discrete allocation functions divide available space using integer floor divisions.
@@ -211,8 +257,8 @@ To preclude undefined behavior (such as signed integer overflow or division by z
 The relational big-step operational semantics $\langle s, \sigma \rangle \Downarrow \sigma'$ is defined inductively:
 \begin{gather}
 \frac{}{\langle \text{skip}, \sigma \rangle \Downarrow \sigma} \quad
-\frac{}{\langle x := e, \sigma \rangle \Downarrow \sigma[x \mapsto \llbracket e \rrbracket_\sigma]} \\[6pt]
-\frac{\langle s_1, \sigma \rangle \Downarrow \sigma' \quad \langle s_2, \sigma' \rangle \Downarrow \sigma''}{\langle s_1; s_2, \sigma \rangle \Downarrow \sigma''} \\[6pt]
+\frac{}{\langle x := e, \sigma \rangle \Downarrow \sigma[x \mapsto \llbracket e \rrbracket_\sigma]} \\[3pt]
+\frac{\langle s_1, \sigma \rangle \Downarrow \sigma' \quad \langle s_2, \sigma' \rangle \Downarrow \sigma''}{\langle s_1; s_2, \sigma \rangle \Downarrow \sigma''} \\[3pt]
 \frac{\llbracket b \rrbracket_\sigma = \text{true} \quad \langle s_1, \sigma \rangle \Downarrow \sigma'}{\langle \text{if } b \text{ then } s_1 \text{ else } s_2, \sigma \rangle \Downarrow \sigma'} \quad
 \frac{\llbracket b \rrbracket_\sigma = \text{false} \quad \langle s_2, \sigma \rangle \Downarrow \sigma'}{\langle \text{if } b \text{ then } s_1 \text{ else } s_2, \sigma \rangle \Downarrow \sigma'}
 \end{gather}
@@ -228,6 +274,7 @@ The BGS-Spec AST purification engine compiles imperative statements $s \in \text
 \mathcal{E}\llbracket s_2 \rrbracket(\sigma) & \text{otherwise}
 \end{cases}
 \end{align}
+\enlargethispage{3\baselineskip}
 
 \subsection{Soundness and Determinism Proofs}
 
@@ -270,75 +317,33 @@ This guarantees that all properties verified on the synthesized Rocq/Coq models 
 
 \section{Empirical Evaluation: Blink Layout and HTML/CSS Engines}
 
-\begin{table*}[t]
-\centering
-\caption{Benchmark results for BGS-Spec batch formalization across 32 major Chromium Blink classes.}
-\label{tab:benchmark}
-\scriptsize
-\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}rlllll}
-\toprule
-\textbf{\#} & \textbf{Blink C++ Class} & \textbf{Subsystem Source File} & \textbf{Theory Archetype} & \textbf{SMT Result} & \textbf{Coq Status} \\
-\midrule
-01 & \texttt{BlockLayoutAlgorithm} & \texttt{core/layout/block\_layout\_algorithm.cc} & Monotonic Progress & UNSAT & \textbf{PASS (0 admits)} \\
-02 & \texttt{LineBreaker} & \texttt{core/layout/inline/line\_breaker.cc} & Monotonic Deduction & UNSAT & \textbf{PASS (0 admits)} \\
-03 & \texttt{FlexibleBoxAlgorithm} & \texttt{core/layout/flex/flexible\_box\_algorithm.cc} & Space Conservation & UNSAT & \textbf{PASS (0 admits)} \\
-04 & \texttt{GridTrackSizingAlgorithm} & \texttt{core/layout/grid/grid\_track\_sizing\_algorithm.cc} & MinMax Bounding & UNSAT & \textbf{PASS (0 admits)} \\
-05 & \texttt{TableLayoutAlgorithm} & \texttt{core/layout/table/table\_layout\_algorithm.cc} & Min-Content Floor & UNSAT & \textbf{PASS (0 admits)} \\
-06 & \texttt{ShapeOutsideInfo} & \texttt{core/layout/shapes/shape\_outside\_info.cc} & Geometric Expansion & UNSAT & \textbf{PASS (0 admits)} \\
-07 & \texttt{WritingModeConverter} & \texttt{core/layout/geometry/writing\_mode\_converter.h} & Involution Bijection & UNSAT & \textbf{PASS (0 admits)} \\
-08 & \texttt{ColumnLayoutAlgorithm} & \texttt{core/layout/fragmentation/column\_layout\_algorithm.cc} & Positive Lower Bound & UNSAT & \textbf{PASS (0 admits)} \\
-09 & \texttt{BidiParagraph} & \texttt{core/layout/inline/bidi\_paragraph.cc} & Clamped Interval $[0, 125]$ & UNSAT & \textbf{PASS (0 admits)} \\
-10 & \texttt{PhysicalRect} & \texttt{core/layout/geometry/physical\_rect.h} & Bounding Union Monoid & UNSAT & \textbf{PASS (0 admits)} \\
-11 & \texttt{MarginStrut} & \texttt{core/layout/geometry/margin\_strut.h} & Sign Partition Invariant & UNSAT & \textbf{PASS (0 admits)} \\
-12 & \texttt{LayoutUnit} & \texttt{platform/geometry/layout\_unit.h} & Saturated Arithmetic & UNSAT & \textbf{PASS (0 admits)} \\
-13 & \texttt{FloatsUtils} & \texttt{core/layout/floats\_utils.cc} & Clearance Non-Negativity & UNSAT & \textbf{PASS (0 admits)} \\
-14 & \texttt{GridPlacement} & \texttt{core/layout/grid/grid\_placement.cc} & Dense Origin Reset & UNSAT & \textbf{PASS (0 admits)} \\
-15 & \texttt{TableBorders} & \texttt{core/layout/table/table\_borders.cc} & Hidden Dominance & UNSAT & \textbf{PASS (0 admits)} \\
-16 & \texttt{TableRowLayoutAlgorithm} & \texttt{core/layout/table/table\_row\_layout\_algorithm.cc} & Non-Negative Distribution & UNSAT & \textbf{PASS (0 admits)} \\
-17 & \texttt{BaselineUtils} & \texttt{core/layout/baseline\_utils.cc} & Baseline Shift Non-Neg & UNSAT & \textbf{PASS (0 admits)} \\
-18 & \texttt{LayoutSVGRoot} & \texttt{core/layout/svg/layout\_svg\_root.cc} & Aspect Ratio Positivity & UNSAT & \textbf{PASS (0 admits)} \\
-19 & \texttt{CSSMathExpressionNode} & \texttt{core/css/css\_math\_expression\_node.cc} & Math Clamp Invariant & UNSAT & \textbf{PASS (0 admits)} \\
-20 & \texttt{PaintLayerScrollableArea}& \texttt{core/paint/paint\_layer\_scrollable\_area.cc} & Overflow Monotonicity & UNSAT & \textbf{PASS (0 admits)} \\
-21 & \texttt{MediaQueryEvaluator} & \texttt{core/css/media\_query\_evaluator.cc} & Three-Valued Involution & UNSAT & \textbf{PASS (0 admits)} \\
-22 & \texttt{LayoutListMarker} & \texttt{core/layout/list/layout\_list\_marker.cc} & Marker Position Precedence & UNSAT & \textbf{PASS (0 admits)} \\
-23 & \texttt{ShadowData} & \texttt{core/style/shadow\_data.cc} & Outsets Commutativity & UNSAT & \textbf{PASS (0 admits)} \\
-24 & \texttt{PositionTryEvaluator} & \texttt{core/layout/position\_try\_evaluator.cc} & Viewport Enclosure & UNSAT & \textbf{PASS (0 admits)} \\
-25 & \texttt{StickyPositionEvaluator}& \texttt{core/layout/sticky\_position\_evaluator.cc} & 1D Constraint Bounding & UNSAT & \textbf{PASS (0 admits)} \\
-26 & \texttt{RubyLayoutAlgorithm} & \texttt{core/layout/inline/ruby\_layout\_algorithm.cc} & Centering Offset Non-Neg & UNSAT & \textbf{PASS (0 admits)} \\
-27 & \texttt{InlineBreakToken} & \texttt{core/layout/inline/inline\_break\_token.cc} & Hyphenation Feasibility & UNSAT & \textbf{PASS (0 admits)} \\
-28 & \texttt{BoxShape} & \texttt{core/layout/shapes/box\_shape.cc} & Corner Radius Scaling & UNSAT & \textbf{PASS (0 admits)} \\
-29 & \texttt{ClipPathClipper} & \texttt{core/paint/clip\_path\_clipper.cc} & Path Bounding Box Enclosure & UNSAT & \textbf{PASS (0 admits)} \\
-30 & \texttt{TableLayoutAlgorithmTypes}& \texttt{core/layout/table/table\_layout\_algorithm\_types.cc} & Colgroup Span $[1, 1000]$ & UNSAT & \textbf{PASS (0 admits)} \\
-31 & \texttt{GridData} & \texttt{core/layout/grid/grid\_data.cc} & Implicit Track Expansion & UNSAT & \textbf{PASS (0 admits)} \\
-32 & \texttt{LayoutBox} & \texttt{core/layout/layout\_box.cc} & Grand Totality Progress & UNSAT & \textbf{PASS (0 admits)} \\
-\bottomrule
-\end{tabular*}
-\end{table*}
-
-To validate the generalizability and scalability of BGS-Spec, we applied the pipeline to 64 large, foundational classes in the Chromium Blink codebase: 32 layout subsystem classes (Table~\ref{tab:benchmark}) and 32 HTML/CSS subsystem classes covering tokenization, tree building, selector matching, CSSOM, font matching, cascading, and color spaces.
+To validate the generalizability and scalability of BGS-Spec across the full spectrum of modern web standards, we applied the pipeline to 100 foundational classes in the Chromium Blink codebase:
+\begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}
+    \item \textbf{Core Layout Algorithms (Classes 1--32, Table~\ref{tab:benchmark}):} Block formatting, line breaking, flexbox distribution, grid track sizing, tables, shapes, fragmentation, bidi reordering, and geometry primitives.
+    \item \textbf{HTML/CSS Engine Pipeline (Classes 33--64):} HTML5 tokenization, construction site, DOM node hierarchy, form controls, CSS selector matching, specificity triples, rule cascades, computed style resolution, font matching, and composited stacking order.
+    \item \textbf{Modern W3C/WHATWG Standards (Classes 65--100):} CSS Grid Level 2 Subgrid line resolution (\texttt{SubgridAlgorithm}, \texttt{GridLineResolver}), Container Queries (\texttt{ContainerQueryEvaluator}), CSS Scoping and Nesting (\texttt{StyleScope}, \texttt{CSSNestingRule}), Anchor Positioning, Box Alignment, Text Justification, Variable Fonts, Color 4/5 interpolation, Scroll-Driven Animations, View Transitions, Paged Fragmentation, Counters, Selection, Observers, Popovers, and 2D Graphics.
+\end{itemize}
 
 \subsection{Experimental Results}
-\begin{itemize}
-    \item \textbf{100\% Compilation Rate:} All 64 classes and the foundational metatheory were automatically synthesized into standalone Rocq/Coq theories (yielding over 803 compiled object modules) and compiled via \texttt{coqc} into \texttt{.vo} object binaries.
-    \item \textbf{Strict Zero-Admit Policy:} A comprehensive lexical and AST audit verified that exactly \textbf{0 admits} (\texttt{admit}, \texttt{Admitted}) exist across the entire formalization suite of 803+ theories.
+\enlargethispage{3.5\baselineskip}
+\begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}
+    \item \textbf{100\% Compilation Rate:} All 100 classes and the foundational metatheories were automatically synthesized into standalone Rocq/Coq theories (yielding 839 compiled object modules) and compiled via \texttt{coqc} into \texttt{.vo} object binaries.
+    \item \textbf{Strict Zero-Admit Policy:} A comprehensive lexical and AST audit verified that exactly \textbf{0 admits} (\texttt{admit}, \texttt{Admitted}) exist across the entire formalization suite of 839 theories.
     \item \textbf{SMT Filtering Efficiency:} Z3 evaluated all candidate pre/post conditions in under 20 milliseconds per class. Counterexamples generated during early archetype matching immediately rejected non-viable conjectures (e.g., rejecting unbounded growth when fixed-point saturation was present).
     \item \textbf{C99 Operational Soundness:} The verified semantic equivalence theorem between $\text{C99}_{\text{det}}$ relational big-step execution and purified Gallina models guarantees that high-level specifications transfer unconditionally to concrete imperative executions.
 \end{itemize}
 
 \section{Discussion and Related Work}
 
-\subsection{Comparison with Traditional Specification Mining}
-Traditional specification mining (Daikon, QuickSpec) relies on black-box execution traces to infer likely invariants. However, trace-based invariants often overfit to test suites, producing thousands of vacuous conjuncts without proof assistant backing. In contrast, BGS-Spec combines structural AST purification with formal deduction, ensuring that every synthesized specification is a certified mathematical theorem.
+\noindent\textbf{Traditional Specification Mining:}
+Traditional specification mining (Daikon, QuickSpec) relies on execution traces to infer invariants, often overfitting without proof assistant backing. In contrast, BGS-Spec combines structural AST purification with formal deduction, ensuring every synthesized specification is a certified theorem.
 
-\subsection{Comparison with Neural Program Synthesis}
-Recent work in neuro-symbolic coding utilizes LLMs for code generation (AlphaCode) or auto-formalization (LeanDojo). However, unconstrained LLM decoders frequently generate non-compiling proofs or hallucinated lemmas. BGS-Spec resolves this by constraining the LLM/prior to \emph{theory sketches}, offloading verification and refutation to deterministic SMT solvers and proof assistants.
+\noindent\textbf{Neural Program Synthesis:}
+Recent work applies LLMs to code generation (AlphaCode) or auto-formalization (LeanDojo). However, unconstrained LLMs frequently generate non-compiling proofs or hallucinated lemmas. BGS-Spec resolves this by constraining the prior to \emph{theory sketches}, offloading verification to deterministic SMT solvers and proof assistants.
 
 \section{Conclusion}
+\enlargethispage{1.5\baselineskip}
 
-We presented BGS-Spec, a neuro-symbolic framework for synthesizing certified, high-level mathematical specifications from imperative, undocumented code. By formalizing candidate properties as Bayesian theory sketches and filtering them through SMT CEGIS, BGS-Spec bridges the specification bottleneck. We established the general metatheory for resource conservation, clamping, and coordinate involutions, proved the operational soundness of BGS-Spec over a deterministic C99 subset ($\text{C99}_{\text{det}}$), and demonstrated its practical utility by fully formalizing and compiling 64 large subsystem classes from Chromium Blink across 803+ theories with strictly zero admits.
-
-\section*{Availability}
-The complete formalization suite, benchmark runner, and Coq theories are available at:
-\url{https://github.com/thealgebraist/blink-twice-if-coq-compiled}.
+We presented BGS-Spec, a neuro-symbolic framework for synthesizing certified specifications from undocumented code. By formalizing properties as Bayesian theory sketches and filtering them through SMT CEGIS, BGS-Spec bridges the specification bottleneck. We established general algebraic metatheory, proved operational soundness over a deterministic C99 subset ($\text{C99}_{\text{det}}$), and fully formalized and compiled 100 large subsystem classes from Chromium Blink across 839 theories with strictly zero admits. The complete suite of theories and tools is available at: \url{https://github.com/thealgebraist/blink-twice-if-coq-compiled}.
 
 \end{document}

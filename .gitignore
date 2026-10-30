@@ -50,3 +50,4 @@ meta_proof_checker
 .DS_Store
 Thumbs.db
 .lia.cache
+.*.cache

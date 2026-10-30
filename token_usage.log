@@ -2178,3 +2178,163 @@
   }
 }
 ---
+{
+  "timestamp": "2026-10-30 18:41:21",
+  "model": "gemini-4-argon",
+  "wave": 19,
+  "iteration": 4,
+  "theme": "Table Deep Semantics, Colgroups & Border Collapsing (Fixed Layout, Column Locations, Border Style Conflict, Border Width Conflict, Row Baseline Alignment, Empty Row Suppression, Cell Colspan Distribution, Cell Rowspan Distribution, Caption Margin Collapsing, Collapsed Border Half-Widths, Table Min/Max Sizing, Colgroup Span Expansion, Row Percent Heights, Cell Vertical Align Middle, Cell Vertical Align Bottom, Table Wrapper Fragment Tree Assembly)",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent209",
+      "file": "agent209_table_fixed_layout.md",
+      "elapsed_sec": 40.57,
+      "chars": 11742,
+      "prompt_tokens": 160,
+      "candidates_tokens": 3500,
+      "total_tokens": 3660
+    },
+    {
+      "id": "agent210",
+      "file": "agent210_table_column_location.md",
+      "elapsed_sec": 36.85,
+      "chars": 10262,
+      "prompt_tokens": 150,
+      "candidates_tokens": 3265,
+      "total_tokens": 3415
+    },
+    {
+      "id": "agent211",
+      "file": "agent211_table_border_style_conflict.md",
+      "elapsed_sec": 31.24,
+      "chars": 9493,
+      "prompt_tokens": 140,
+      "candidates_tokens": 2945,
+      "total_tokens": 3085
+    },
+    {
+      "id": "agent212",
+      "file": "agent212_table_border_width_conflict.md",
+      "elapsed_sec": 26.29,
+      "chars": 8153,
+      "prompt_tokens": 139,
+      "candidates_tokens": 2537,
+      "total_tokens": 2676
+    },
+    {
+      "id": "agent213",
+      "file": "agent213_table_row_baseline.md",
+      "elapsed_sec": 33.83,
+      "chars": 10326,
+      "prompt_tokens": 146,
+      "candidates_tokens": 3286,
+      "total_tokens": 3432
+    },
+    {
+      "id": "agent214",
+      "file": "agent214_table_empty_row_suppression.md",
+      "elapsed_sec": 40.68,
+      "chars": 11935,
+      "prompt_tokens": 123,
+      "candidates_tokens": 3500,
+      "total_tokens": 3623
+    },
+    {
+      "id": "agent215",
+      "file": "agent215_table_cell_colspan.md",
+      "elapsed_sec": 22.74,
+      "chars": 7199,
+      "prompt_tokens": 136,
+      "candidates_tokens": 2226,
+      "total_tokens": 2362
+    },
+    {
+      "id": "agent216",
+      "file": "agent216_table_cell_rowspan.md",
+      "elapsed_sec": 31.43,
+      "chars": 10946,
+      "prompt_tokens": 138,
+      "candidates_tokens": 3231,
+      "total_tokens": 3369
+    },
+    {
+      "id": "agent217",
+      "file": "agent217_table_caption_margin_collapse.md",
+      "elapsed_sec": 36.27,
+      "chars": 12644,
+      "prompt_tokens": 137,
+      "candidates_tokens": 3500,
+      "total_tokens": 3637
+    },
+    {
+      "id": "agent218",
+      "file": "agent218_table_collapsed_border_half_width.md",
+      "elapsed_sec": 19.61,
+      "chars": 4611,
+      "prompt_tokens": 149,
+      "candidates_tokens": 1568,
+      "total_tokens": 1717
+    },
+    {
+      "id": "agent219",
+      "file": "agent219_table_min_max_sizing.md",
+      "elapsed_sec": 31.23,
+      "chars": 9336,
+      "prompt_tokens": 147,
+      "candidates_tokens": 2748,
+      "total_tokens": 2895
+    },
+    {
+      "id": "agent220",
+      "file": "agent220_table_colgroup_expansion.md",
+      "elapsed_sec": 26.28,
+      "chars": 8287,
+      "prompt_tokens": 132,
+      "candidates_tokens": 2390,
+      "total_tokens": 2522
+    },
+    {
+      "id": "agent221",
+      "file": "agent221_table_row_percent_height.md",
+      "elapsed_sec": 19.26,
+      "chars": 5527,
+      "prompt_tokens": 143,
+      "candidates_tokens": 1634,
+      "total_tokens": 1777
+    },
+    {
+      "id": "agent222",
+      "file": "agent222_table_cell_vertical_align_middle.md",
+      "elapsed_sec": 27.67,
+      "chars": 8224,
+      "prompt_tokens": 150,
+      "candidates_tokens": 2508,
+      "total_tokens": 2658
+    },
+    {
+      "id": "agent223",
+      "file": "agent223_table_cell_vertical_align_bottom.md",
+      "elapsed_sec": 20.94,
+      "chars": 5587,
+      "prompt_tokens": 142,
+      "candidates_tokens": 1607,
+      "total_tokens": 1749
+    },
+    {
+      "id": "agent224",
+      "file": "agent224_table_wrapper_fragment_assembly.md",
+      "elapsed_sec": 37.53,
+      "chars": 12248,
+      "prompt_tokens": 128,
+      "candidates_tokens": 3500,
+      "total_tokens": 3628
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 2260,
+    "candidates_tokens": 43945,
+    "total_tokens": 46205
+  }
+}
+---

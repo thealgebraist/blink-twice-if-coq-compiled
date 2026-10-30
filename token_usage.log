@@ -3138,3 +3138,163 @@
   }
 }
 ---
+{
+  "timestamp": "2026-10-30 19:12:58",
+  "model": "gemini-4-argon",
+  "wave": 25,
+  "iteration": 2,
+  "theme": "Blink Web Animations & Transitions Semantics (Cubic Bezier, Steps Timing, Linear Easing, Keyframe Delay, Iteration Time, Active Duration, Transition Trigger, Reversing Factor, Composite Op, Transform Interpolation, Filter List Padding, Opacity Clamping, Path Offset Progress, Timeline Monotonicity, Play State, Effect End Time)",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent305",
+      "file": "agent305_animation_cubic_bezier.md",
+      "elapsed_sec": 25.54,
+      "chars": 5377,
+      "prompt_tokens": 61,
+      "candidates_tokens": 1923,
+      "total_tokens": 1984
+    },
+    {
+      "id": "agent306",
+      "file": "agent306_animation_steps_timing.md",
+      "elapsed_sec": 21.18,
+      "chars": 5313,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1616,
+      "total_tokens": 1668
+    },
+    {
+      "id": "agent307",
+      "file": "agent307_animation_linear_easing.md",
+      "elapsed_sec": 21.87,
+      "chars": 4907,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1390,
+      "total_tokens": 1440
+    },
+    {
+      "id": "agent308",
+      "file": "agent308_animation_keyframe_delay.md",
+      "elapsed_sec": 24.66,
+      "chars": 6031,
+      "prompt_tokens": 54,
+      "candidates_tokens": 1443,
+      "total_tokens": 1497
+    },
+    {
+      "id": "agent309",
+      "file": "agent309_animation_iteration_time.md",
+      "elapsed_sec": 23.56,
+      "chars": 6077,
+      "prompt_tokens": 54,
+      "candidates_tokens": 1569,
+      "total_tokens": 1623
+    },
+    {
+      "id": "agent310",
+      "file": "agent310_animation_active_duration.md",
+      "elapsed_sec": 15.8,
+      "chars": 4783,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1252,
+      "total_tokens": 1303
+    },
+    {
+      "id": "agent311",
+      "file": "agent311_animation_transition_trigger.md",
+      "elapsed_sec": 13.07,
+      "chars": 3896,
+      "prompt_tokens": 49,
+      "candidates_tokens": 883,
+      "total_tokens": 932
+    },
+    {
+      "id": "agent312",
+      "file": "agent312_animation_reversing_factor.md",
+      "elapsed_sec": 20.45,
+      "chars": 5092,
+      "prompt_tokens": 57,
+      "candidates_tokens": 1253,
+      "total_tokens": 1310
+    },
+    {
+      "id": "agent313",
+      "file": "agent313_animation_composite_operation.md",
+      "elapsed_sec": 24.88,
+      "chars": 6381,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1729,
+      "total_tokens": 1780
+    },
+    {
+      "id": "agent314",
+      "file": "agent314_animation_transform_interpolation.md",
+      "elapsed_sec": 24.0,
+      "chars": 5461,
+      "prompt_tokens": 58,
+      "candidates_tokens": 1688,
+      "total_tokens": 1746
+    },
+    {
+      "id": "agent315",
+      "file": "agent315_animation_filter_list_padding.md",
+      "elapsed_sec": 26.29,
+      "chars": 6521,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1762,
+      "total_tokens": 1814
+    },
+    {
+      "id": "agent316",
+      "file": "agent316_animation_opacity_clamping.md",
+      "elapsed_sec": 22.02,
+      "chars": 4770,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1473,
+      "total_tokens": 1524
+    },
+    {
+      "id": "agent317",
+      "file": "agent317_animation_path_offset_progress.md",
+      "elapsed_sec": 26.53,
+      "chars": 6729,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1785,
+      "total_tokens": 1837
+    },
+    {
+      "id": "agent318",
+      "file": "agent318_animation_timeline_monotonicity.md",
+      "elapsed_sec": 20.5,
+      "chars": 4791,
+      "prompt_tokens": 48,
+      "candidates_tokens": 1148,
+      "total_tokens": 1196
+    },
+    {
+      "id": "agent319",
+      "file": "agent319_animation_play_state.md",
+      "elapsed_sec": 28.65,
+      "chars": 7426,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1979,
+      "total_tokens": 2029
+    },
+    {
+      "id": "agent320",
+      "file": "agent320_animation_effect_end_time.md",
+      "elapsed_sec": 19.08,
+      "chars": 4553,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1171,
+      "total_tokens": 1224
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 843,
+    "candidates_tokens": 24064,
+    "total_tokens": 24907
+  }
+}
+---

@@ -4138,3 +4138,163 @@
   }
 }
 ---
+{
+  "timestamp": "2026-10-30 19:47:16",
+  "model": "gemini-4-argon",
+  "wave": 30,
+  "iteration": 7,
+  "theme": "Modern CSS Layout - Subgrid, Anchor Positioning & Masonry Layout Semantics",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent385",
+      "file": "agent385_subgrid_track_span.md",
+      "elapsed_sec": 38.89,
+      "chars": 9163,
+      "prompt_tokens": 55,
+      "candidates_tokens": 2425,
+      "total_tokens": 2480
+    },
+    {
+      "id": "agent386",
+      "file": "agent386_subgrid_line_names.md",
+      "elapsed_sec": 31.49,
+      "chars": 8010,
+      "prompt_tokens": 54,
+      "candidates_tokens": 2122,
+      "total_tokens": 2176
+    },
+    {
+      "id": "agent387",
+      "file": "agent387_anchor_resolution.md",
+      "elapsed_sec": 49.69,
+      "chars": 8386,
+      "prompt_tokens": 51,
+      "candidates_tokens": 2031,
+      "total_tokens": 2082
+    },
+    {
+      "id": "agent388",
+      "file": "agent388_anchor_midpoint.md",
+      "elapsed_sec": 22.14,
+      "chars": 5878,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1478,
+      "total_tokens": 1529
+    },
+    {
+      "id": "agent389",
+      "file": "agent389_anchor_inset_clamping.md",
+      "elapsed_sec": 23.26,
+      "chars": 6620,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1535,
+      "total_tokens": 1586
+    },
+    {
+      "id": "agent390",
+      "file": "agent390_position_try_order.md",
+      "elapsed_sec": 39.1,
+      "chars": 5929,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1337,
+      "total_tokens": 1390
+    },
+    {
+      "id": "agent391",
+      "file": "agent391_position_try_flip.md",
+      "elapsed_sec": 49.5,
+      "chars": 8398,
+      "prompt_tokens": 53,
+      "candidates_tokens": 2329,
+      "total_tokens": 2382
+    },
+    {
+      "id": "agent392",
+      "file": "agent392_masonry_placement.md",
+      "elapsed_sec": 23.04,
+      "chars": 5614,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1515,
+      "total_tokens": 1566
+    },
+    {
+      "id": "agent393",
+      "file": "agent393_masonry_accumulation.md",
+      "elapsed_sec": 27.64,
+      "chars": 6983,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1819,
+      "total_tokens": 1869
+    },
+    {
+      "id": "agent394",
+      "file": "agent394_cqw_unit.md",
+      "elapsed_sec": 20.03,
+      "chars": 4560,
+      "prompt_tokens": 56,
+      "candidates_tokens": 1291,
+      "total_tokens": 1347
+    },
+    {
+      "id": "agent395",
+      "file": "agent395_cqh_unit.md",
+      "elapsed_sec": 27.31,
+      "chars": 5565,
+      "prompt_tokens": 56,
+      "candidates_tokens": 1505,
+      "total_tokens": 1561
+    },
+    {
+      "id": "agent396",
+      "file": "agent396_cqi_unit.md",
+      "elapsed_sec": 19.71,
+      "chars": 5046,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1243,
+      "total_tokens": 1296
+    },
+    {
+      "id": "agent397",
+      "file": "agent397_cqb_unit.md",
+      "elapsed_sec": 19.15,
+      "chars": 5381,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1293,
+      "total_tokens": 1346
+    },
+    {
+      "id": "agent398",
+      "file": "agent398_cqmin_cqmax_unit.md",
+      "elapsed_sec": 23.29,
+      "chars": 6134,
+      "prompt_tokens": 56,
+      "candidates_tokens": 1679,
+      "total_tokens": 1735
+    },
+    {
+      "id": "agent399",
+      "file": "agent399_popover_top_layer.md",
+      "elapsed_sec": 27.46,
+      "chars": 6872,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1722,
+      "total_tokens": 1775
+    },
+    {
+      "id": "agent400",
+      "file": "agent400_popover_backdrop.md",
+      "elapsed_sec": 20.9,
+      "chars": 5087,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1190,
+      "total_tokens": 1242
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 848,
+    "candidates_tokens": 26514,
+    "total_tokens": 27362
+  }
+}
+---

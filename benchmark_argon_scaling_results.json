@@ -1,0 +1,60 @@
+{
+  "thinking_budgets": {
+    "Low (512)": {
+      "success": true,
+      "elapsed_sec": 7.27,
+      "prompt_tokens": 289,
+      "candidate_tokens": 632,
+      "total_tokens": 921,
+      "has_coq": true,
+      "coq_compiles": false
+    },
+    "Medium (2048)": {
+      "success": true,
+      "elapsed_sec": 6.9,
+      "prompt_tokens": 289,
+      "candidate_tokens": 513,
+      "total_tokens": 802,
+      "has_coq": true,
+      "coq_compiles": true
+    },
+    "High (8192)": {
+      "success": true,
+      "elapsed_sec": 17.73,
+      "prompt_tokens": 289,
+      "candidate_tokens": 415,
+      "total_tokens": 704,
+      "has_coq": true,
+      "coq_compiles": false
+    }
+  },
+  "concurrency_scaling": {
+    "4_agents": {
+      "num_agents": 4,
+      "wall_clock_sec": 16.44,
+      "avg_agent_sec": 10.31,
+      "successful_queries": 4,
+      "theories_compiled": 4,
+      "total_tokens": 3418,
+      "throughput_tokens_per_sec": 207.9
+    },
+    "8_agents": {
+      "num_agents": 8,
+      "wall_clock_sec": 8.66,
+      "avg_agent_sec": 7.46,
+      "successful_queries": 8,
+      "theories_compiled": 6,
+      "total_tokens": 6616,
+      "throughput_tokens_per_sec": 764.0
+    },
+    "16_agents": {
+      "num_agents": 16,
+      "wall_clock_sec": 9.47,
+      "avg_agent_sec": 7.3,
+      "successful_queries": 16,
+      "theories_compiled": 13,
+      "total_tokens": 13413,
+      "throughput_tokens_per_sec": 1416.4
+    }
+  }
+}

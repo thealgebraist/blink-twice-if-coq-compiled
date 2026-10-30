@@ -2658,3 +2658,163 @@
   }
 }
 ---
+{
+  "timestamp": "2026-10-30 18:55:19",
+  "model": "gemini-4-argon",
+  "wave": 22,
+  "iteration": 7,
+  "theme": "CSS Cascade, Specificity & Media Queries (Cascade Origin Ranking, Specificity Lexicographical Comparison, Document Order Tie-Breaking, Media Query Range Evaluation, Container Query Nearest Ancestor, Custom Property Inheritance, Color Alpha Blending, Font-Weight Normalization, Revert-Layer Rollback, @supports Feature Query, Keyframe Offset Monotonicity, Viewport Units Resolution, Font-Size Relative Units, :is() Specificity Maximum, :where() Zero Specificity, !important Origin Inversion)",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent257",
+      "file": "agent257_cascade_origin_rank.md",
+      "elapsed_sec": 16.58,
+      "chars": 4881,
+      "prompt_tokens": 149,
+      "candidates_tokens": 1510,
+      "total_tokens": 1659
+    },
+    {
+      "id": "agent258",
+      "file": "agent258_specificity_lexicographical.md",
+      "elapsed_sec": 34.55,
+      "chars": 9485,
+      "prompt_tokens": 153,
+      "candidates_tokens": 3316,
+      "total_tokens": 3469
+    },
+    {
+      "id": "agent259",
+      "file": "agent259_cascade_order_of_appearance.md",
+      "elapsed_sec": 24.1,
+      "chars": 8457,
+      "prompt_tokens": 131,
+      "candidates_tokens": 2638,
+      "total_tokens": 2769
+    },
+    {
+      "id": "agent260",
+      "file": "agent260_media_query_range_eval.md",
+      "elapsed_sec": 18.93,
+      "chars": 5235,
+      "prompt_tokens": 151,
+      "candidates_tokens": 1785,
+      "total_tokens": 1936
+    },
+    {
+      "id": "agent261",
+      "file": "agent261_container_query_eval.md",
+      "elapsed_sec": 25.26,
+      "chars": 7052,
+      "prompt_tokens": 116,
+      "candidates_tokens": 1861,
+      "total_tokens": 1977
+    },
+    {
+      "id": "agent262",
+      "file": "agent262_custom_property_inheritance.md",
+      "elapsed_sec": 19.21,
+      "chars": 5485,
+      "prompt_tokens": 126,
+      "candidates_tokens": 1398,
+      "total_tokens": 1524
+    },
+    {
+      "id": "agent263",
+      "file": "agent263_color_alpha_composite.md",
+      "elapsed_sec": 26.06,
+      "chars": 7182,
+      "prompt_tokens": 171,
+      "candidates_tokens": 2892,
+      "total_tokens": 3063
+    },
+    {
+      "id": "agent264",
+      "file": "agent264_font_weight_clamping.md",
+      "elapsed_sec": 19.03,
+      "chars": 4836,
+      "prompt_tokens": 132,
+      "candidates_tokens": 1510,
+      "total_tokens": 1642
+    },
+    {
+      "id": "agent265",
+      "file": "agent265_revert_layer_cascade.md",
+      "elapsed_sec": 21.13,
+      "chars": 8645,
+      "prompt_tokens": 133,
+      "candidates_tokens": 2155,
+      "total_tokens": 2288
+    },
+    {
+      "id": "agent266",
+      "file": "agent266_supports_feature_query.md",
+      "elapsed_sec": 24.03,
+      "chars": 7205,
+      "prompt_tokens": 116,
+      "candidates_tokens": 2171,
+      "total_tokens": 2287
+    },
+    {
+      "id": "agent267",
+      "file": "agent267_keyframe_offset_monotonicity.md",
+      "elapsed_sec": 38.73,
+      "chars": 10442,
+      "prompt_tokens": 145,
+      "candidates_tokens": 3500,
+      "total_tokens": 3645
+    },
+    {
+      "id": "agent268",
+      "file": "agent268_viewport_units_resolution.md",
+      "elapsed_sec": 25.19,
+      "chars": 6219,
+      "prompt_tokens": 137,
+      "candidates_tokens": 2224,
+      "total_tokens": 2361
+    },
+    {
+      "id": "agent269",
+      "file": "agent269_font_size_relative_units.md",
+      "elapsed_sec": 29.07,
+      "chars": 8121,
+      "prompt_tokens": 153,
+      "candidates_tokens": 2620,
+      "total_tokens": 2773
+    },
+    {
+      "id": "agent270",
+      "file": "agent270_is_pseudo_class_specificity.md",
+      "elapsed_sec": 49.01,
+      "chars": 9854,
+      "prompt_tokens": 149,
+      "candidates_tokens": 3500,
+      "total_tokens": 3649
+    },
+    {
+      "id": "agent271",
+      "file": "agent271_where_pseudo_class_zero_specificity.md",
+      "elapsed_sec": 35.2,
+      "chars": 11440,
+      "prompt_tokens": 140,
+      "candidates_tokens": 3500,
+      "total_tokens": 3640
+    },
+    {
+      "id": "agent272",
+      "file": "agent272_important_origin_inversion.md",
+      "elapsed_sec": 23.77,
+      "chars": 7868,
+      "prompt_tokens": 116,
+      "candidates_tokens": 2128,
+      "total_tokens": 2244
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 2218,
+    "candidates_tokens": 38708,
+    "total_tokens": 40926
+  }
+}
+---

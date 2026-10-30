@@ -49,3 +49,4 @@ meta_proof_checker
 # OS artifacts
 .DS_Store
 Thumbs.db
+.lia.cache

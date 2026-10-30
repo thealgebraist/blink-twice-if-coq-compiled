@@ -4618,3 +4618,163 @@
   }
 }
 ---
+{
+  "timestamp": "2026-10-30 21:04:20",
+  "model": "gemini-4-argon",
+  "wave": 33,
+  "iteration": 2,
+  "theme": "Web Audio, HTML5 Canvas & 2D Rasterization Primitives",
+  "thinking_budget": 2048,
+  "agents": [
+    {
+      "id": "agent433",
+      "file": "agent433_webaudio_graph_transitivity.md",
+      "elapsed_sec": 31.16,
+      "chars": 7387,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1878,
+      "total_tokens": 1931
+    },
+    {
+      "id": "agent434",
+      "file": "agent434_gain_node_attenuation.md",
+      "elapsed_sec": 19.89,
+      "chars": 4845,
+      "prompt_tokens": 49,
+      "candidates_tokens": 1426,
+      "total_tokens": 1475
+    },
+    {
+      "id": "agent435",
+      "file": "agent435_biquad_filter_bounds.md",
+      "elapsed_sec": 14.56,
+      "chars": 4052,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1165,
+      "total_tokens": 1216
+    },
+    {
+      "id": "agent436",
+      "file": "agent436_audioparam_ramp_monotonicity.md",
+      "elapsed_sec": 28.84,
+      "chars": 7210,
+      "prompt_tokens": 49,
+      "candidates_tokens": 1944,
+      "total_tokens": 1993
+    },
+    {
+      "id": "agent437",
+      "file": "agent437_canvas_state_stack.md",
+      "elapsed_sec": 28.76,
+      "chars": 6641,
+      "prompt_tokens": 55,
+      "candidates_tokens": 1700,
+      "total_tokens": 1755
+    },
+    {
+      "id": "agent438",
+      "file": "agent438_canvas_path_closure.md",
+      "elapsed_sec": 22.7,
+      "chars": 5573,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1426,
+      "total_tokens": 1477
+    },
+    {
+      "id": "agent439",
+      "file": "agent439_canvas_global_alpha.md",
+      "elapsed_sec": 23.34,
+      "chars": 5557,
+      "prompt_tokens": 49,
+      "candidates_tokens": 1705,
+      "total_tokens": 1754
+    },
+    {
+      "id": "agent440",
+      "file": "agent440_canvas_imagedata_length.md",
+      "elapsed_sec": 17.96,
+      "chars": 4016,
+      "prompt_tokens": 54,
+      "candidates_tokens": 1186,
+      "total_tokens": 1240
+    },
+    {
+      "id": "agent441",
+      "file": "agent441_canvas_transform_invertibility.md",
+      "elapsed_sec": 30.34,
+      "chars": 6645,
+      "prompt_tokens": 53,
+      "candidates_tokens": 1814,
+      "total_tokens": 1867
+    },
+    {
+      "id": "agent442",
+      "file": "agent442_canvas_stroke_offset.md",
+      "elapsed_sec": 22.95,
+      "chars": 5445,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1592,
+      "total_tokens": 1643
+    },
+    {
+      "id": "agent443",
+      "file": "agent443_canvas_dash_array_period.md",
+      "elapsed_sec": 24.04,
+      "chars": 5116,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1424,
+      "total_tokens": 1474
+    },
+    {
+      "id": "agent444",
+      "file": "agent444_gradient_color_stops.md",
+      "elapsed_sec": 21.51,
+      "chars": 5515,
+      "prompt_tokens": 49,
+      "candidates_tokens": 1432,
+      "total_tokens": 1481
+    },
+    {
+      "id": "agent445",
+      "file": "agent445_radial_gradient_radii.md",
+      "elapsed_sec": 19.2,
+      "chars": 5096,
+      "prompt_tokens": 52,
+      "candidates_tokens": 1250,
+      "total_tokens": 1302
+    },
+    {
+      "id": "agent446",
+      "file": "agent446_pattern_wrap_coordinates.md",
+      "elapsed_sec": 24.36,
+      "chars": 5693,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1598,
+      "total_tokens": 1648
+    },
+    {
+      "id": "agent447",
+      "file": "agent447_bezier_bounding_box.md",
+      "elapsed_sec": 23.21,
+      "chars": 5648,
+      "prompt_tokens": 51,
+      "candidates_tokens": 1572,
+      "total_tokens": 1623
+    },
+    {
+      "id": "agent448",
+      "file": "agent448_color_space_clamping.md",
+      "elapsed_sec": 25.96,
+      "chars": 5889,
+      "prompt_tokens": 50,
+      "candidates_tokens": 1772,
+      "total_tokens": 1822
+    }
+  ],
+  "aggregate": {
+    "prompt_tokens": 817,
+    "candidates_tokens": 24884,
+    "total_tokens": 25701
+  }
+}
+---

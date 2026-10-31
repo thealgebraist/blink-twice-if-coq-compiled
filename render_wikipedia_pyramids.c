@@ -200,7 +200,7 @@ int main(void) {
 
     // Wikipedia Logo & Wordmark (Georgia / Serif for wordmark)
     blink_skia_font_draw_text_ex(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
-                                 16, 31, "WIKIPEDIA", "Georgia", 20.0f, BLINK_FONT_STYLE_BOLD, 0.5f, COLOR_TEXT_BLACK);
+                                 16, 31, "WIKIPEDIA", "Georgia", 20.0f, BLINK_FONT_STYLE_BOLD, 0.5f, 0xFF000000);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
                               159, 28, "The Free Encyclopedia", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
 

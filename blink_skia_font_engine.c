@@ -2,11 +2,109 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <math.h>
 #include <ApplicationServices/ApplicationServices.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+static FT_Library s_ft_lib = NULL;
+static FT_Face s_ft_georgia_reg = NULL;
+static FT_Face s_ft_georgia_bold = NULL;
+static FT_Face s_ft_georgia_italic = NULL;
+
+static void init_freetype_if_needed(void) {
+    if (s_ft_lib) return;
+    if (FT_Init_FreeType(&s_ft_lib) != 0) return;
+    FT_New_Face(s_ft_lib, "/System/Library/Fonts/Supplemental/Georgia.ttf", 0, &s_ft_georgia_reg);
+    FT_New_Face(s_ft_lib, "/System/Library/Fonts/Supplemental/Georgia Bold.ttf", 0, &s_ft_georgia_bold);
+    FT_New_Face(s_ft_lib, "/System/Library/Fonts/Supplemental/Georgia Italic.ttf", 0, &s_ft_georgia_italic);
+}
+
+static bool is_georgia_family(const char* family) {
+    return family && (strstr(family, "Georgia") || strstr(family, "serif") || strstr(family, "Libertine"));
+}
+
+static bool draw_text_skia_freetype(uint32_t* fb, int fb_w, int fb_h,
+                                    float x, float baseline_y,
+                                    const char* text,
+                                    const char* font_family,
+                                    float font_size,
+                                    int style_flags,
+                                    float letter_spacing,
+                                    uint32_t color_argb) {
+    init_freetype_if_needed();
+    if (!s_ft_lib || !is_georgia_family(font_family)) {
+        return false;
+    }
+
+    FT_Face face = s_ft_georgia_reg;
+    if (style_flags & BLINK_FONT_STYLE_BOLD) {
+        if (s_ft_georgia_bold) face = s_ft_georgia_bold;
+    } else if (style_flags & BLINK_FONT_STYLE_ITALIC) {
+        if (s_ft_georgia_italic) face = s_ft_georgia_italic;
+    }
+    if (!face) return false;
+
+    FT_Set_Pixel_Sizes(face, 0, (FT_UInt)roundf(font_size));
+
+    float pen_x = x;
+    FT_UInt prev_glyph = 0;
+
+    uint8_t fg_r = (color_argb >> 16) & 0xFF;
+    uint8_t fg_g = (color_argb >> 8) & 0xFF;
+    uint8_t fg_b = color_argb & 0xFF;
+
+    for (int i = 0; text[i]; i++) {
+        FT_UInt g = FT_Get_Char_Index(face, (unsigned char)text[i]);
+        if (FT_HAS_KERNING(face) && prev_glyph && g) {
+            FT_Vector kern;
+            FT_Get_Kerning(face, prev_glyph, g, FT_KERNING_DEFAULT, &kern);
+            pen_x += kern.x / 64.0f;
+        }
+
+        FT_Vector delta;
+        delta.x = (FT_Pos)((pen_x - floorf(pen_x)) * 64.0f);
+        delta.y = (FT_Pos)((baseline_y - floorf(baseline_y)) * 64.0f);
+        FT_Set_Transform(face, NULL, &delta);
+
+        FT_Load_Glyph(face, g, FT_LOAD_NO_HINTING);
+        FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+
+        FT_Bitmap* bm = &face->glyph->bitmap;
+        int gx = (int)floorf(pen_x) + face->glyph->bitmap_left;
+        int gy = (int)floorf(baseline_y) - face->glyph->bitmap_top;
+
+        for (unsigned int r = 0; r < bm->rows; r++) {
+            int py = gy + r;
+            if (py < 0 || py >= fb_h) continue;
+            for (unsigned int c = 0; c < bm->width; c++) {
+                int px = gx + c;
+                if (px < 0 || px >= fb_w) continue;
+                uint8_t cov = bm->buffer[r * bm->pitch + c];
+                if (cov == 0) continue;
+
+                uint32_t bg = fb[py * fb_w + px];
+                uint8_t bg_r = (bg >> 16) & 0xFF;
+                uint8_t bg_g = (bg >> 8) & 0xFF;
+                uint8_t bg_b = bg & 0xFF;
+
+                // Blending theorem per BlinkGlyphRasterizerSemantics.v
+                uint8_t out_r = (fg_r * cov + bg_r * (255 - cov) + 127) / 255;
+                uint8_t out_g = (fg_g * cov + bg_g * (255 - cov) + 127) / 255;
+                uint8_t out_b = (fg_b * cov + bg_b * (255 - cov) + 127) / 255;
+
+                fb[py * fb_w + px] = (0xFF << 24) | (out_r << 16) | (out_g << 8) | out_b;
+            }
+        }
+        pen_x += face->glyph->advance.x / 64.0f + letter_spacing;
+        prev_glyph = g;
+    }
+    return true;
+}
 
 void blink_skia_font_init(void) {
-    // Initialized on demand via CoreText
+    init_freetype_if_needed();
 }
 
 static CTFontRef create_ct_font(const char* family, float size, int style_flags) {
@@ -80,6 +178,10 @@ void blink_skia_font_draw_text_ex(uint32_t* fb, int fb_w, int fb_h,
                                   float letter_spacing,
                                   uint32_t color_argb) {
     if (!fb || !text || strlen(text) == 0) return;
+
+    if (draw_text_skia_freetype(fb, fb_w, fb_h, x, baseline_y, text, font_family, font_size, style_flags, letter_spacing, color_argb)) {
+        return;
+    }
 
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(fb, fb_w, fb_h, 8, fb_w * 4, cs,
@@ -234,6 +336,28 @@ float blink_skia_font_measure_text(const char* text,
                                    float font_size,
                                    int weight_bold) {
     if (!text || strlen(text) == 0) return 0.0f;
+
+    init_freetype_if_needed();
+    if (s_ft_lib && is_georgia_family(font_family)) {
+        FT_Face face = (weight_bold && s_ft_georgia_bold) ? s_ft_georgia_bold : s_ft_georgia_reg;
+        if (face) {
+            FT_Set_Pixel_Sizes(face, 0, (FT_UInt)roundf(font_size));
+            float advance = 0.0f;
+            FT_UInt prev_glyph = 0;
+            for (int i = 0; text[i]; i++) {
+                FT_UInt g = FT_Get_Char_Index(face, (unsigned char)text[i]);
+                if (FT_HAS_KERNING(face) && prev_glyph && g) {
+                    FT_Vector kern;
+                    FT_Get_Kerning(face, prev_glyph, g, FT_KERNING_DEFAULT, &kern);
+                    advance += kern.x / 64.0f;
+                }
+                FT_Load_Glyph(face, g, FT_LOAD_NO_HINTING);
+                advance += face->glyph->advance.x / 64.0f;
+                prev_glyph = g;
+            }
+            return advance;
+        }
+    }
 
     CTFontRef font = create_ct_font(font_family, font_size, weight_bold);
     CFStringRef cf_str = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingUTF8);

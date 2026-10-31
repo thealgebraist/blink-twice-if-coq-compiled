@@ -85,3 +85,4 @@ if __name__ == '__main__':
     ]
     for formal, chrom, diff in pairs:
         compare_images(formal, chrom, diff)
+

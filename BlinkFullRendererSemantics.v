@@ -80,6 +80,9 @@ Record ConstraintSpace := mkConstraintSpace {
   cs_pct_block : Z
 }.
 
+Definition place_fragment (frag : PhysicalFragment) (x y : Z) : PhysicalFragment :=
+  mkPhysicalFragment x y (pf_w frag) (pf_h frag) (pf_children frag).
+
 Record LayoutResult := mkLayoutResult {
   lr_fragment : PhysicalFragment;
   lr_margin_strut : MarginStrut;
@@ -241,8 +244,12 @@ with layout_children_block : ConstraintSpace -> MarginStrut -> Z -> list BoxNode
       let next_strut := if is_self_collapsing
                         then margin_strut_append strut_with_top (bs_margin_bottom s) false
                         else margin_strut_append default_margin_strut (bs_margin_bottom s) false in
+      let positioned_res := mkLayoutResult
+                              (place_fragment (lr_fragment res) 0 child_y)
+                              (lr_margin_strut res)
+                              (lr_consumed_block res) in
       layout_children_block space next_strut next_y nodes results final_y final_strut ->
-      layout_children_block space strut cursor_y (node :: nodes) (res :: results) final_y final_strut
+      layout_children_block space strut cursor_y (node :: nodes) (positioned_res :: results) final_y final_strut
 
 where "space '|-' node '⇓' result" := (layout_big_step space node result).
 
@@ -301,4 +308,26 @@ Proof.
     destruct Hrec as [Hrs [Hy Hfs]].
     subst results0 final_y2 final_strut2.
     repeat split; reflexivity.
+Qed.
+
+
+(** Theorem 4: Geometry preservation under fragment placement *)
+Theorem place_fragment_geometry_preserved : forall frag x y,
+  pf_w (place_fragment frag x y) = pf_w frag /\
+  pf_h (place_fragment frag x y) = pf_h frag /\
+  pf_children (place_fragment frag x y) = pf_children frag.
+Proof.
+  intros frag x y.
+  unfold place_fragment.
+  simpl. repeat split; reflexivity.
+Qed.
+
+(** Theorem 5: Exact physical offset assignment for placed fragments *)
+Theorem place_fragment_offset_exact : forall frag x y,
+  pf_x (place_fragment frag x y) = x /\
+  pf_y (place_fragment frag x y) = y.
+Proof.
+  intros frag x y.
+  unfold place_fragment, pf_x, pf_y.
+  simpl. split; reflexivity.
 Qed.

@@ -333,3 +333,75 @@ Proof.
   rewrite Hres in Hwithin.
   exact Hwithin.
 Qed.
+
+
+(******************************************************************************)
+(* 4. CHROMIUM BLINK HALF-LEADING & BASELINE METRICS ALIGNMENT                *)
+(******************************************************************************)
+
+(** W3C CSS Inline 3 §3 & Chromium Blink InlineLayoutAlgorithm:              *)
+(** Leading L_delta = line_height - (ascent + descent).                       *)
+(** Half-leading is distributed symmetrically above ascent and below descent. *)
+
+Definition compute_half_leading (line_height font_box_h : Z) : Z :=
+  Z.max 0 ((line_height - font_box_h) / 2).
+
+Definition compute_line_box_half_leading (line_height ascent descent : Z) : (Z * Z) :=
+  let leading := line_height - (ascent + descent) in
+  let half := Z.max 0 (leading / 2) in
+  (ascent + half, descent + (Z.max 0 (leading - half))).
+
+Definition compute_first_line_baseline (box_top line_height ascent descent : Z) : Z :=
+  box_top + compute_half_leading line_height (ascent + descent) + ascent.
+
+Definition compute_snapped_baseline (box_top ascent : Z) : Z :=
+  box_top + ascent.
+
+Theorem half_leading_nonneg : forall L E,
+  0 <= compute_half_leading L E.
+Proof.
+  intros L E.
+  unfold compute_half_leading.
+  apply Z.le_max_l.
+Qed.
+
+Theorem line_height_conserved : forall L A D,
+  0 <= A -> 0 <= D ->
+  A + D <= L ->
+  let (asc, desc) := compute_line_box_half_leading L A D in
+  asc + desc = L.
+Proof.
+  intros L A D Ha Hd Hle.
+  unfold compute_line_box_half_leading.
+  set (leading := L - (A + D)).
+  assert (Hlead_ge_0 : 0 <= leading) by (unfold leading; lia).
+  assert (Hhalf_ge_0 : 0 <= leading / 2).
+  { apply Z.div_pos; lia. }
+  pose proof (Z.div_le_upper_bound leading 2 leading).
+  assert (Hrem_ge_0 : 0 <= leading - leading / 2) by lia.
+  rewrite (Z.max_r 0 (leading / 2)) by lia.
+  rewrite (Z.max_r 0 (leading - leading / 2)) by lia.
+  unfold leading.
+  lia.
+Qed.
+
+Theorem baseline_within_line : forall box_top L A D,
+  0 <= box_top ->
+  0 <= A -> 0 <= D ->
+  A + D <= L ->
+  box_top <= compute_first_line_baseline box_top L A D <= box_top + L.
+Proof.
+  intros box_top L A D Htop Ha Hd Hle.
+  unfold compute_first_line_baseline, compute_half_leading.
+  pose proof (Z.div_le_upper_bound (L - (A + D)) 2 (L - (A + D))).
+  assert (Hhalf_ge_0 : 0 <= (L - (A + D)) / 2).
+  { apply Z.div_pos; lia. }
+  rewrite (Z.max_r 0 ((L - (A + D)) / 2)) by lia.
+  split; lia.
+Qed.
+
+Theorem snapped_baseline_matches_integer_ascent : forall box_top A,
+  compute_snapped_baseline box_top A = box_top + A.
+Proof.
+  intros. reflexivity.
+Qed.

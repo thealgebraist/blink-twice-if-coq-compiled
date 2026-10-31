@@ -281,3 +281,169 @@ Theorem wikipedia_vertical_flow_exact :
 Proof.
   vm_compute. reflexivity.
 Qed.
+
+
+(******************************************************************************)
+(* 6. CHROMIUM BLINK LAYOUTUNIT (26.6 FIXED-POINT) & SUBPIXEL SNAPPING        *)
+(******************************************************************************)
+
+(** In Chromium Blink, internal geometry coordinates are represented using    *)
+(** [LayoutUnit], an integer fixed-point number with a 6-bit fractional part: *)
+(** 1 pixel = 64 LayoutUnits (kFixedPointDenominator = 64).                   *)
+
+Definition LayoutUnit : Type := Z.
+Definition kFixedPointDenominator : Z := 64.
+
+Definition lu_from_pixel (p : Z) : LayoutUnit :=
+  p * kFixedPointDenominator.
+
+Definition lu_to_pixel_floor (x : LayoutUnit) : Z :=
+  x / kFixedPointDenominator.
+
+Definition lu_to_pixel_round (x : LayoutUnit) : Z :=
+  (x + 32) / kFixedPointDenominator.
+
+Definition lu_to_pixel_ceil (x : LayoutUnit) : Z :=
+  (x + 63) / kFixedPointDenominator.
+
+(** In Blink, snapping a LayoutUnit size starting at a LayoutUnit location:   *)
+(** snap_size(size, loc) = round(loc + size) - round(loc)                     *)
+(** ensuring that adjacent abutting intervals tile with ZERO pixel gaps.      *)
+Definition lu_snap_size (size loc : LayoutUnit) : Z :=
+  lu_to_pixel_round (loc + size) - lu_to_pixel_round loc.
+
+Theorem lu_snap_size_nonneg : forall size loc,
+  0 <= size ->
+  0 <= lu_snap_size size loc.
+Proof.
+  intros size loc Hsz.
+  unfold lu_snap_size, lu_to_pixel_round, kFixedPointDenominator.
+  assert ((loc + 32) / 64 <= (loc + size + 32) / 64).
+  { apply Z.div_le_mono; lia. }
+  lia.
+Qed.
+
+Lemma div_64_exact : forall a,
+  (a * 64 + 32) / 64 = a.
+Proof.
+  intros a.
+  symmetry.
+  apply Z.div_unique with (r := 32); lia.
+Qed.
+
+Theorem lu_snap_size_exact_pixels : forall p l,
+  lu_snap_size (lu_from_pixel p) (lu_from_pixel l) = p.
+Proof.
+  intros p l.
+  unfold lu_snap_size, lu_from_pixel, lu_to_pixel_round, kFixedPointDenominator.
+  replace (l * 64 + p * 64 + 32) with ((l + p) * 64 + 32) by ring.
+  rewrite (div_64_exact (l + p)).
+  rewrite (div_64_exact l).
+  lia.
+Qed.
+
+Theorem lu_snap_tiling_adjacent : forall size loc,
+  lu_to_pixel_round loc + lu_snap_size size loc = lu_to_pixel_round (loc + size).
+Proof.
+  intros size loc.
+  unfold lu_snap_size.
+  lia.
+Qed.
+
+(******************************************************************************)
+(* 7. BLINK NGBlockLayoutAlgorithm SELF-COLLAPSING MARGIN PASS-THROUGH        *)
+(******************************************************************************)
+
+(** W3C CSS 2.2 §8.3.1 & Blink NGBlockLayoutAlgorithm::IsSelfCollapsing:      *)
+(** A box is self-collapsing if its content height, padding, and borders     *)
+(** are all zero, meaning its top and bottom margins collapse together       *)
+(** without advancing the vertical block cursor.                             *)
+
+Definition is_self_collapsing (b : BoxMetrics) : bool :=
+  (bm_content_h b =? 0) &&
+  (bm_p_top b =? 0) && (bm_p_bottom b =? 0) &&
+  (bm_b_top b =? 0) && (bm_b_bottom b =? 0).
+
+Definition step_vertical_flow_ng (st : FlowState) (b : BoxMetrics) : (FlowState * LayoutFragment) :=
+  let (eff_pos, eff_neg) := collapse_margin_step (fs_margin_pos st) (fs_margin_neg st) (bm_m_top b) in
+  if is_self_collapsing b then
+    let (next_pos, next_neg) := collapse_margin_step eff_pos eff_neg (bm_m_bottom b) in
+    let collapsed_margin := margin_strut_sum eff_pos eff_neg in
+    let child_y := fs_cursor_y st + collapsed_margin in
+    (mkFlowState (fs_cursor_y st) next_pos next_neg,
+     mkLayoutFragment child_y 0 collapsed_margin)
+  else
+    let collapsed_margin := margin_strut_sum eff_pos eff_neg in
+    let child_y := fs_cursor_y st + collapsed_margin in
+    let child_h := box_total_height b in
+    let next_cursor := child_y + child_h in
+    let next_pos := margin_pos_part (bm_m_bottom b) in
+    let next_neg := margin_neg_part (bm_m_bottom b) in
+    (mkFlowState next_cursor next_pos next_neg,
+     mkLayoutFragment child_y child_h collapsed_margin).
+
+Fixpoint compute_vertical_flow_ng_rec (st : FlowState) (boxes : list BoxMetrics) : list LayoutFragment :=
+  match boxes with
+  | [] => []
+  | b :: rest =>
+      let (st', frag) := step_vertical_flow_ng st b in
+      frag :: compute_vertical_flow_ng_rec st' rest
+  end.
+
+Definition compute_vertical_flow_ng (initial_y : Z) (boxes : list BoxMetrics) : list LayoutFragment :=
+  let init_st := mkFlowState initial_y 0 0 in
+  compute_vertical_flow_ng_rec init_st boxes.
+
+Theorem self_collapsing_cursor_stationary : forall st b,
+  is_self_collapsing b = true ->
+  let '(st', frag) := step_vertical_flow_ng st b in
+  fs_cursor_y st' = fs_cursor_y st /\ frag_h frag = 0.
+Proof.
+  intros st b Hsc.
+  unfold step_vertical_flow_ng.
+  rewrite Hsc.
+  destruct (collapse_margin_step (fs_margin_pos st) (fs_margin_neg st) (bm_m_top b)).
+  destruct (collapse_margin_step z z0 (bm_m_bottom b)).
+  simpl. split; reflexivity.
+Qed.
+
+Theorem non_self_collapsing_matches_step_vertical_flow : forall st b,
+  is_self_collapsing b = false ->
+  step_vertical_flow_ng st b = step_vertical_flow st b.
+Proof.
+  intros st b Hnsc.
+  unfold step_vertical_flow_ng, step_vertical_flow.
+  rewrite Hnsc.
+  reflexivity.
+Qed.
+
+Theorem step_flow_ng_preserves_valid_state : forall st b,
+  valid_flow_state st ->
+  valid_box_metrics b ->
+  let '(st', _) := step_vertical_flow_ng st b in
+  valid_flow_state st'.
+Proof.
+  intros [cy p n] b [Hp Hn] Hb.
+  unfold step_vertical_flow_ng.
+  destruct (is_self_collapsing b) eqn:E.
+  - unfold collapse_margin_step, valid_flow_state, margin_pos_part, margin_neg_part.
+    simpl. split; lia.
+  - unfold step_vertical_flow, valid_flow_state, margin_pos_part, margin_neg_part.
+    destruct (collapse_margin_step p n (bm_m_top b)).
+    simpl. split; [apply Z.le_max_l | apply Z.le_min_l].
+Qed.
+
+Theorem wikipedia_vertical_flow_ng_exact :
+  compute_vertical_flow_ng 64 wikipedia_article_blocks =
+  [
+    mkLayoutFragment 64 34 0;
+    mkLayoutFragment 102 14 4;
+    mkLayoutFragment 124 16 8;
+    mkLayoutFragment 152 72 12;
+    mkLayoutFragment 236 99 12;
+    mkLayoutFragment 347 20 12;
+    mkLayoutFragment 375 97 8
+  ].
+Proof.
+  vm_compute. reflexivity.
+Qed.

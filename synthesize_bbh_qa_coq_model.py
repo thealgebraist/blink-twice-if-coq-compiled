@@ -68,9 +68,10 @@ def ensure_bbh_datasets():
                 headers={"User-Agent": "AntigravityFormalBBHSynthesizer/1.0"},
             )
             with urllib.request.urlopen(req, timeout=20) as resp:
-                raw = resp.read().decode("utf-8")
+                raw = json.loads(resp.read().decode("utf-8"))
             with open(path, "w", encoding="utf-8") as f:
-                f.write(raw)
+                json.dump(raw, f, indent=2, ensure_ascii=False)
+                f.write("\n")
         with open(path, "r", encoding="utf-8") as f:
             datasets[task] = json.load(f)["examples"]
     return datasets

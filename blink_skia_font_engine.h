@@ -27,6 +27,15 @@ void blink_skia_font_draw_text(uint32_t* fb, int fb_w, int fb_h,
                                int style_flags,
                                uint32_t color_argb);
 
+void blink_skia_font_draw_text_ex(uint32_t* fb, int fb_w, int fb_h,
+                                  float x, float baseline_y,
+                                  const char* text,
+                                  const char* font_family,
+                                  float font_size,
+                                  int style_flags,
+                                  float letter_spacing,
+                                  uint32_t color_argb);
+
 /**
  * Draws multi-line wrapped text box matching Blink/Skia line breaking and line-height.
  */

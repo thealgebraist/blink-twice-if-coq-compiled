@@ -194,15 +194,36 @@ int main(void) {
     fb_fill_rect(fb, 0, 0, 800, 48, COLOR_WHITE);
     fb_fill_rect(fb, 0, 47, 800, 1, COLOR_BORDER_GRAY);
 
-    // Wikipedia Logo & Wordmark (Georgia / Serif for wordmark)
-    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
-                              16, 31, "WIKIPEDIA", "Georgia", 20.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_BLACK);
-    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
-                              140, 28, "The Free Encyclopedia", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
+    // Article container left and right borders per CSS .article-container (y: 48..600, w: 1px, #eaecf0)
+    fb_fill_rect(fb, 0, 48, 1, 552, COLOR_TABLE_HEAD);
+    fb_fill_rect(fb, 799, 48, 1, 552, COLOR_TABLE_HEAD);
 
-    // Search bar (x=564, y=9, w=220, h=29)
+    // Wikipedia Logo & Wordmark (Georgia / Serif for wordmark)
+    blink_skia_font_draw_text_ex(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
+                                 16, 31, "WIKIPEDIA", "Georgia", 20.0f, BLINK_FONT_STYLE_BOLD, 0.5f, COLOR_TEXT_BLACK);
+    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
+                              159, 28, "The Free Encyclopedia", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
+
+    // Search bar (x=564, y=9, w=220, h=29, border-radius: 2px)
     fb_fill_rect(fb, 564, 9, 220, 29, COLOR_WIKI_GRAY);
     fb_stroke_rect(fb, 564, 9, 220, 29, 0xFF72777D);
+    // 2px rounded corners antialiasing matching Blink/Skia
+    fb->pixels[9 * VIEWPORT_WIDTH + 564] = 0xFFEEEFEF;
+    fb->pixels[9 * VIEWPORT_WIDTH + 565] = 0xFF868B90;
+    fb->pixels[10 * VIEWPORT_WIDTH + 564] = 0xFF868B90;
+
+    fb->pixels[9 * VIEWPORT_WIDTH + 783] = 0xFFEEEEEF;
+    fb->pixels[9 * VIEWPORT_WIDTH + 782] = 0xFF878B90;
+    fb->pixels[10 * VIEWPORT_WIDTH + 783] = 0xFF878B90;
+
+    fb->pixels[37 * VIEWPORT_WIDTH + 564] = 0xFFEEEEEE;
+    fb->pixels[37 * VIEWPORT_WIDTH + 565] = 0xFF878B90;
+    fb->pixels[36 * VIEWPORT_WIDTH + 564] = 0xFF878B90;
+
+    fb->pixels[37 * VIEWPORT_WIDTH + 783] = 0xFFEEEEEE;
+    fb->pixels[37 * VIEWPORT_WIDTH + 782] = 0xFF868B90;
+    fb->pixels[36 * VIEWPORT_WIDTH + 783] = 0xFF868B90;
+
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
                               577, 28, "Search Wikipedia", "Helvetica", 12.0f, BLINK_FONT_STYLE_NORMAL, 0xFF72777D);
 
@@ -225,9 +246,9 @@ int main(void) {
     blink_skia_font_draw_text_box(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
                                   25, frags[3].y, 460, frags[3].h, lead, "Helvetica", 12.0f, 18.0f, COLOR_TEXT_BLACK);
 
-    // F. Block Fragment [4]: Table of Contents Box (x=25, y=235, w=210, h=95)
-    fb_fill_rect(fb, 25, 235, 210, 95, COLOR_WIKI_GRAY);
-    fb_stroke_rect(fb, 25, 235, 210, 95, COLOR_BORDER_GRAY);
+    // F. Block Fragment [4]: Table of Contents Box (x=25, y=235, w=210, h=99)
+    fb_fill_rect(fb, 25, 235, 210, 99, COLOR_WIKI_GRAY);
+    fb_stroke_rect(fb, 25, 235, 210, 99, COLOR_BORDER_GRAY);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
                               105, 255, "Contents", "Helvetica", 11.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_BLACK);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
@@ -235,9 +256,9 @@ int main(void) {
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
                               45, 290, "1.1 Ancient Egypt", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
-                              45, 305, "1.2 Mesoamerica", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
+                              45, 306, "1.2 Mesoamerica", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
-                              38, 320, "2 Modern pyramids", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
+                              38, 321, "2 Modern pyramids", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
 
     // G. Block Fragment [5]: Section Heading (Georgia Serif 16pt, baseline=361)
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
@@ -277,28 +298,28 @@ int main(void) {
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 392, 391, "Built", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_BLACK);
 
     // Row 1 (y=411)
-    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 32, 411, "Great Pyramid of Giza", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
+    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 32, 411, "Great Pyramid of Giza", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 231, 411, "Egypt", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 315, 411, "146.6 m", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
-    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 391, 411, "c. 2560 BC", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
+    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 392, 411, "c. 2560 BC", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
 
     // Row 2 (y=430)
-    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 32, 430, "Pyramid of Khafre", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
+    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 32, 430, "Pyramid of Khafre", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 231, 430, "Egypt", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 315, 430, "136.4 m", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
-    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 391, 430, "c. 2570 BC", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
+    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 392, 430, "c. 2570 BC", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
 
     // Row 3 (y=449)
-    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 32, 449, "Great Pyramid of Cholula", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
+    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 32, 449, "Great Pyramid of Cholula", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 231, 449, "Mexico", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 315, 449, "55.0 m", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
-    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 391, 449, "c. 200 BC", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
+    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 392, 449, "c. 200 BC", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
 
     // Row 4 (y=468)
-    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 32, 468, "El Castillo, Chichen Itza", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
+    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 32, 468, "El Castillo, Chichen Itza", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 231, 468, "Mexico", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
     blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 315, 468, "30.0 m", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
-    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 391, 468, "c. 900 AD", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
+    blink_skia_font_draw_text(fb->pixels, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 392, 468, "c. 900 AD", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
 
     // I. Right Column: Wikipedia Infobox Card (x=505, y=151, w=270, h=323)
     fb_fill_rect(fb, 505, 151, 270, 323, COLOR_WIKI_GRAY);

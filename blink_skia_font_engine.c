@@ -42,12 +42,14 @@ static CTFontRef create_ct_font(const char* family, float size, int style_flags)
     return base_font;
 }
 
-static CGColorRef create_cg_color(uint32_t color_argb) {
-    float a = ((color_argb >> 24) & 0xFF) / 255.0f;
-    float r = ((color_argb >> 16) & 0xFF) / 255.0f;
-    float g = ((color_argb >> 8) & 0xFF) / 255.0f;
-    float b = (color_argb & 0xFF) / 255.0f;
-    return CGColorCreateGenericRGB(r, g, b, a);
+static CGColorRef create_cg_color(CGColorSpaceRef cs, uint32_t color_argb) {
+    CGFloat comp[4] = {
+        ((color_argb >> 16) & 0xFF) / 255.0f,
+        ((color_argb >> 8) & 0xFF) / 255.0f,
+        (color_argb & 0xFF) / 255.0f,
+        ((color_argb >> 24) & 0xFF) / 255.0f
+    };
+    return CGColorCreate(cs, comp);
 }
 
 static void configure_skia_context(CGContextRef ctx, int fb_h) {
@@ -69,13 +71,14 @@ static void configure_skia_context(CGContextRef ctx, int fb_h) {
     CGContextSetTextMatrix(ctx, CGAffineTransformMakeScale(1.0f, -1.0f));
 }
 
-void blink_skia_font_draw_text(uint32_t* fb, int fb_w, int fb_h,
-                               float x, float baseline_y,
-                               const char* text,
-                               const char* font_family,
-                               float font_size,
-                               int weight_bold,
-                               uint32_t color_argb) {
+void blink_skia_font_draw_text_ex(uint32_t* fb, int fb_w, int fb_h,
+                                  float x, float baseline_y,
+                                  const char* text,
+                                  const char* font_family,
+                                  float font_size,
+                                  int style_flags,
+                                  float letter_spacing,
+                                  uint32_t color_argb) {
     if (!fb || !text || strlen(text) == 0) return;
 
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
@@ -83,16 +86,30 @@ void blink_skia_font_draw_text(uint32_t* fb, int fb_w, int fb_h,
                                              kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
     configure_skia_context(ctx, fb_h);
 
-    CTFontRef font = create_ct_font(font_family, font_size, weight_bold);
-    CGColorRef color = create_cg_color(color_argb);
+    CTFontRef font = create_ct_font(font_family, font_size, style_flags);
+    CGColorRef color = create_cg_color(cs, color_argb);
 
     CFStringRef cf_str = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingUTF8);
-    CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
-    CFTypeRef values[] = { font, color };
+    
+    CFStringRef keys[3];
+    CFTypeRef values[3];
+    int num_keys = 2;
+    keys[0] = kCTFontAttributeName;
+    values[0] = font;
+    keys[1] = kCTForegroundColorAttributeName;
+    values[1] = color;
+    
+    CFNumberRef cf_kern = NULL;
+    if (letter_spacing != 0.0f) {
+        cf_kern = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &letter_spacing);
+        keys[2] = kCTKernAttributeName;
+        values[2] = cf_kern;
+        num_keys = 3;
+    }
 
     CFDictionaryRef attr = CFDictionaryCreate(kCFAllocatorDefault,
                                               (const void**)keys, (const void**)values,
-                                              2,
+                                              num_keys,
                                               &kCFTypeDictionaryKeyCallBacks,
                                               &kCFTypeDictionaryValueCallBacks);
 
@@ -102,6 +119,7 @@ void blink_skia_font_draw_text(uint32_t* fb, int fb_w, int fb_h,
     CGContextSetTextPosition(ctx, x, baseline_y);
     CTLineDraw(line, ctx);
 
+    if (cf_kern) CFRelease(cf_kern);
     CFRelease(line);
     CFRelease(attr_str);
     CFRelease(attr);
@@ -110,6 +128,16 @@ void blink_skia_font_draw_text(uint32_t* fb, int fb_w, int fb_h,
     CFRelease(font);
     CGContextRelease(ctx);
     CGColorSpaceRelease(cs);
+}
+
+void blink_skia_font_draw_text(uint32_t* fb, int fb_w, int fb_h,
+                               float x, float baseline_y,
+                               const char* text,
+                               const char* font_family,
+                               float font_size,
+                               int style_flags,
+                               uint32_t color_argb) {
+    blink_skia_font_draw_text_ex(fb, fb_w, fb_h, x, baseline_y, text, font_family, font_size, style_flags, 0.0f, color_argb);
 }
 
 void blink_skia_font_draw_text_box(uint32_t* fb, int fb_w, int fb_h,
@@ -127,7 +155,7 @@ void blink_skia_font_draw_text_box(uint32_t* fb, int fb_w, int fb_h,
     configure_skia_context(ctx, fb_h);
 
     CTFontRef font = create_ct_font(font_family, font_size, 0);
-    CGColorRef color = create_cg_color(color_argb);
+    CGColorRef color = create_cg_color(cs, color_argb);
 
     CFStringRef cf_str = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingUTF8);
     CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };

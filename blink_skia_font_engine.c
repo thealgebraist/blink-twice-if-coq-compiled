@@ -9,7 +9,7 @@ void blink_skia_font_init(void) {
     // Initialized on demand via CoreText
 }
 
-static CTFontRef create_ct_font(const char* family, float size, int bold) {
+static CTFontRef create_ct_font(const char* family, float size, int style_flags) {
     CTFontRef base_font = NULL;
 
     if (family && (strstr(family, "-apple-system") || strstr(family, "BlinkMacSystemFont") ||
@@ -27,12 +27,16 @@ static CTFontRef create_ct_font(const char* family, float size, int bold) {
         base_font = CTFontCreateUIFontForLanguage(kCTFontUIFontSystem, size, NULL);
     }
 
-    if (bold && base_font) {
-        CTFontRef bold_font = CTFontCreateCopyWithSymbolicTraits(base_font, size, NULL,
-                                                                 kCTFontTraitBold, kCTFontTraitBold);
-        if (bold_font) {
+    CTFontSymbolicTraits traits = 0;
+    if (style_flags & 1) traits |= kCTFontTraitBold;
+    if (style_flags & 2) traits |= kCTFontTraitItalic;
+
+    if (traits != 0 && base_font) {
+        CTFontRef styled_font = CTFontCreateCopyWithSymbolicTraits(base_font, size, NULL,
+                                                                   traits, traits);
+        if (styled_font) {
             CFRelease(base_font);
-            return bold_font;
+            return styled_font;
         }
     }
     return base_font;
@@ -153,11 +157,18 @@ void blink_skia_font_draw_text_box(uint32_t* fb, int fb_w, int fb_h,
     CGFloat half_leading = (line_height - font_box_h) / 2.0f;
     if (half_leading < 0) half_leading = 0;
 
-    float current_baseline = top_y + half_leading + ascent;
+    // Blink FontMetrics integer baseline offset:
+    // In Chromium Blink LayoutNG, inline box baseline is placed at top_y + round(ascent)
+    float current_baseline = top_y + roundf(ascent);
 
     while (start < total_len && (current_baseline - top_y - ascent) <= h) {
         CFIndex count = CTTypesetterSuggestLineBreak(typesetter, start, w);
-        CTLineRef line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, count));
+        // W3C CSS Text 3 §4.1.2 & §7.1: Trim trailing whitespace before justification
+        CFIndex visible_count = count;
+        while (visible_count > 0 && CFStringGetCharacterAtIndex(cf_str, start + visible_count - 1) == ' ') {
+            visible_count--;
+        }
+        CTLineRef line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, visible_count));
 
         // W3C CSS Text 3 §7.1 Justification:
         // If not the last line of paragraph, justify to w

@@ -15,12 +15,16 @@ void blink_skia_font_init(void);
  * x, baseline_y: text origin in top-left coordinate system.
  * color_argb: 32-bit ARGB (0xAARRGGBB).
  */
+#define BLINK_FONT_STYLE_NORMAL 0
+#define BLINK_FONT_STYLE_BOLD   1
+#define BLINK_FONT_STYLE_ITALIC 2
+
 void blink_skia_font_draw_text(uint32_t* fb, int fb_w, int fb_h,
                                float x, float baseline_y,
                                const char* text,
                                const char* font_family,
                                float font_size,
-                               int weight_bold,
+                               int style_flags,
                                uint32_t color_argb);
 
 /**

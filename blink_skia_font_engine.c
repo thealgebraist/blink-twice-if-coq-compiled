@@ -13,7 +13,25 @@ static FT_Face s_ft_georgia_reg = NULL;
 static FT_Face s_ft_georgia_bold = NULL;
 static FT_Face s_ft_georgia_italic = NULL;
 
+static uint8_t s_gamma_table[256];
+static bool s_gamma_initialized = false;
+
+static void init_gamma_table(void) {
+    if (s_gamma_initialized) return;
+    for (int i = 0; i < 256; i++) {
+        float f = (float)i / 255.0f;
+        // Skia grayscale font gamma exponent: 1.4f (SK_GAMMA_EXPONENT per Blink font rasterizer)
+        float g = powf(f, 1.0f / 1.4f);
+        int v = (int)roundf(g * 255.0f);
+        if (v < 0) v = 0;
+        if (v > 255) v = 255;
+        s_gamma_table[i] = (uint8_t)v;
+    }
+    s_gamma_initialized = true;
+}
+
 static void init_freetype_if_needed(void) {
+    init_gamma_table();
     if (s_ft_lib) return;
     if (FT_Init_FreeType(&s_ft_lib) != 0) return;
     FT_New_Face(s_ft_lib, "/System/Library/Fonts/Supplemental/Georgia.ttf", 0, &s_ft_georgia_reg);
@@ -81,8 +99,11 @@ static bool draw_text_skia_freetype(uint32_t* fb, int fb_w, int fb_h,
             for (unsigned int c = 0; c < bm->width; c++) {
                 int px = gx + c;
                 if (px < 0 || px >= fb_w) continue;
-                uint8_t cov = bm->buffer[r * bm->pitch + c];
-                if (cov == 0) continue;
+                uint8_t raw_cov = bm->buffer[r * bm->pitch + c];
+                if (raw_cov == 0) continue;
+
+                // Apply Skia font gamma table per theorem blit_glyph_coverage_bounds
+                uint8_t cov = s_gamma_table[raw_cov];
 
                 uint32_t bg = fb[py * fb_w + px];
                 uint8_t bg_r = (bg >> 16) & 0xFF;

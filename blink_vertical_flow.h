@@ -40,3 +40,4 @@ void blink_compute_vertical_flow(int initial_y,
 #endif
 
 #endif // BLINK_VERTICAL_FLOW_H
+

@@ -46,3 +46,4 @@ void blink_compute_vertical_flow(int initial_y,
         margin_neg = z_min(0, b->m_bottom);
     }
 }
+

@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Flower (Full Multi-Page Article) - Wikipedia</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 800px;
+      height: 1800px;
+      margin: 0;
+      padding: 0;
+      background: #f8f9fa;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Liberation Sans", sans-serif;
+      color: #202122;
+      overflow: hidden;
+    }
+    .page-unit {
+      width: 800px;
+      height: 600px;
+      position: relative;
+      overflow: hidden;
+    }
+    @scope (#page-1) {
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 800px;
+      height: 600px;
+      margin: 0;
+      padding: 0;
+      background: #f8f9fa;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Liberation Sans", sans-serif;
+      color: #202122;
+      overflow: hidden;
+    }
+    /* Wikipedia Top Header */
+    .wiki-header {
+      background: #ffffff;
+      border-bottom: 1px solid #a2a9b1;
+      height: 48px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .wiki-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .wiki-wordmark {
+      font-family: 'Linux Libertine', Georgia, serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #000000;
+      letter-spacing: 0.5px;
+    }
+    .wiki-tagline {
+      font-size: 11px;
+      color: #54595d;
+      margin-left: 4px;
+    }
+    .wiki-search {
+      background: #f8f9fa;
+      border: 1px solid #72777d;
+      border-radius: 2px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #72777d;
+      width: 220px;
+    }
+    /* Article Container */
+    .article-container {
+      background: #ffffff;
+      margin: 0 auto;
+      width: 800px;
+      height: 552px;
+      padding: 16px 24px;
+      border-left: 1px solid #eaecf0;
+      border-right: 1px solid #eaecf0;
+    }
+    .first-heading {
+      font-family: 'Linux Libertine', Georgia, serif;
+      font-size: 26px;
+      font-weight: 400;
+      border-bottom: 1px solid #a2a9b1;
+      padding-bottom: 4px;
+      margin-bottom: 4px;
+      color: #000000;
+    }
+    .site-sub {
+      font-size: 11px;
+      color: #54595d;
+      margin-bottom: 8px;
+    }
+    .hatnote {
+      font-style: italic;
+      font-size: 12px;
+      color: #54595d;
+      margin-bottom: 12px;
+    }
+    /* Main Layout Grid */
+    .content-layout {
+      display: grid;
+      grid-template-columns: 460px 270px;
+      gap: 20px;
+    }
+    /* Left Article Body */
+    .lead-paragraph {
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      text-align: justify;
+    }
+    .toc-box {
+      background: #f8f9fa;
+      border: 1px solid #a2a9b1;
+      padding: 8px 12px;
+      width: 210px;
+      margin-bottom: 12px;
+      font-size: 11px;
+    }
+    .toc-title {
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 6px;
+      color: #202122;
+    }
+    .toc-list {
+      list-style-type: none;
+      line-height: 1.4;
+      color: #36c;
+    }
+    .section-heading {
+      font-family: 'Linux Libertine', Georgia, serif;
+      font-size: 16px;
+      font-weight: 400;
+      border-bottom: 1px solid #a2a9b1;
+      padding-bottom: 2px;
+      margin-bottom: 8px;
+    }
+    .flower-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+      margin-top: 6px;
+    }
+    .flower-table th {
+      background: #eaecf0;
+      border: 1px solid #a2a9b1;
+      padding: 4px 6px;
+      text-align: left;
+      font-weight: 700;
+    }
+    .flower-table td {
+      border: 1px solid #a2a9b1;
+      padding: 3px 6px;
+    }
+    .flower-table tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    /* Right Infobox Thumbnail */
+    .infobox {
+      background: #f8f9fa;
+      border: 1px solid #a2a9b1;
+      padding: 6px;
+      font-size: 11px;
+    }
+    .infobox-title {
+      font-weight: 700;
+      text-align: center;
+      background: #eaecf0;
+      padding: 4px;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    .thumb-img {
+      width: 256px;
+      height: 170px;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto;
+      border: 1px solid #c8ccd1;
+    }
+    .thumb-caption {
+      font-size: 10px;
+      line-height: 1.3;
+      color: #202122;
+      padding: 4px 2px;
+      text-align: center;
+      border-bottom: 1px solid #eaecf0;
+      margin-bottom: 6px;
+    }
+    .infobox-meta {
+      width: 100%;
+      font-size: 10px;
+      border-collapse: collapse;
+    }
+    .infobox-meta th {
+      text-align: left;
+      padding: 2px 4px;
+      color: #54595d;
+      width: 40%;
+    }
+    .infobox-meta td {
+      padding: 2px 4px;
+    }
+  
+    }
+    @scope (#page-2) {
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 800px;
+      height: 600px;
+      margin: 0;
+      padding: 0;
+      background: #f8f9fa;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Liberation Sans", sans-serif;
+      color: #202122;
+      overflow: hidden;
+    }
+    /* Wikipedia Running Header */
+    .wiki-header {
+      background: #ffffff;
+      border-bottom: 1px solid #a2a9b1;
+      height: 48px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .wiki-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .wiki-wordmark {
+      font-family: 'Linux Libertine', Georgia, serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #000000;
+      letter-spacing: 0.5px;
+    }
+    .wiki-tagline {
+      font-size: 11px;
+      color: #54595d;
+      margin-left: 4px;
+    }
+    .wiki-page-badge {
+      font-size: 11px;
+      color: #54595d;
+      background: #f8f9fa;
+      border: 1px solid #c8ccd1;
+      padding: 3px 8px;
+      border-radius: 2px;
+    }
+    /* Article Container */
+    .article-container {
+      background: #ffffff;
+      margin: 0 auto;
+      width: 800px;
+      height: 552px;
+      padding: 16px 24px;
+      border-left: 1px solid #eaecf0;
+      border-right: 1px solid #eaecf0;
+    }
+    .section-heading {
+      font-family: 'Linux Libertine', Georgia, serif;
+      font-size: 16px;
+      font-weight: 400;
+      border-bottom: 1px solid #a2a9b1;
+      padding-bottom: 2px;
+      margin-bottom: 8px;
+      color: #000000;
+    }
+    .body-paragraph {
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+      text-align: justify;
+    }
+    /* Content Grid */
+    .content-layout {
+      display: grid;
+      grid-template-columns: 460px 270px;
+      gap: 20px;
+    }
+    /* Tables */
+    .wiki-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+      margin-top: 6px;
+      margin-bottom: 12px;
+    }
+    .wiki-table th {
+      background: #eaecf0;
+      border: 1px solid #a2a9b1;
+      padding: 4px 6px;
+      text-align: left;
+      font-weight: 700;
+    }
+    .wiki-table td {
+      border: 1px solid #a2a9b1;
+      padding: 3px 6px;
+    }
+    .wiki-table tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    /* Right Infobox Card */
+    .infobox-card {
+      background: #f8f9fa;
+      border: 1px solid #a2a9b1;
+      padding: 6px;
+      font-size: 10px;
+    }
+    .infobox-title {
+      font-weight: 700;
+      text-align: center;
+      background: #eaecf0;
+      padding: 4px;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+    .thumb-img {
+      width: 256px;
+      height: 160px;
+      display: block;
+      margin: 0 auto;
+      border: 1px solid #c8ccd1;
+    }
+    .thumb-caption {
+      font-size: 10px;
+      line-height: 1.3;
+      color: #202122;
+      padding: 4px 2px;
+      text-align: center;
+      border-bottom: 1px solid #eaecf0;
+      margin-bottom: 6px;
+    }
+    .infobox-meta {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+    .infobox-meta th {
+      text-align: left;
+      padding: 2px 4px;
+      color: #54595d;
+      width: 38%;
+    }
+    .infobox-meta td {
+      padding: 2px 4px;
+    }
+    /* Page Nav Footer */
+    .page-footer {
+      border-top: 1px solid #eaecf0;
+      padding-top: 8px;
+      font-size: 11px;
+      color: #3366cc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-muted {
+      color: #54595d;
+    }
+  
+    }
+    @scope (#page-3) {
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 800px;
+      height: 600px;
+      margin: 0;
+      padding: 0;
+      background: #f8f9fa;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Liberation Sans", sans-serif;
+      color: #202122;
+      overflow: hidden;
+    }
+    /* Wikipedia Running Header */
+    .wiki-header {
+      background: #ffffff;
+      border-bottom: 1px solid #a2a9b1;
+      height: 48px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .wiki-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .wiki-wordmark {
+      font-family: 'Linux Libertine', Georgia, serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #000000;
+      letter-spacing: 0.5px;
+    }
+    .wiki-tagline {
+      font-size: 11px;
+      color: #54595d;
+      margin-left: 4px;
+    }
+    .wiki-page-badge {
+      font-size: 11px;
+      color: #54595d;
+      background: #f8f9fa;
+      border: 1px solid #c8ccd1;
+      padding: 3px 8px;
+      border-radius: 2px;
+    }
+    /* Article Container */
+    .article-container {
+      background: #ffffff;
+      margin: 0 auto;
+      width: 800px;
+      height: 552px;
+      padding: 16px 24px;
+      border-left: 1px solid #eaecf0;
+      border-right: 1px solid #eaecf0;
+    }
+    .section-heading {
+      font-family: 'Linux Libertine', Georgia, serif;
+      font-size: 16px;
+      font-weight: 400;
+      border-bottom: 1px solid #a2a9b1;
+      padding-bottom: 2px;
+      margin-bottom: 8px;
+      color: #000000;
+    }
+    .body-paragraph {
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 8px;
+      text-align: justify;
+    }
+    /* Tables */
+    .wiki-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+      margin-top: 4px;
+      margin-bottom: 10px;
+    }
+    .wiki-table th {
+      background: #eaecf0;
+      border: 1px solid #a2a9b1;
+      padding: 4px 6px;
+      text-align: left;
+      font-weight: 700;
+    }
+    .wiki-table td {
+      border: 1px solid #a2a9b1;
+      padding: 3px 6px;
+    }
+    .wiki-table tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    /* Category Box */
+    .cat-box {
+      background: #f8f9fa;
+      border: 1px solid #a2a9b1;
+      padding: 6px 12px;
+      font-size: 10px;
+      color: #54595d;
+      margin-top: 6px;
+      margin-bottom: 8px;
+    }
+    .cat-box a {
+      color: #3366cc;
+      text-decoration: none;
+    }
+    /* Page Nav Footer */
+    .page-footer {
+      border-top: 1px solid #eaecf0;
+      padding-top: 8px;
+      font-size: 11px;
+      color: #3366cc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-muted {
+      color: #54595d;
+    }
+  
+    }
+  </style>
+</head>
+<body>
+  <!-- ==================== PAGE 1 ==================== -->
+  <div class="page-unit" id="page-1">
+
+  <div class="wiki-header">
+    <div class="wiki-logo">
+      <span class="wiki-wordmark">WIKIPEDIA</span>
+      <span class="wiki-tagline">The Free Encyclopedia</span>
+    </div>
+    <div class="wiki-search">Search Wikipedia</div>
+  </div>
+
+  <div class="article-container">
+    <h1 class="first-heading">Flower</h1>
+    <div class="site-sub">From Wikipedia, the free encyclopedia</div>
+    <div class="hatnote">This article is about the reproductive structure. For other uses, see Flower (disambiguation).</div>
+
+    <div class="content-layout">
+      <!-- Left Column -->
+      <div class="article-body">
+        <p class="lead-paragraph">
+          A flower, sometimes known as a bloom or blossom, is the reproductive structure found in flowering plants (plants of the division Angiospermae). The biological function of a flower is to facilitate reproduction, usually by providing a mechanism for the union of sperm with eggs.
+        </p>
+
+        <div class="toc-box">
+          <div class="toc-title">Contents</div>
+          <ul class="toc-list">
+            <li>1 Floral anatomy</li>
+            <li>&nbsp;&nbsp;1.1 Perianth</li>
+            <li>&nbsp;&nbsp;1.2 Reproductive organs</li>
+            <li>2 Major flower groups</li>
+          </ul>
+        </div>
+
+        <h2 class="section-heading">Major Groups of Flowering Plants</h2>
+        <table class="flower-table">
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Representative</th>
+              <th>Petal Multiples</th>
+              <th>Known Species</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Monocots</td>
+              <td>Lilies, Orchids</td>
+              <td>Multiples of 3</td>
+              <td>c. 70,000</td>
+            </tr>
+            <tr>
+              <td>Eudicots</td>
+              <td>Roses, Sunflowers</td>
+              <td>Multiples of 4 or 5</td>
+              <td>c. 175,000</td>
+            </tr>
+            <tr>
+              <td>Magnoliids</td>
+              <td>Magnolias, Bay laurel</td>
+              <td>Variable / Spiral</td>
+              <td>c. 10,000</td>
+            </tr>
+            <tr>
+              <td>Basal angiosperms</td>
+              <td>Water lilies</td>
+              <td>Spiral arrangement</td>
+              <td>c. 200</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Right Column: Infobox -->
+      <div class="infobox">
+        <div class="infobox-title">Flower</div>
+        <img src="flower_thumb.png" alt="A sacred lotus in bloom" class="thumb-img">
+        <div class="thumb-caption">A sacred lotus in bloom (Nelumbo nucifera)</div>
+        <table class="infobox-meta">
+          <tr>
+            <th>Organ type</th>
+            <td>Reproductive shoot</td>
+          </tr>
+          <tr>
+            <th>Division</th>
+            <td>Angiosperms (Magnoliophyta)</td>
+          </tr>
+          <tr>
+            <th>Fossil range</th>
+            <td>Early Cretaceous to present</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <!-- ==================== PAGE 2 ==================== -->
+  <div class="page-unit" id="page-2">
+
+  <div class="wiki-header">
+    <div class="wiki-logo">
+      <span class="wiki-wordmark">WIKIPEDIA</span>
+      <span class="wiki-tagline">Flower &mdash; Anatomy &amp; Morphology</span>
+    </div>
+    <div class="wiki-page-badge">Page 2 of 3</div>
+  </div>
+
+  <div class="article-container">
+    <div class="content-layout">
+      <!-- Left Column -->
+      <div class="article-body">
+        <h2 class="section-heading">1.1 Perianth: Calyx and Corolla</h2>
+        <p class="body-paragraph">
+          Together, the calyx (sepals) and corolla (petals) constitute the perianth, the outer non-reproductive envelope of the flower. The calyx protects the developing floral tissues in the bud stage, while the pigmented corolla exhibits spectral absorption and UV reflection patterns designed to attract specialized animal pollinators.
+        </p>
+
+        <table class="wiki-table">
+          <thead>
+            <tr>
+              <th>Symmetry</th>
+              <th>Botanical Term</th>
+              <th>Floral Planes</th>
+              <th>Example Taxa</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Radial</td>
+              <td>Actinomorphic</td>
+              <td>Multiple (&gt;2) planes</td>
+              <td>Lilies, Wild roses</td>
+            </tr>
+            <tr>
+              <td>Bilateral</td>
+              <td>Zygomorphic</td>
+              <td>Single plane only</td>
+              <td>Orchids, Snapdragons</td>
+            </tr>
+            <tr>
+              <td>Asymmetric</td>
+              <td>Irregular</td>
+              <td>No plane of symmetry</td>
+              <td>Canna, Marantaceae</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2 class="section-heading">1.2 Reproductive Organs: Androecium &amp; Gynoecium</h2>
+        <p class="body-paragraph">
+          The fertile organs comprise the male androecium (stamens bearing pollen sacs) and the female gynoecium (one or more carpels enclosing ovules). Double fertilization within the ovary produces the diploid zygote and triploid nutritive endosperm.
+        </p>
+
+        <table class="wiki-table">
+          <thead>
+            <tr>
+              <th>Organ</th>
+              <th>Components</th>
+              <th>Cytological Function</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Stamen</td>
+              <td>Anther &amp; Filament</td>
+              <td>Microsporogenesis producing pollen</td>
+            </tr>
+            <tr>
+              <td>Carpel</td>
+              <td>Stigma, Style, Ovary</td>
+              <td>Megasporogenesis and seed set</td>
+            </tr>
+            <tr>
+              <td>Receptacle</td>
+              <td>Torus / Pedicel apex</td>
+              <td>Attachment axis for floral whorls</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Right Column: Infobox Diagram Card -->
+      <div class="infobox-card">
+        <div class="infobox-title">Floral Anatomy Diagram</div>
+        <img src="flower_diagram.png" alt="Flower cross-section diagram" class="thumb-img">
+        <div class="thumb-caption">Longitudinal floral section showing whorls</div>
+        <table class="infobox-meta">
+          <tr>
+            <th>Petal</th>
+            <td>Corolla attraction lobe</td>
+          </tr>
+          <tr>
+            <th>Sepal</th>
+            <td>Calyx protective leaf</td>
+          </tr>
+          <tr>
+            <th>Stamen</th>
+            <td>Anther + pollen filament</td>
+          </tr>
+          <tr>
+            <th>Pistil</th>
+            <td>Stigma, style &amp; ovary</td>
+          </tr>
+          <tr>
+            <th>Receptacle</th>
+            <td>Thickened stem base</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Page Nav Footer -->
+    <div class="page-footer">
+      <span>&larr; Page 1 (Overview &amp; Classification)</span>
+      <span class="footer-muted">Page 2 of 3</span>
+      <span>Continued on Page 3 (Ecology &amp; Evolution) &rarr;</span>
+    </div>
+  </div>
+
+  </div>
+
+  <!-- ==================== PAGE 3 ==================== -->
+  <div class="page-unit" id="page-3">
+
+  <div class="wiki-header">
+    <div class="wiki-logo">
+      <span class="wiki-wordmark">WIKIPEDIA</span>
+      <span class="wiki-tagline">Flower &mdash; Taxonomy &amp; Evolution</span>
+    </div>
+    <div class="wiki-page-badge">Page 3 of 3</div>
+  </div>
+
+  <div class="article-container">
+    <h2 class="section-heading">2 Major Groups of Flowering Plants &amp; Evolution</h2>
+    <p class="body-paragraph">
+      Flowering plants emerged during the early Cretaceous period, approximately 130 million years ago, rapidly diversifying to dominate terrestrial flora in an evolutionary radiation Charles Darwin famously termed an "abominable mystery". Living angiosperms comprise four primary lineages exhibiting distinct anatomical specializations.
+    </p>
+
+    <table class="wiki-table">
+      <thead>
+        <tr>
+          <th>Angiosperm Clade</th>
+          <th>Distinguishing Traits</th>
+          <th>Floral Architecture</th>
+          <th>Global Diversity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Monocotyledonae</td>
+          <td>Single cotyledon, parallel venation</td>
+          <td>Trimerous perianth (multiples of 3)</td>
+          <td>c. 70,000 species (Poaceae, Orchidaceae)</td>
+        </tr>
+        <tr>
+          <td>Eudicotyledonae</td>
+          <td>Tricolpate pollen, reticulate venation</td>
+          <td>Tetramerous / Pentamerous (4 or 5)</td>
+          <td>c. 175,000 species (Asteraceae, Rosaceae)</td>
+        </tr>
+        <tr>
+          <td>Magnoliidae</td>
+          <td>Ethereal oil cells, branched veins</td>
+          <td>Spiral / Trimerous whorls, many stamens</td>
+          <td>c. 10,000 species (Magnoliaceae, Lauraceae)</td>
+        </tr>
+        <tr>
+          <td>Basal Angiosperms</td>
+          <td>Ancient relicts, laminar stamens</td>
+          <td>Spiral arrangement, undifferentiated</td>
+          <td>c. 200 species (Amborellales, Nymphaeales)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="section-heading">3 Pollination Syndromes &amp; Coevolutionary Mutualisms</h2>
+    <p class="body-paragraph">
+      Angiosperm flowers have coevolved with diverse biotic and abiotic pollination vectors. Floral phenotypic suites&mdash;encompassing corolla morphology, pigment reflectance, olfactory chemistry, and nectar composition&mdash;correlate with specific pollinator guilds.
+    </p>
+
+    <table class="wiki-table">
+      <thead>
+        <tr>
+          <th>Pollinator Vector</th>
+          <th>Syndrome Term</th>
+          <th>Floral Adaptations &amp; Visual Signals</th>
+          <th>Representative Taxa</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Apoidea (Bees)</td>
+          <td>Melittophily</td>
+          <td>Yellow / blue / UV guide patterns, sweet nectar</td>
+          <td>Apple, Clover, Rosemary</td>
+        </tr>
+        <tr>
+          <td>Lepidoptera (Moths)</td>
+          <td>Phalaenophily</td>
+          <td>White corolla, nocturnal fragrance emission</td>
+          <td>Tobacco, Evening primrose</td>
+        </tr>
+        <tr>
+          <td>Trochilidae (Birds)</td>
+          <td>Ornithophily</td>
+          <td>Vivid red tubular corolla, copious dilute nectar</td>
+          <td>Fuchsia, Hibiscus, Sage</td>
+        </tr>
+        <tr>
+          <td>Anemophily (Wind)</td>
+          <td>Abiotic Vector</td>
+          <td>Reduced perianth, versatile pendulous anthers</td>
+          <td>Grasses, Birches, Oaks</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="cat-box">
+      <strong>Categories:</strong> Flowers &bull; Plant anatomy &bull; Angiosperm morphology &bull; Botany &bull; Reproductive biology
+    </div>
+
+    <!-- Page Nav Footer -->
+    <div class="page-footer">
+      <span>&larr; Page 2 (Anatomy &amp; Morphology)</span>
+      <span class="footer-muted">Page 3 of 3 (End of Article)</span>
+      <span>Wikipedia: Featured Article &bull; CC BY-SA 4.0</span>
+    </div>
+  </div>
+
+  </div>
+</body>
+</html>

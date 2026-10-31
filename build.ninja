@@ -949,7 +949,14 @@ build libblink_formal.dylib: shared_lib blink_formal_engine.c
 build blink_formal_engine.ll: llvm_ir blink_formal_engine.c
 build blink_formal_engine.s: asm_gen blink_formal_engine.c
 
-build engine_all: phony blink_formal_runner blink_formal_engine_cpp.o libblink_formal.dylib blink_formal_engine.ll blink_formal_engine.s
+# Rule & target for standalone URL to PNG tool powered by Coq formal models
+rule build_url2png
+  command = $CC -O3 -std=c99 blink_url2png.c blink_skia_font_engine.c blink_image_codec.c blink_vertical_flow.c -framework CoreText -framework CoreGraphics -framework CoreFoundation $$(pkg-config --cflags --libs freetype2) -lcurl -lz -o $out
+  description = BUILD_URL2PNG $out
+
+build blink_url2png: build_url2png blink_url2png.c blink_skia_font_engine.c blink_image_codec.c blink_vertical_flow.c | blink_skia_font_engine.h blink_image_codec.h blink_vertical_flow.h blink_dual_mode_z.h
+
+build engine_all: phony blink_formal_runner blink_url2png blink_formal_engine_cpp.o libblink_formal.dylib blink_formal_engine.ll blink_formal_engine.s
 build .engine_tested: run_runner blink_formal_runner
 build test: phony .admits_verified .engine_tested
 build all: phony coq_all .admits_verified engine_all .engine_tested

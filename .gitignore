@@ -59,3 +59,9 @@ render_showcase_images_fonts
 render_wikipedia_pyramids
 render_wikipedia_flowers
 render_wikipedia_flowers_multipage
+blink_url2png
+test_*.png
+render_wikipedia_flowers
+render_wikipedia_flowers_multipage
+blink_url2png
+test_*.png_multipage

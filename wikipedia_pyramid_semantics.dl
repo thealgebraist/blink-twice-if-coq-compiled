@@ -1,220 +1,323 @@
-// =========================================================================
+// ============================================================================
 // wikipedia_pyramid_semantics.dl
-// Souffle Datalog Relational Model of Live Wikipedia 'Pyramid' Article
-// (MediaWiki PageId 23704, Revision 1382372480, 111 DOM Blocks, 10 Monuments)
-// =========================================================================
+//
+// Deductive Encyclopedic Knowledge Base & Sentence Entailment Engine
+// synthesized from the sentences of the live Wikipedia 'Pyramid' article.
+// ============================================================================
 
-.decl WikiBlock(id: number, region: symbol, kind: symbol, words: number, lines: number, img_w: number, img_h: number, content_h: number, m_top: number, m_bottom: number, p_top: number, p_bottom: number, b_top: number, b_bottom: number)
-.decl Monument(id: symbol, region: symbol, base_dm: number, height_dm: number, extant_count: number, is_stepped: number)
+.decl WikiSentence(id: number, section: symbol, region: symbol, prop_kind: symbol, words: number, year_anchor: number, has_quant: number)
+.decl Monument(id: symbol, section: symbol, region: symbol, civ: symbol, poly: symbol, surface: symbol, apex: symbol, orient: symbol, mat: symbol, purpose: symbol, lifecycle: symbol, epistemic: symbol, year_built: number, height_dm: number, base_area_m2: number, stories: number, extant_count: number, slope_deg: number)
+.decl BuddhistStepPyramidRegion(country: symbol, surviving_count: number)
 
-// 1. Regime Analysis & Dead-Branch Elimination (blink_regimes.dl style)
-.decl NonNegativeMarginBlock(id: number)
-.decl NegativeMarginViolation(id: number)
-.decl GlobalPositiveMarginRegime(status: symbol, verified_blocks: number)
-.decl BlockVisualRegime(id: number, regime: symbol)
+WikiSentence(1, "Sec_Lead", "Reg_Global", "PK_EtymologyAndDefinition", 44, 0, 0).
+WikiSentence(2, "Sec_Lead", "Reg_Global", "PK_GeometricOrPhysicalLaw", 23, 0, 0).
+WikiSentence(3, "Sec_Lead", "Reg_Global", "PK_GeometricOrPhysicalLaw", 21, 0, 0).
+WikiSentence(4, "Sec_Lead", "Reg_Global", "PK_GeometricOrPhysicalLaw", 18, 0, 0).
+WikiSentence(5, "Sec_Lead", "Reg_Global", "PK_CulturalOrRitualFunction", 13, 0, 0).
+WikiSentence(6, "Sec_Lead", "Reg_Global", "PK_CulturalOrRitualFunction", 13, 0, 0).
+WikiSentence(7, "Sec_Lead", "Reg_Global", "PK_ComparativeOrSuperlative", 18, 0, 0).
+WikiSentence(8, "Sec_Lead", "Reg_Global", "PK_ComparativeOrSuperlative", 26, 0, 0).
+WikiSentence(9, "Sec_Lead", "Reg_Global", "PK_CulturalOrRitualFunction", 15, 0, 1).
+WikiSentence(10, "Sec_Mesopotamia", "Reg_WestAsia", "PK_CulturalOrRitualFunction", 9, 0, 0).
+WikiSentence(11, "Sec_Mesopotamia", "Reg_WestAsia", "PK_CulturalOrRitualFunction", 9, 0, 0).
+WikiSentence(12, "Sec_Mesopotamia", "Reg_WestAsia", "PK_MaterialAndConstruction", 11, 0, 0).
+WikiSentence(13, "Sec_Mesopotamia", "Reg_WestAsia", "PK_HistoricalChronology", 11, 0, 0).
+WikiSentence(14, "Sec_Mesopotamia", "Reg_WestAsia", "PK_CulturalOrRitualFunction", 12, 0, 0).
+WikiSentence(15, "Sec_Mesopotamia", "Reg_WestAsia", "PK_HistoricalChronology", 17, -3500, 1).
+WikiSentence(16, "Sec_Mesopotamia", "Reg_WestAsia", "PK_HistoricalChronology", 12, 0, 0).
+WikiSentence(17, "Sec_Mesopotamia", "Reg_WestAsia", "PK_HistoricalChronology", 12, -4000, 1).
+WikiSentence(18, "Sec_Mesopotamia", "Reg_WestAsia", "PK_HistoricalChronology", 12, -3500, 1).
+WikiSentence(19, "Sec_Mesopotamia", "Reg_WestAsia", "PK_CulturalOrRitualFunction", 21, 0, 0).
+WikiSentence(20, "Sec_Mesopotamia", "Reg_WestAsia", "PK_HistoricalChronology", 17, 0, 0).
+WikiSentence(21, "Sec_Mesopotamia", "Reg_WestAsia", "PK_HistoricalChronology", 14, 0, 1).
+WikiSentence(22, "Sec_Mesopotamia", "Reg_WestAsia", "PK_HistoricalChronology", 8, 0, 0).
+WikiSentence(23, "Sec_Mesopotamia", "Reg_WestAsia", "PK_CulturalOrRitualFunction", 9, 0, 1).
+WikiSentence(24, "Sec_Mesopotamia", "Reg_WestAsia", "PK_EpistemicOrControversy", 24, 0, 0).
+WikiSentence(25, "Sec_Mesopotamia", "Reg_WestAsia", "PK_CulturalOrRitualFunction", 27, 0, 0).
+WikiSentence(26, "Sec_Egypt", "Reg_Africa", "PK_ComparativeOrSuperlative", 25, 0, 0).
+WikiSentence(27, "Sec_Egypt", "Reg_Africa", "PK_CulturalOrRitualFunction", 9, 0, 0).
+WikiSentence(28, "Sec_Egypt", "Reg_Africa", "PK_HistoricalChronology", 7, 0, 0).
+WikiSentence(29, "Sec_Egypt", "Reg_Africa", "PK_LifecycleOrPreservation", 16, 0, 0).
+WikiSentence(30, "Sec_Egypt", "Reg_Africa", "PK_HistoricalChronology", 16, 0, 0).
+WikiSentence(31, "Sec_Egypt", "Reg_Africa", "PK_HistoricalChronology", 11, -2700, 1).
+WikiSentence(32, "Sec_Egypt", "Reg_Africa", "PK_HistoricalChronology", 17, 0, 0).
+WikiSentence(33, "Sec_Egypt", "Reg_Africa", "PK_CulturalOrRitualFunction", 13, 0, 1).
+WikiSentence(34, "Sec_Egypt", "Reg_Africa", "PK_HistoricalChronology", 21, 0, 0).
+WikiSentence(35, "Sec_Egypt", "Reg_Africa", "PK_HistoricalChronology", 13, -2150, 1).
+WikiSentence(36, "Sec_Egypt", "Reg_Africa", "PK_CulturalOrRitualFunction", 31, 0, 0).
+WikiSentence(37, "Sec_Egypt", "Reg_Africa", "PK_CulturalOrRitualFunction", 12, 0, 0).
+WikiSentence(38, "Sec_Egypt", "Reg_Africa", "PK_HistoricalChronology", 17, 0, 0).
+WikiSentence(39, "Sec_Egypt", "Reg_Africa", "PK_ComparativeOrSuperlative", 18, 0, 0).
+WikiSentence(40, "Sec_Egypt", "Reg_Africa", "PK_ComparativeOrSuperlative", 22, 1311, 1).
+WikiSentence(41, "Sec_Egypt", "Reg_Africa", "PK_CulturalOrRitualFunction", 13, 0, 1).
+WikiSentence(42, "Sec_Egypt", "Reg_Africa", "PK_CulturalOrRitualFunction", 16, 0, 1).
+WikiSentence(43, "Sec_Egypt", "Reg_Africa", "PK_CulturalOrRitualFunction", 37, 0, 0).
+WikiSentence(44, "Sec_Egypt", "Reg_Africa", "PK_HistoricalChronology", 15, 2008, 1).
+WikiSentence(45, "Sec_Sudan", "Reg_Africa", "PK_ComparativeOrSuperlative", 18, 0, 1).
+WikiSentence(46, "Sec_Sudan", "Reg_Africa", "PK_CulturalOrRitualFunction", 26, 0, 1).
+WikiSentence(47, "Sec_Sudan", "Reg_Africa", "PK_CulturalOrRitualFunction", 16, 0, 0).
+WikiSentence(48, "Sec_Sudan", "Reg_Africa", "PK_ComparativeOrSuperlative", 10, 0, 0).
+WikiSentence(49, "Sec_Sudan", "Reg_Africa", "PK_HistoricalChronology", 10, 200, 1).
+WikiSentence(50, "Sec_Sahel", "Reg_Africa", "PK_EpistemicOrControversy", 26, 0, 0).
+WikiSentence(51, "Sec_Sahel", "Reg_Africa", "PK_HistoricalChronology", 19, 0, 0).
+WikiSentence(52, "Sec_Sahel", "Reg_Africa", "PK_HistoricalChronology", 17, 0, 0).
+WikiSentence(53, "Sec_Sahel", "Reg_Africa", "PK_CulturalOrRitualFunction", 14, 0, 1).
+WikiSentence(54, "Sec_Sahel", "Reg_Africa", "PK_ComparativeOrSuperlative", 16, 0, 1).
+WikiSentence(55, "Sec_Sahel", "Reg_Africa", "PK_HistoricalChronology", 16, 0, 0).
+WikiSentence(56, "Sec_Nigeria", "Reg_Africa", "PK_CulturalOrRitualFunction", 20, 0, 0).
+WikiSentence(57, "Sec_Nigeria", "Reg_Africa", "PK_MaterialAndConstruction", 7, 0, 1).
+WikiSentence(58, "Sec_Nigeria", "Reg_Africa", "PK_CulturalOrRitualFunction", 18, 0, 1).
+WikiSentence(59, "Sec_Nigeria", "Reg_Africa", "PK_CulturalOrRitualFunction", 10, 0, 1).
+WikiSentence(60, "Sec_Nigeria", "Reg_Africa", "PK_CulturalOrRitualFunction", 6, 0, 0).
+WikiSentence(61, "Sec_Nigeria", "Reg_Africa", "PK_EpistemicOrControversy", 14, 0, 0).
+WikiSentence(62, "Sec_Nigeria", "Reg_Africa", "PK_CulturalOrRitualFunction", 12, 0, 0).
+WikiSentence(63, "Sec_Nigeria", "Reg_Africa", "PK_CulturalOrRitualFunction", 12, 0, 0).
+WikiSentence(64, "Sec_Nigeria", "Reg_Africa", "PK_HistoricalChronology", 18, 0, 0).
+WikiSentence(65, "Sec_Greece", "Reg_Europe", "PK_HistoricalChronology", 56, 150, 1).
+WikiSentence(66, "Sec_Greece", "Reg_Europe", "PK_LifecycleOrPreservation", 11, 0, 0).
+WikiSentence(67, "Sec_Greece", "Reg_Europe", "PK_CulturalOrRitualFunction", 25, 0, 1).
+WikiSentence(68, "Sec_Greece", "Reg_Europe", "PK_CulturalOrRitualFunction", 14, 0, 0).
+WikiSentence(69, "Sec_Greece", "Reg_Europe", "PK_GeometricOrPhysicalLaw", 37, 0, 1).
+WikiSentence(70, "Sec_Greece", "Reg_Europe", "PK_MaterialAndConstruction", 26, 0, 0).
+WikiSentence(71, "Sec_Greece", "Reg_Europe", "PK_CulturalOrRitualFunction", 13, 0, 0).
+WikiSentence(72, "Sec_Greece", "Reg_Europe", "PK_CulturalOrRitualFunction", 10, 0, 1).
+WikiSentence(73, "Sec_Greece", "Reg_Europe", "PK_CulturalOrRitualFunction", 22, 0, 0).
+WikiSentence(74, "Sec_Greece", "Reg_Europe", "PK_EpistemicOrControversy", 20, 0, 0).
+WikiSentence(75, "Sec_Greece", "Reg_Europe", "PK_EpistemicOrControversy", 39, 0, 0).
+WikiSentence(76, "Sec_Greece", "Reg_Europe", "PK_CulturalOrRitualFunction", 64, 0, 0).
+WikiSentence(77, "Sec_Greece", "Reg_Europe", "PK_CulturalOrRitualFunction", 16, 0, 1).
+WikiSentence(78, "Sec_Greece", "Reg_Europe", "PK_EpistemicOrControversy", 11, 0, 0).
+WikiSentence(79, "Sec_Poland", "Reg_Europe", "PK_CulturalOrRitualFunction", 20, 0, 0).
+WikiSentence(80, "Sec_Spain", "Reg_Europe", "PK_MaterialAndConstruction", 15, 0, 1).
+WikiSentence(81, "Sec_Spain", "Reg_Europe", "PK_CulturalOrRitualFunction", 23, 0, 1).
+WikiSentence(82, "Sec_Spain", "Reg_Europe", "PK_HistoricalChronology", 19, 1850, 1).
+WikiSentence(83, "Sec_Spain", "Reg_Europe", "PK_HistoricalChronology", 28, 0, 0).
+WikiSentence(84, "Sec_Spain", "Reg_Europe", "PK_LifecycleOrPreservation", 11, 0, 0).
+WikiSentence(85, "Sec_Spain", "Reg_Europe", "PK_LifecycleOrPreservation", 9, 0, 1).
+WikiSentence(86, "Sec_RomanEmpire", "Reg_Europe", "PK_LifecycleOrPreservation", 23, -50, 1).
+WikiSentence(87, "Sec_RomanEmpire", "Reg_Europe", "PK_LifecycleOrPreservation", 21, 1450, 1).
+WikiSentence(88, "Sec_MedievalEurope", "Reg_Europe", "PK_HistoricalChronology", 22, 0, 0).
+WikiSentence(89, "Sec_Peru", "Reg_Americas", "PK_CulturalOrRitualFunction", 28, 0, 0).
+WikiSentence(90, "Sec_Mesoamerica", "Reg_Americas", "PK_CulturalOrRitualFunction", 6, 0, 0).
+WikiSentence(91, "Sec_Mesoamerica", "Reg_Americas", "PK_ComparativeOrSuperlative", 19, 0, 0).
+WikiSentence(92, "Sec_Mesoamerica", "Reg_Americas", "PK_ComparativeOrSuperlative", 16, 0, 0).
+WikiSentence(93, "Sec_Mesoamerica", "Reg_Americas", "PK_ComparativeOrSuperlative", 24, -250, 1).
+WikiSentence(94, "Sec_Mesoamerica", "Reg_Americas", "PK_ComparativeOrSuperlative", 19, 0, 0).
+WikiSentence(95, "Sec_Mesoamerica", "Reg_Americas", "PK_LifecycleOrPreservation", 34, -50, 1).
+WikiSentence(96, "Sec_Mesoamerica", "Reg_Americas", "PK_LifecycleOrPreservation", 10, 0, 0).
+WikiSentence(97, "Sec_Mesoamerica", "Reg_Americas", "PK_CulturalOrRitualFunction", 9, 0, 1).
+WikiSentence(98, "Sec_Mesoamerica", "Reg_Americas", "PK_EpistemicOrControversy", 30, 1487, 1).
+WikiSentence(99, "Sec_UnitedStates", "Reg_Americas", "PK_MaterialAndConstruction", 18, 0, 0).
+WikiSentence(100, "Sec_UnitedStates", "Reg_Americas", "PK_ComparativeOrSuperlative", 24, 1100, 1).
+WikiSentence(101, "Sec_UnitedStates", "Reg_Americas", "PK_ComparativeOrSuperlative", 11, 0, 0).
+WikiSentence(102, "Sec_UnitedStates", "Reg_Americas", "PK_CulturalOrRitualFunction", 7, 0, 0).
+WikiSentence(103, "Sec_UnitedStates", "Reg_Americas", "PK_EpistemicOrControversy", 15, 0, 0).
+WikiSentence(104, "Sec_UnitedStates", "Reg_Americas", "PK_MaterialAndConstruction", 29, 0, 0).
+WikiSentence(105, "Sec_UnitedStates", "Reg_Americas", "PK_CulturalOrRitualFunction", 17, 0, 0).
+WikiSentence(106, "Sec_China", "Reg_Asia", "PK_CulturalOrRitualFunction", 7, 0, 0).
+WikiSentence(107, "Sec_China", "Reg_Asia", "PK_HistoricalChronology", 24, -221, 1).
+WikiSentence(108, "Sec_China", "Reg_Asia", "PK_HistoricalChronology", 19, 0, 1).
+WikiSentence(109, "Sec_India", "Reg_Asia", "PK_MaterialAndConstruction", 20, 0, 0).
+WikiSentence(110, "Sec_India", "Reg_Asia", "PK_HistoricalChronology", 17, 0, 0).
+WikiSentence(111, "Sec_India", "Reg_Asia", "PK_ComparativeOrSuperlative", 13, 0, 0).
+WikiSentence(112, "Sec_India", "Reg_Asia", "PK_HistoricalChronology", 13, 1050, 1).
+WikiSentence(113, "Sec_India", "Reg_Asia", "PK_HistoricalChronology", 27, 1987, 1).
+WikiSentence(114, "Sec_India", "Reg_Asia", "PK_HistoricalChronology", 9, 1010, 1).
+WikiSentence(115, "Sec_India", "Reg_Asia", "PK_HistoricalChronology", 9, 0, 0).
+WikiSentence(116, "Sec_India", "Reg_Asia", "PK_CulturalOrRitualFunction", 17, 0, 0).
+WikiSentence(117, "Sec_Indonesia", "Reg_Asia", "PK_MaterialAndConstruction", 15, 0, 0).
+WikiSentence(118, "Sec_Indonesia", "Reg_Asia", "PK_CulturalOrRitualFunction", 12, 0, 0).
+WikiSentence(119, "Sec_Indonesia", "Reg_Asia", "PK_CulturalOrRitualFunction", 21, 0, 0).
+WikiSentence(120, "Sec_Indonesia", "Reg_Asia", "PK_HistoricalChronology", 17, 750, 1).
+WikiSentence(121, "Sec_Indonesia", "Reg_Asia", "PK_CulturalOrRitualFunction", 18, 0, 0).
+WikiSentence(122, "Sec_Indonesia", "Reg_Asia", "PK_HistoricalChronology", 33, 1450, 1).
+WikiSentence(123, "Sec_EastCentralAsia", "Reg_Asia", "PK_CulturalOrRitualFunction", 11, 0, 0).
+WikiSentence(124, "Sec_EastCentralAsia", "Reg_Asia", "PK_LifecycleOrPreservation", 5, 0, 0).
+WikiSentence(125, "Sec_EastCentralAsia", "Reg_Asia", "PK_EpistemicOrControversy", 17, 0, 0).
+WikiSentence(126, "Sec_EastCentralAsia", "Reg_Asia", "PK_LifecycleOrPreservation", 8, 0, 0).
+WikiSentence(127, "Sec_EastCentralAsia", "Reg_Asia", "PK_LifecycleOrPreservation", 25, 0, 1).
+WikiSentence(128, "Sec_Oceania", "Reg_Oceania", "PK_HistoricalChronology", 24, 0, 0).
+WikiSentence(129, "Sec_ModernPyramids", "Reg_Global", "PK_HistoricalChronology", 17, 1840, 1).
+WikiSentence(130, "Sec_ModernPyramids", "Reg_Global", "PK_MaterialAndConstruction", 28, 0, 1).
+WikiSentence(131, "Sec_ModernPyramids", "Reg_Global", "PK_HistoricalChronology", 13, 1989, 1).
+WikiSentence(132, "Sec_ModernPyramids", "Reg_Global", "PK_GeometricOrPhysicalLaw", 13, 0, 0).
+WikiSentence(133, "Sec_ModernPyramids", "Reg_Global", "PK_LifecycleOrPreservation", 29, 1993, 1).
+WikiSentence(134, "Sec_ModernPyramids", "Reg_Global", "PK_ComparativeOrSuperlative", 21, 1016, 1).
+WikiSentence(135, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 12, 0, 1).
+WikiSentence(136, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 23, 0, 1).
+WikiSentence(137, "Sec_ModernPyramids", "Reg_Global", "PK_HistoricalChronology", 25, 1991, 1).
+WikiSentence(138, "Sec_ModernPyramids", "Reg_Global", "PK_LifecycleOrPreservation", 24, 2007, 1).
+WikiSentence(139, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 31, 0, 1).
+WikiSentence(140, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 16, 0, 1).
+WikiSentence(141, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 9, 0, 1).
+WikiSentence(142, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 14, 0, 0).
+WikiSentence(143, "Sec_ModernPyramids", "Reg_Global", "PK_GeometricOrPhysicalLaw", 31, 0, 0).
+WikiSentence(144, "Sec_ModernPyramids", "Reg_Global", "PK_GeometricOrPhysicalLaw", 11, 0, 0).
+WikiSentence(145, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 10, 0, 0).
+WikiSentence(146, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 10, 0, 1).
+WikiSentence(147, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 16, 0, 0).
+WikiSentence(148, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 24, 0, 0).
+WikiSentence(149, "Sec_ModernPyramids", "Reg_Global", "PK_HistoricalChronology", 15, 0, 0).
+WikiSentence(150, "Sec_ModernPyramids", "Reg_Global", "PK_LifecycleOrPreservation", 21, 1939, 1).
+WikiSentence(151, "Sec_ModernPyramids", "Reg_Global", "PK_HistoricalChronology", 19, 0, 1).
+WikiSentence(152, "Sec_ModernPyramids", "Reg_Global", "PK_HistoricalChronology", 21, 0, 0).
+WikiSentence(153, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 17, 1823, 1).
+WikiSentence(154, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 8, 0, 0).
+WikiSentence(155, "Sec_ModernPyramids", "Reg_Global", "PK_GeometricOrPhysicalLaw", 10, 0, 0).
+WikiSentence(156, "Sec_ModernPyramids", "Reg_Global", "PK_HistoricalChronology", 18, 0, 1).
+WikiSentence(157, "Sec_ModernPyramids", "Reg_Global", "PK_CulturalOrRitualFunction", 16, 0, 0).
+WikiSentence(158, "Sec_ModernPyramids", "Reg_Global", "PK_LifecycleOrPreservation", 20, 1993, 1).
+WikiSentence(159, "Sec_ModernPyramids", "Reg_Global", "PK_LifecycleOrPreservation", 8, 0, 0).
+WikiSentence(160, "Sec_ModernPyramids", "Reg_Global", "PK_LifecycleOrPreservation", 19, 0, 0).
+WikiSentence(161, "Sec_ModernPyramids", "Reg_Global", "PK_HistoricalChronology", 42, 1820, 1).
+WikiSentence(162, "Sec_ModernPyramids", "Reg_Global", "PK_GeometricOrPhysicalLaw", 9, 0, 0).
+WikiSentence(163, "Sec_ModernMausoleums", "Reg_Global", "PK_HistoricalChronology", 19, 0, 1).
+WikiSentence(164, "Sec_ModernMausoleums", "Reg_Global", "PK_CulturalOrRitualFunction", 13, 0, 0).
+WikiSentence(165, "Sec_ModernMausoleums", "Reg_Global", "PK_CulturalOrRitualFunction", 9, 0, 0).
+WikiSentence(166, "Sec_ModernMausoleums", "Reg_Global", "PK_HistoricalChronology", 17, 1889, 1).
+WikiSentence(167, "Sec_ModernMausoleums", "Reg_Global", "PK_CulturalOrRitualFunction", 7, 0, 0).
+WikiSentence(168, "Sec_ModernMausoleums", "Reg_Global", "PK_CulturalOrRitualFunction", 14, 0, 0).
 
-NonNegativeMarginBlock(id) :- WikiBlock(id, _, _, _, _, _, _, _, mt, mb, _, _, _, _), mt >= 0, mb >= 0.
-NegativeMarginViolation(id) :- WikiBlock(id, _, _, _, _, _, _, _, mt, mb, _, _, _, _), (mt < 0 ; mb < 0).
-GlobalPositiveMarginRegime("ACTIVE_FASTPATH_MNEG_ZERO", n) :-
-    !NegativeMarginViolation(_),
-    n = count : { NonNegativeMarginBlock(_) }.
+Monument("Mon_AnuZiggurat", "Sec_Mesopotamia", "Reg_WestAsia", "Civ_Mesopotamian", "Poly_Rectangular", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_MudBrick", "Purp_TemplePlatform", "Life_PartiallyRuined", "Epis_TextualShrineHerodotus", -4000, 130, 2400, 0, 1, 60).
+Monument("Mon_ChoghaZanbil", "Sec_Mesopotamia", "Reg_WestAsia", "Civ_Elamite", "Poly_Square", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_FiredGlazedBrick", "Purp_TemplePlatform", "Life_Extant", "Epis_Archaeological", -1250, 250, 11000, 0, 1, 62).
+Monument("Mon_DjoserStep", "Sec_Egypt", "Reg_Africa", "Civ_AncientEgyptian", "Poly_Rectangular", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_Limestone", "Purp_RoyalTomb", "Life_Extant", "Epis_Archaeological", -2670, 625, 13190, 0, 135, 72).
+Monument("Mon_RedPyramid", "Sec_Egypt", "Reg_Africa", "Civ_AncientEgyptian", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_Limestone", "Purp_RoyalTomb", "Life_Extant", "Epis_Archaeological", -2590, 1050, 48400, 0, 135, 43).
+Monument("Mon_KhufuGiza", "Sec_Egypt", "Reg_Africa", "Civ_AncientEgyptian", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_Limestone", "Purp_RoyalTomb", "Life_Extant", "Epis_Archaeological", -2560, 1466, 53000, 0, 135, 51).
+Monument("Mon_KhafreGiza", "Sec_Egypt", "Reg_Africa", "Civ_AncientEgyptian", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_Limestone", "Purp_RoyalTomb", "Life_Extant", "Epis_Archaeological", -2530, 1364, 46300, 0, 135, 53).
+Monument("Mon_AhmoseAbydos", "Sec_Egypt", "Reg_Africa", "Civ_AncientEgyptian", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_Limestone", "Purp_RoyalTomb", "Life_PartiallyRuined", "Epis_Archaeological", -1525, 400, 2750, 0, 135, 60).
+Monument("Mon_MeroeNubia", "Sec_Sudan", "Reg_Africa", "Civ_KushiteNubian", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_Sandstone", "Purp_RoyalTomb", "Life_Extant", "Epis_Archaeological", -300, 300, 900, 0, 220, 70).
+Monument("Mon_TombOfAskia", "Sec_Sahel", "Reg_Africa", "Civ_Songhai", "Poly_Square", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_ClayMud", "Purp_RoyalTomb", "Life_Extant", "Epis_Archaeological", 1495, 170, 320, 0, 1, 65).
+Monument("Mon_NsudeIgbo", "Sec_Nigeria", "Reg_Africa", "Civ_Igbo", "Poly_Circular", "Surf_Stepped", "Apex_PointedPyramidion", "Orient_Upright", "Mat_ClayMud", "Purp_DeityTemple", "Life_PeriodicReconstruction", "Epis_Archaeological", 1700, 90, 260, 0, 10, 60).
+Monument("Mon_Hellinikon", "Sec_Greece", "Reg_Europe", "Civ_AncientGreek", "Poly_Rectangular", "Surf_SmoothFilled", "Apex_RidgeLine", "Orient_Upright", "Mat_Limestone", "Purp_MemorialOrWatchtower", "Life_PartiallyRuined", "Epis_DisputedBlackAthena", -350, 35, 175, 0, 2, 60).
+Monument("Mon_Kuyavian", "Sec_Poland", "Reg_Europe", "Civ_EuropeanMegalithic", "Poly_Trapezoidal", "Surf_SmoothFilled", "Apex_RidgeLine", "Orient_Upright", "Mat_EarthAndStone", "Purp_MegalithicTomb", "Life_Extant", "Epis_Archaeological", -3500, 30, 1500, 0, 12, 35).
+Monument("Mon_GuimarTenerife", "Sec_Spain", "Reg_Europe", "Civ_ModernEuropean", "Poly_Rectangular", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_LavaStone", "Purp_AgriculturalTerrace", "Life_Extant", "Epis_Agricultural19thC", 1850, 120, 600, 0, 6, 55).
+Monument("Mon_CestiusRome", "Sec_RomanEmpire", "Reg_Europe", "Civ_Roman", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_MarbleBrick", "Purp_MausoleumTomb", "Life_Extant", "Epis_Archaeological", -12, 270, 900, 0, 1, 68).
+Monument("Mon_MetaRomuli", "Sec_RomanEmpire", "Reg_Europe", "Civ_Roman", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_MarbleBrick", "Purp_MausoleumTomb", "Life_Demolished", "Epis_TextualHistorical", -20, 320, 625, 0, 0, 65).
+Monument("Mon_OviedoSpire", "Sec_MedievalEurope", "Reg_Europe", "Civ_MedievalChristian", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_Limestone", "Purp_ChurchTower", "Life_Extant", "Epis_Archaeological", 1450, 800, 144, 0, 1, 78).
+Monument("Mon_CaralAndes", "Sec_Peru", "Reg_Americas", "Civ_AndeanCaral", "Poly_Rectangular", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_EarthAndStone", "Purp_TemplePlatform", "Life_Extant", "Epis_Archaeological", -2600, 280, 24000, 0, 6, 45).
+Monument("Mon_CholulaMexico", "Sec_Mesoamerica", "Reg_Americas", "Civ_Mesoamerican", "Poly_Square", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_MudBrick", "Purp_TemplePlatform", "Life_Extant", "Epis_Archaeological", -200, 660, 160000, 0, 1, 32).
+Monument("Mon_SunTeotihuacan", "Sec_Mesoamerica", "Reg_Americas", "Civ_Mesoamerican", "Poly_Square", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_EarthAndStone", "Purp_TemplePlatform", "Life_Extant", "Epis_Archaeological", 200, 655, 50600, 0, 1, 33).
+Monument("Mon_ElCastillo", "Sec_Mesoamerica", "Reg_Americas", "Civ_Mesoamerican", "Poly_Square", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_Limestone", "Purp_TemplePlatform", "Life_Extant", "Epis_Archaeological", 900, 300, 3060, 0, 1, 45).
+Monument("Mon_Cuicuilco", "Sec_Mesoamerica", "Reg_Americas", "Civ_Mesoamerican", "Poly_Circular", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_LavaStone", "Purp_TemplePlatform", "Life_PartiallyRuined", "Epis_Archaeological", -500, 230, 9500, 0, 1, 40).
+Monument("Mon_Tenochtitlan", "Sec_Mesoamerica", "Reg_Americas", "Civ_Mesoamerican", "Poly_Rectangular", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_EarthAndStone", "Purp_SacrificialTemple", "Life_PartiallyRuined", "Epis_DisputedSourceCount", 1487, 600, 8000, 0, 1, 45).
+Monument("Mon_MonksMound", "Sec_UnitedStates", "Reg_Americas", "Civ_Mississippian", "Poly_Rectangular", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_EarthAndStone", "Purp_CivicPlatform", "Life_Extant", "Epis_Archaeological", 1100, 300, 56000, 0, 1, 30).
+Monument("Mon_QinShiHuang", "Sec_China", "Reg_Asia", "Civ_ImperialChinese", "Poly_Square", "Surf_SmoothFilled", "Apex_FlatTop", "Orient_Upright", "Mat_EarthAndStone", "Purp_RoyalTomb", "Life_Extant", "Epis_Archaeological", -221, 760, 122500, 0, 13, 25).
+Monument("Mon_Brihadisvara", "Sec_India", "Reg_Asia", "Civ_CholaIndian", "Poly_Square", "Surf_Stepped", "Apex_PointedPyramidion", "Orient_Upright", "Mat_Granite", "Purp_ActiveHinduTemple", "Life_Extant", "Epis_Archaeological", 1010, 660, 900, 0, 4, 70).
+Monument("Mon_Borobudur", "Sec_Indonesia", "Reg_Asia", "Civ_AustronesianJavanese", "Poly_Square", "Surf_Stepped", "Apex_PointedPyramidion", "Orient_Upright", "Mat_LavaStone", "Purp_BuddhistStupa", "Life_Extant", "Epis_Archaeological", 780, 350, 15129, 0, 9, 35).
+Monument("Mon_PrasatThom", "Sec_EastCentralAsia", "Reg_Asia", "Civ_Khmer", "Poly_Square", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_Sandstone", "Purp_TemplePlatform", "Life_Extant", "Epis_Archaeological", 928, 360, 3844, 0, 1, 52).
+Monument("Mon_Pulemelei", "Sec_Oceania", "Reg_Oceania", "Civ_Polynesian", "Poly_Rectangular", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_LavaStone", "Purp_CivicPlatform", "Life_Extant", "Epis_Archaeological", 1100, 120, 3900, 0, 3, 40).
+Monument("Mon_LouvrePyramid", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_SteelAndGlass", "Purp_MuseumEntrance", "Life_Extant", "Epis_Archaeological", 1989, 206, 1156, 0, 1, 51).
+Monument("Mon_PyramideInversee", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Inverted", "Mat_SteelAndGlass", "Purp_SkylightInstallation", "Life_Extant", "Epis_Archaeological", 1993, 70, 177, 0, 1, 51).
+Monument("Mon_TheShard", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_SteelAndGlass", "Purp_Skyscraper", "Life_Extant", "Epis_Archaeological", 2012, 3096, 3900, 72, 1, 80).
+Monument("Mon_LuxorLasVegas", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_SteelAndGlass", "Purp_HotelResort", "Life_Extant", "Epis_Archaeological", 1993, 1070, 35300, 30, 1, 51).
+Monument("Mon_MemphisPyramid", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_SteelAndGlass", "Purp_SportsToMegastore", "Life_Repurposed2015", "Epis_Archaeological", 1991, 980, 32000, 32, 1, 53).
+Monument("Mon_WalterLongBeach", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_SteelAndGlass", "Purp_SportsArena", "Life_Extant", "Epis_Archaeological", 1994, 580, 11100, 18, 1, 53).
+Monument("Mon_TransamericaSF", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Square", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_SteelAndGlass", "Purp_Skyscraper", "Life_Extant", "Epis_Archaeological", 1972, 2600, 2800, 48, 1, 79).
+Monument("Mon_RyugyongPyongyang", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Triangular", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_SteelAndGlass", "Purp_Skyscraper", "Life_UnderConstruction", "Epis_Archaeological", 1987, 3300, 36000, 105, 1, 75).
+Monument("Mon_SlovakRadio", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Square", "Surf_Stepped", "Apex_FlatTop", "Orient_Inverted", "Mat_SteelAndGlass", "Purp_CivicBroadcast", "Life_Extant", "Epis_Archaeological", 1983, 800, 6400, 0, 1, 45).
+Monument("Mon_Trylon1939", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Triangular", "Surf_SmoothFilled", "Apex_PointedPyramidion", "Orient_Upright", "Mat_SteelAndGlass", "Purp_ExhibitionMonument", "Life_Demolished", "Epis_Archaeological", 1939, 1860, 400, 0, 0, 84).
+Monument("Mon_Ballandean", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Square", "Surf_Stepped", "Apex_PointedPyramidion", "Orient_Upright", "Mat_Granite", "Purp_FollyMonument", "Life_Extant", "Epis_Archaeological", 1998, 150, 300, 0, 1, 50).
+Monument("Mon_TimePyramidWemding", "Sec_ModernPyramids", "Reg_Global", "Civ_ContemporaryGlobal", "Poly_Square", "Surf_Stepped", "Apex_FlatTop", "Orient_Upright", "Mat_ConcreteBlocks", "Purp_PublicTimeArt", "Life_Scheduled3183", "Epis_Archaeological", 1993, 74, 225, 0, 1, 55).
 
-BlockVisualRegime(id, "BorderedSectionHeading") :- WikiBlock(id, _, k, _, _, _, _, _, _, _, _, _, _, bb), (k = "BK_H1" ; k = "BK_H2"), bb > 0.
-BlockVisualRegime(id, "SubHeadingClean") :- WikiBlock(id, _, k, _, _, _, _, _, _, _, _, _, _, 0), (k = "BK_H3" ; k = "BK_H4").
-BlockVisualRegime(id, "FramedFigureCard") :- WikiBlock(id, _, "BK_Figure", _, _, _, _, _, _, _, _, _, 1, 1).
-BlockVisualRegime(id, "ItalicHatnote") :- WikiBlock(id, _, "BK_Hatnote", _, _, _, _, _, _, _, _, _, _, _).
-BlockVisualRegime(id, "BodyProseFlow") :- WikiBlock(id, _, k, _, _, _, _, _, _, _, _, _, 0, 0), (k = "BK_Paragraph" ; k = "BK_List").
+// Sentence fact (East/SE/Central Asia): "At least nine Buddhist step pyramids survive..."
+BuddhistStepPyramidRegion("Korea_Gyeongsang", 4).
+BuddhistStepPyramidRegion("Japan", 3).
+BuddhistStepPyramidRegion("Indonesia_Borobudur", 1).
+BuddhistStepPyramidRegion("Tajikistan_Vrang", 1).
 
-// 2. Inductive Vertical Flow & W3C Margin Collapsing Fixpoint
-.decl BlockBoxHeight(id: number, box_h: number)
-BlockBoxHeight(id, bt + pt + ch + pb + bb) :- WikiBlock(id, _, _, _, _, _, _, ch, _, _, pt, pb, bt, bb).
+// ----------------------------------------------------------------------------
+// 1. Deductive Architectural Regime Classification
+// ----------------------------------------------------------------------------
+.decl ArchitecturalRegime(mon: symbol, regime: symbol)
+ArchitecturalRegime(m, "Regime_InvertedModern") :-
+    Monument(m, _, _, _, _, _, _, "Orient_Inverted", _, _, _, _, _, _, _, _, _, _).
+ArchitecturalRegime(m, "Regime_ModernCivicOrCommercial") :-
+    Monument(m, "Sec_ModernPyramids", _, _, _, _, _, "Orient_Upright", _, _, _, _, _, _, _, _, _, _).
+ArchitecturalRegime(m, "Regime_AncientTruncatedTempleOrPlatform") :-
+    Monument(m, sec, _, _, _, _, "Apex_FlatTop", "Orient_Upright", _, purp, _, _, _, _, _, _, _, _),
+    sec != "Sec_ModernPyramids", purp != "Purp_RoyalTomb".
+ArchitecturalRegime(m, "Regime_FuneraryTombOrMausoleum") :-
+    Monument(m, sec, _, _, _, _, _, "Orient_Upright", _, purp, _, _, _, _, _, _, _, _),
+    sec != "Sec_ModernPyramids",
+    (purp = "Purp_RoyalTomb" ; purp = "Purp_MausoleumTomb" ; purp = "Purp_MegalithicTomb").
+ArchitecturalRegime(m, "Regime_SacredPointedOrRidgeMonument") :-
+    Monument(m, sec, _, _, _, _, apex, "Orient_Upright", _, purp, _, _, _, _, _, _, _, _),
+    sec != "Sec_ModernPyramids", apex != "Apex_FlatTop",
+    purp != "Purp_RoyalTomb", purp != "Purp_MausoleumTomb", purp != "Purp_MegalithicTomb".
 
-.decl FlowState(id: number, y: number, h: number, collapsed_m: number, next_cursor: number, out_m_pos: number)
+// ----------------------------------------------------------------------------
+// 2. Chronological Precedence & Earliest Civilization Discovery
+// ----------------------------------------------------------------------------
+.decl EarliestMonument(mon: symbol, year: number)
+EarliestMonument(m, y) :-
+    Monument(m, _, _, _, _, _, _, _, _, _, _, _, y, _, _, _, _, _),
+    y = min y2 : { Monument(_, _, _, _, _, _, _, _, _, _, _, _, y2, _, _, _, _, _) }.
 
-// Base block id = 0 at INITIAL_Y = 64
-FlowState(0, 64 + mt, h, mt, 64 + mt + h, mb) :-
-    WikiBlock(0, _, _, _, _, _, _, _, mt, mb, _, _, _, _),
-    BlockBoxHeight(0, h).
+// ----------------------------------------------------------------------------
+// 3. Area/Volume vs Height Non-Monotonicity Paradox Discovery
+//    Finds pairs where m_wide has strictly larger base area than m_tall,
+//    yet m_tall is strictly taller than m_wide!
+// ----------------------------------------------------------------------------
+.decl BaseAreaVsHeightParadox(wider_mon: symbol, wider_area: number, taller_mon: symbol, taller_h_dm: number)
+BaseAreaVsHeightParadox(mw, aw, mt, ht) :-
+    Monument(mw, _, _, _, _, _, _, _, _, _, _, _, _, hw, aw, _, _, _),
+    Monument(mt, _, _, _, _, _, _, _, _, _, _, _, _, ht, at_area, _, _, _),
+    mt = "Mon_KhufuGiza", aw > at_area, ht > hw, hw > 0, at_area > 0.
 
-// Inductive step id = prev + 1: collapsed = max(prev_mb, cur_mt)
-FlowState(id, prev_cur + cm, h, cm, prev_cur + cm + h, mb) :-
-    FlowState(prev_id, _, _, _, prev_cur, prev_mb),
-    id = prev_id + 1,
-    WikiBlock(id, _, _, _, _, _, _, _, mt, mb, _, _, _, _),
-    BlockBoxHeight(id, h),
-    cm = max(prev_mb, mt).
+// ----------------------------------------------------------------------------
+// 4. Global Superlative Entailments from Sentence Facts
+// ----------------------------------------------------------------------------
+.decl TallestAncientPyramid(mon: symbol, h_dm: number)
+TallestAncientPyramid(m, h) :-
+    Monument(m, _, _, _, _, _, _, _, _, _, _, _, yr, h, _, _, _, _), yr < 500,
+    h = max h2 : { Monument(_, _, _, _, _, _, _, _, _, _, _, _, yr2, h2, _, _, _, _), yr2 < 500 }.
 
-// 3. Continuous Multi-Page Pagination (Viewport 800 x 600)
-.decl BlockPageSlice(id: number, region: symbol, kind: symbol, y: number, h: number, start_page: number, end_page: number)
-BlockPageSlice(id, reg, k, y, h, y / 600, (y + h - 1) / 600) :-
-    WikiBlock(id, reg, k, _, _, _, _, _, _, _, _, _, _, _),
-    FlowState(id, y, h, _, _, _), h > 0.
+.decl TallestCompletedPyramid(mon: symbol, h_dm: number)
+TallestCompletedPyramid(m, h) :-
+    Monument(m, _, _, _, _, _, _, _, _, _, "Life_Extant", _, _, h, _, _, _, _),
+    h = max h2 : { Monument(_, _, _, _, _, _, _, _, _, _, "Life_Extant", _, _, h2, _, _, _, _) }.
 
-.decl ArticleSummary(total_blocks: number, total_words: number, total_figures: number, canvas_height: number, total_pages: number)
-ArticleSummary(nb, nw, nf, canvas_h, (canvas_h + 599) / 600) :-
-    nb = count : { WikiBlock(_, _, _, _, _, _, _, _, _, _, _, _, _, _) },
-    nw = sum w : { WikiBlock(_, _, _, w, _, _, _, _, _, _, _, _, _, _) },
-    nf = count : { WikiBlock(_, _, "BK_Figure", _, _, _, _, _, _, _, _, _, _, _) },
-    max_end = max nc : { FlowState(_, _, _, _, nc, _) },
-    last_mb = max mb : { FlowState(nb - 1, _, _, _, _, mb) },
-    canvas_h = max_end + last_mb + 32.
+.decl LargestBaseAreaPyramid(mon: symbol, area_m2: number)
+LargestBaseAreaPyramid(m, a) :-
+    Monument(m, _, _, _, _, _, _, _, _, _, _, _, _, _, a, _, _, _),
+    a = max a2 : { Monument(_, _, _, _, _, _, _, _, _, _, _, _, _, _, a2, _, _, _) }.
 
-// 4. Regional Semantic Aggregation
-.decl RegionSummary(region: symbol, blk_count: number, word_count: number, fig_count: number, min_y: number, max_y_end: number)
-RegionSummary(reg, bc, wc, fc, min_y, max_end) :-
-    WikiBlock(_, reg, _, _, _, _, _, _, _, _, _, _, _, _),
-    bc = count : { WikiBlock(_, reg, _, _, _, _, _, _, _, _, _, _, _, _) },
-    wc = sum w : { WikiBlock(id2, reg, _, w, _, _, _, _, _, _, _, _, _, _), id2 >= 0 },
-    fc = count : { WikiBlock(_, reg, "BK_Figure", _, _, _, _, _, _, _, _, _, _, _) },
-    min_y = min y : { WikiBlock(id3, reg, _, _, _, _, _, _, _, _, _, _, _, _), FlowState(id3, y, _, _, _, _) },
-    max_end = max nc : { WikiBlock(id4, reg, _, _, _, _, _, _, _, _, _, _, _, _), FlowState(id4, _, _, _, nc, _) }.
+.decl MostExtantPyramidsTradition(mon: symbol, extant: number)
+MostExtantPyramidsTradition(m, e) :-
+    Monument(m, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, e, _),
+    e = max e2 : { Monument(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, e2, _) }.
 
-// 5. Encyclopedic Knowledge Graph Superlatives (using scaled kdm^3 volume to fit 64-bit signed int)
-.decl MonumentVolumeProxy(id: symbol, vol_proxy: number)
-MonumentVolumeProxy(id, ((base / 10) * (base / 10) * height) / 10) :- Monument(id, _, base, height, _, _).
+// ----------------------------------------------------------------------------
+// 5. Scholarly / Epistemic Caution Inference
+// ----------------------------------------------------------------------------
+.decl EpistemicCautionRequired(mon: symbol, epistemic_tag: symbol)
+EpistemicCautionRequired(m, ep) :-
+    Monument(m, _, _, _, _, _, _, _, _, _, _, ep, _, _, _, _, _, _),
+    ep != "Epis_Archaeological".
 
-.decl LargestByVolume(id: symbol, vol_proxy: number)
-LargestByVolume(id, v) :- MonumentVolumeProxy(id, v), v = max v2 : { MonumentVolumeProxy(_, v2) }.
+// ----------------------------------------------------------------------------
+// 6. Corpus & Buddhist Step-Pyramid Aggregations
+// ----------------------------------------------------------------------------
+.decl CorpusSummary(total_sentences: number, total_words: number, quant_sentences: number, buddhist_total: number)
+CorpusSummary(ns, nw, nq, nb) :-
+    ns = count : { WikiSentence(_, _, _, _, _, _, _) },
+    nw = sum w : { WikiSentence(_, _, _, _, w, _, _) },
+    nq = count : { WikiSentence(_, _, _, _, _, _, 1) },
+    nb = sum c : { BuddhistStepPyramidRegion(_, c) }.
 
-.decl TallestModernMonument(id: symbol, height_dm: number)
-TallestModernMonument(id, h) :- Monument(id, "Reg_Modern", _, h, _, _), h = max h2 : { Monument(_, "Reg_Modern", _, h2, _, _) }.
+.decl RegionSentenceSummary(region: symbol, sent_count: number, word_count: number)
+RegionSentenceSummary(reg, sc, wc) :-
+    WikiSentence(_, _, reg, _, _, _, _),
+    sc = count : { WikiSentence(_, _, reg, _, _, _, _) },
+    wc = sum w : { WikiSentence(_, _, reg, _, w, _, _) }.
 
-.decl TallestAncientMonument(id: symbol, height_dm: number)
-TallestAncientMonument(id, h) :- Monument(id, reg, _, h, _, _), reg != "Reg_Modern", h = max h2 : { Monument(_, r2, _, h2, _, _), r2 != "Reg_Modern" }.
-
-.decl MostExtantPyramids(id: symbol, extant: number)
-MostExtantPyramids(id, c) :- Monument(id, _, _, _, c, _), c = max c2 : { Monument(_, _, _, _, c2, _) }.
-
-.output GlobalPositiveMarginRegime(IO=stdout)
-.output ArticleSummary(IO=stdout)
-.output RegionSummary(IO=stdout)
-.output LargestByVolume(IO=stdout)
-.output TallestAncientMonument(IO=stdout)
-.output TallestModernMonument(IO=stdout)
-.output MostExtantPyramids(IO=stdout)
-.output BlockPageSlice(IO=stdout)
-
-// --- EDB Facts: 111 Live Wikipedia Pyramid DOM Blocks ---
-WikiBlock(0, "Reg_Lead", "BK_H1", 1, 1, 0, 0, 34, 0, 8, 0, 4, 0, 1).
-WikiBlock(1, "Reg_Lead", "BK_Hatnote", 20, 2, 0, 0, 38, 4, 8, 2, 2, 0, 0).
-WikiBlock(2, "Reg_Lead", "BK_Figure", 8, 2, 250, 187, 225, 8, 12, 6, 6, 1, 1).
-WikiBlock(3, "Reg_Lead", "BK_Paragraph", 67, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
-WikiBlock(4, "Reg_Lead", "BK_Paragraph", 52, 4, 0, 0, 80, 8, 10, 0, 0, 0, 0).
-WikiBlock(5, "Reg_Lead", "BK_Figure", 7, 2, 250, 188, 226, 8, 12, 6, 6, 1, 1).
-WikiBlock(6, "Reg_Lead", "BK_Paragraph", 72, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
-WikiBlock(7, "Reg_Lead", "BK_H2", 2, 1, 0, 0, 26, 18, 8, 0, 3, 0, 1).
-WikiBlock(8, "Reg_Lead", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
-WikiBlock(9, "Reg_WestAsia", "BK_H3", 2, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
-WikiBlock(10, "Reg_WestAsia", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(11, "Reg_WestAsia", "BK_Hatnote", 3, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
-WikiBlock(12, "Reg_WestAsia", "BK_Figure", 13, 3, 250, 158, 212, 8, 12, 6, 6, 1, 1).
-WikiBlock(13, "Reg_WestAsia", "BK_Paragraph", 69, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
-WikiBlock(14, "Reg_WestAsia", "BK_Paragraph", 156, 11, 0, 0, 220, 8, 10, 0, 0, 0, 0).
-WikiBlock(15, "Reg_Africa", "BK_H3", 1, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
-WikiBlock(16, "Reg_Africa", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(17, "Reg_Africa", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
-WikiBlock(18, "Reg_Africa", "BK_Figure", 11, 2, 250, 165, 203, 8, 12, 6, 6, 1, 1).
-WikiBlock(19, "Reg_Africa", "BK_Paragraph", 73, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
-WikiBlock(20, "Reg_Africa", "BK_Paragraph", 135, 10, 0, 0, 200, 8, 10, 0, 0, 0, 0).
-WikiBlock(21, "Reg_Africa", "BK_Paragraph", 69, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
-WikiBlock(22, "Reg_Africa", "BK_Paragraph", 52, 4, 0, 0, 80, 8, 10, 0, 0, 0, 0).
-WikiBlock(23, "Reg_Africa", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(24, "Reg_Africa", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
-WikiBlock(25, "Reg_Africa", "BK_Figure", 6, 2, 250, 188, 226, 8, 12, 6, 6, 1, 1).
-WikiBlock(26, "Reg_Africa", "BK_Figure", 10, 2, 250, 188, 226, 8, 12, 6, 6, 1, 1).
-WikiBlock(27, "Reg_Africa", "BK_Paragraph", 80, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
-WikiBlock(28, "Reg_Africa", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(29, "Reg_Africa", "BK_Hatnote", 5, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
-WikiBlock(30, "Reg_Africa", "BK_Paragraph", 45, 3, 0, 0, 60, 8, 10, 0, 0, 0, 0).
-WikiBlock(31, "Reg_Africa", "BK_Paragraph", 63, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
-WikiBlock(32, "Reg_Africa", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(33, "Reg_Africa", "BK_Hatnote", 5, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
-WikiBlock(34, "Reg_Africa", "BK_Paragraph", 117, 8, 0, 0, 160, 8, 10, 0, 0, 0, 0).
-WikiBlock(35, "Reg_Europe", "BK_H3", 1, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
-WikiBlock(36, "Reg_Europe", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(37, "Reg_Europe", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
-WikiBlock(38, "Reg_Europe", "BK_Figure", 3, 1, 250, 141, 163, 8, 12, 6, 6, 1, 1).
-WikiBlock(39, "Reg_Europe", "BK_Paragraph", 67, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
-WikiBlock(40, "Reg_Europe", "BK_Paragraph", 102, 8, 0, 0, 160, 8, 10, 0, 0, 0, 0).
-WikiBlock(41, "Reg_Europe", "BK_Paragraph", 65, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
-WikiBlock(42, "Reg_Europe", "BK_Paragraph", 119, 9, 0, 0, 180, 8, 10, 0, 0, 0, 0).
-WikiBlock(43, "Reg_Europe", "BK_Paragraph", 11, 2, 0, 0, 40, 8, 10, 0, 0, 0, 0).
-WikiBlock(44, "Reg_Europe", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(45, "Reg_Europe", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
-WikiBlock(46, "Reg_Europe", "BK_Paragraph", 20, 2, 0, 0, 40, 8, 10, 0, 0, 0, 0).
-WikiBlock(47, "Reg_Europe", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(48, "Reg_Europe", "BK_Figure", 5, 1, 250, 180, 202, 8, 12, 6, 6, 1, 1).
-WikiBlock(49, "Reg_Europe", "BK_Paragraph", 57, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
-WikiBlock(50, "Reg_Europe", "BK_Paragraph", 48, 4, 0, 0, 80, 8, 10, 0, 0, 0, 0).
-WikiBlock(51, "Reg_Europe", "BK_H4", 2, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(52, "Reg_Europe", "BK_Hatnote", 5, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
-WikiBlock(53, "Reg_Europe", "BK_Figure", 6, 1, 250, 166, 188, 8, 12, 6, 6, 1, 1).
-WikiBlock(54, "Reg_Europe", "BK_Paragraph", 44, 3, 0, 0, 60, 8, 10, 0, 0, 0, 0).
-WikiBlock(55, "Reg_Europe", "BK_H4", 2, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(56, "Reg_Europe", "BK_Paragraph", 22, 2, 0, 0, 40, 8, 10, 0, 0, 0, 0).
-WikiBlock(57, "Reg_Americas", "BK_H3", 1, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
-WikiBlock(58, "Reg_Americas", "BK_Figure", 11, 2, 250, 169, 207, 8, 12, 6, 6, 1, 1).
-WikiBlock(59, "Reg_Americas", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(60, "Reg_Americas", "BK_Paragraph", 28, 3, 0, 0, 60, 8, 10, 0, 0, 0, 0).
-WikiBlock(61, "Reg_Americas", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(62, "Reg_Americas", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
-WikiBlock(63, "Reg_Americas", "BK_Figure", 5, 1, 250, 133, 155, 8, 12, 6, 6, 1, 1).
-WikiBlock(64, "Reg_Americas", "BK_Paragraph", 25, 3, 0, 0, 60, 8, 10, 0, 0, 0, 0).
-WikiBlock(65, "Reg_Americas", "BK_Paragraph", 103, 8, 0, 0, 160, 8, 10, 0, 0, 0, 0).
-WikiBlock(66, "Reg_Americas", "BK_Paragraph", 39, 3, 0, 0, 60, 8, 10, 0, 0, 0, 0).
-WikiBlock(67, "Reg_Americas", "BK_H4", 2, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(68, "Reg_Americas", "BK_Figure", 12, 3, 250, 121, 175, 8, 12, 6, 6, 1, 1).
-WikiBlock(69, "Reg_Americas", "BK_Figure", 3, 1, 250, 188, 210, 8, 12, 6, 6, 1, 1).
-WikiBlock(70, "Reg_Americas", "BK_Paragraph", 121, 11, 0, 0, 220, 8, 10, 0, 0, 0, 0).
-WikiBlock(71, "Reg_Asia", "BK_H3", 1, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
-WikiBlock(72, "Reg_Asia", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
-WikiBlock(73, "Reg_Asia", "BK_Figure", 7, 2, 250, 188, 226, 8, 12, 6, 6, 1, 1).
-WikiBlock(74, "Reg_Asia", "BK_Figure", 4, 1, 250, 188, 210, 8, 12, 6, 6, 1, 1).
-WikiBlock(75, "Reg_Asia", "BK_Paragraph", 50, 4, 0, 0, 80, 8, 10, 0, 0, 0, 0).
-WikiBlock(76, "Reg_Asia", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(77, "Reg_Asia", "BK_Paragraph", 90, 7, 0, 0, 140, 8, 10, 0, 0, 0, 0).
-WikiBlock(78, "Reg_Asia", "BK_List", 39, 4, 90, 120, 80, 6, 10, 0, 0, 0, 0).
-WikiBlock(79, "Reg_Asia", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(80, "Reg_Asia", "BK_Figure", 4, 1, 250, 98, 120, 8, 12, 6, 6, 1, 1).
-WikiBlock(81, "Reg_Asia", "BK_Figure", 5, 1, 250, 167, 189, 8, 12, 6, 6, 1, 1).
-WikiBlock(82, "Reg_Asia", "BK_Paragraph", 48, 4, 0, 0, 80, 8, 10, 0, 0, 0, 0).
-WikiBlock(83, "Reg_Asia", "BK_Paragraph", 68, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
-WikiBlock(84, "Reg_Asia", "BK_H4", 7, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
-WikiBlock(85, "Reg_Asia", "BK_Figure", 9, 2, 250, 167, 205, 8, 12, 6, 6, 1, 1).
-WikiBlock(86, "Reg_Asia", "BK_Paragraph", 66, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
-WikiBlock(87, "Reg_Oceania", "BK_H3", 1, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
-WikiBlock(88, "Reg_Oceania", "BK_Paragraph", 24, 2, 0, 0, 40, 8, 10, 0, 0, 0, 0).
-WikiBlock(89, "Reg_Oceania", "BK_Figure", 8, 2, 250, 167, 205, 8, 12, 6, 6, 1, 1).
-WikiBlock(90, "Reg_Modern", "BK_H2", 2, 1, 0, 0, 26, 18, 8, 0, 3, 0, 1).
-WikiBlock(91, "Reg_Modern", "BK_Figure", 35, 7, 310, 194, 312, 8, 12, 6, 6, 1, 1).
-WikiBlock(92, "Reg_Modern", "BK_List", 17, 2, 0, 0, 40, 6, 10, 0, 0, 0, 0).
-WikiBlock(93, "Reg_Modern", "BK_Figure", 4, 1, 250, 122, 144, 8, 12, 6, 6, 1, 1).
-WikiBlock(94, "Reg_Modern", "BK_List", 83, 7, 0, 0, 140, 6, 10, 0, 0, 0, 0).
-WikiBlock(95, "Reg_Modern", "BK_Figure", 5, 1, 130, 240, 262, 8, 12, 6, 6, 1, 1).
-WikiBlock(96, "Reg_Modern", "BK_List", 136, 11, 0, 0, 220, 6, 10, 0, 0, 0, 0).
-WikiBlock(97, "Reg_Modern", "BK_Figure", 6, 2, 130, 226, 264, 8, 12, 6, 6, 1, 1).
-WikiBlock(98, "Reg_Modern", "BK_List", 241, 19, 0, 0, 380, 6, 10, 0, 0, 0, 0).
-WikiBlock(99, "Reg_Modern", "BK_Figure", 14, 3, 250, 167, 221, 8, 12, 6, 6, 1, 1).
-WikiBlock(100, "Reg_Modern", "BK_List", 144, 11, 0, 0, 220, 6, 10, 0, 0, 0, 0).
-WikiBlock(101, "Reg_Modern", "BK_Figure", 8, 2, 250, 137, 175, 8, 12, 6, 6, 1, 1).
-WikiBlock(102, "Reg_Modern", "BK_List", 46, 5, 184, 120, 100, 6, 10, 0, 0, 0, 0).
-WikiBlock(103, "Reg_Modern", "BK_H3", 2, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
-WikiBlock(104, "Reg_Modern", "BK_Figure", 4, 1, 250, 333, 355, 8, 12, 6, 6, 1, 1).
-WikiBlock(105, "Reg_Modern", "BK_Paragraph", 79, 7, 0, 0, 140, 8, 10, 0, 0, 0, 0).
-WikiBlock(106, "Reg_Meta", "BK_H2", 2, 1, 0, 0, 26, 18, 8, 0, 3, 0, 1).
-WikiBlock(107, "Reg_Meta", "BK_List", 23, 2, 0, 0, 40, 6, 10, 0, 0, 0, 0).
-WikiBlock(108, "Reg_Meta", "BK_H2", 1, 1, 0, 0, 26, 18, 8, 0, 3, 0, 1).
-WikiBlock(109, "Reg_Meta", "BK_H2", 2, 1, 0, 0, 26, 18, 8, 0, 3, 0, 1).
-WikiBlock(110, "Reg_Meta", "BK_List", 12, 2, 12, 16, 40, 6, 10, 0, 0, 0, 0).
-
-// --- EDB Facts: 10 Canonical Monuments from Live Article ---
-Monument("Mon_ChoghaZanbil", "Reg_WestAsia", 1052, 420, 30, 1).
-Monument("Mon_KhufuGiza", "Reg_Africa", 2303, 1466, 118, 0).
-Monument("Mon_KhafreGiza", "Reg_Africa", 2152, 1364, 118, 0).
-Monument("Mon_MeroeNubia", "Reg_Africa", 120, 300, 220, 0).
-Monument("Mon_CestiusRome", "Reg_Europe", 296, 270, 2, 0).
-Monument("Mon_CholulaMexico", "Reg_Americas", 4500, 660, 50, 1).
-Monument("Mon_BorobudurJava", "Reg_Asia", 1230, 350, 15, 1).
-Monument("Mon_LouvreParis", "Reg_Modern", 354, 206, 5, 0).
-Monument("Mon_TransamericaSF", "Reg_Modern", 530, 2600, 12, 0).
-Monument("Mon_TheShardLondon", "Reg_Modern", 650, 3096, 3, 0).
+.output ArchitecturalRegime(IO=stdout)
+.output EarliestMonument(IO=stdout)
+.output BaseAreaVsHeightParadox(IO=stdout)
+.output TallestAncientPyramid(IO=stdout)
+.output TallestCompletedPyramid(IO=stdout)
+.output LargestBaseAreaPyramid(IO=stdout)
+.output MostExtantPyramidsTradition(IO=stdout)
+.output EpistemicCautionRequired(IO=stdout)
+.output CorpusSummary(IO=stdout)
+.output RegionSentenceSummary(IO=stdout)

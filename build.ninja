@@ -936,7 +936,7 @@ build GeneralSpecificationSoundnessTheory.vo: coqc GeneralSpecificationSoundness
 build LayoutMetaProofSystem.vo: coqc LayoutMetaProofSystem.v
 build PythonTimSortCollapseSemantics.vo: coqc PythonTimSortCollapseSemantics.v
 build PythonTokenBucketSemantics.vo: coqc PythonTokenBucketSemantics.v
-build WikipediaPyramidsSemanticModel.vo: coqc WikipediaPyramidsSemanticModel.v | BlinkDualModeZSemantics.vo
+build WikipediaPyramidsSemanticModel.vo: coqc WikipediaPyramidsSemanticModel.v
 build test_hyphen.vo: coqc test_hyphen.v | BlinkTextHyphenationBreakSemantics.vo
 build test_offsets.vo: coqc test_offsets.v
 

@@ -423,7 +423,7 @@ static void render_flower_page_2(FrameBuffer* fb, int base_y) {
         blink_image_free(diag_img);
     }
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                              540, base_y + 272, "Longitudinal floral section showing whorls", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
+                              539, base_y + 272, "Longitudinal floral section showing whorls", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
     fb_fill_rect(fb, 512, base_y + 279, 256, 1, COLOR_TABLE_HEAD);
 
     // Infobox metadata rows
@@ -447,7 +447,7 @@ static void render_flower_page_2(FrameBuffer* fb, int base_y) {
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
                               25, base_y + 490, "\xE2\x86\x90 Page 1 (Overview & Classification)", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                              348, base_y + 490, "Page 2 of 3", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
+                              347, base_y + 490, "Page 2 of 3", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
                               537, base_y + 490, "Continued on Page 3 (Ecology & Evolution) \xE2\x86\x92", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
 }
@@ -586,18 +586,18 @@ static void render_flower_page_3(FrameBuffer* fb, int base_y) {
     fb_fill_rect(fb, 25, base_y + 446, 750, 26, COLOR_WIKI_GRAY);
     fb_stroke_rect(fb, 25, base_y + 446, 750, 26, COLOR_BORDER_GRAY);
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                              39, base_y + 462, "Categories:", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
+                              38, base_y + 461, "Categories:", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                              102, base_y + 462, "Flowers \xE2\x80\xA2 Plant anatomy \xE2\x80\xA2 Angiosperm morphology \xE2\x80\xA2 Botany \xE2\x80\xA2 Reproductive biology", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
+                              101, base_y + 461, "Flowers \xE2\x80\xA2 Plant anatomy \xE2\x80\xA2 Angiosperm morphology \xE2\x80\xA2 Botany \xE2\x80\xA2 Reproductive biology", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
 
     // Page Footer Nav Line
     fb_fill_rect(fb, 25, base_y + 480, 750, 1, COLOR_TABLE_HEAD);
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
                               25, base_y + 500, "\xE2\x86\x90 Page 2 (Anatomy & Morphology)", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                              309, base_y + 500, "Page 3 of 3 (End of Article)", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
+                              308, base_y + 500, "Page 3 of 3 (End of Article)", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                              550, base_y + 500, "Wikipedia: Featured Article \xE2\x80\xA2 CC BY-SA 4.0", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
+                              549, base_y + 500, "Wikipedia: Featured Article \xE2\x80\xA2 CC BY-SA 4.0", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
 }
 
 int main(void) {

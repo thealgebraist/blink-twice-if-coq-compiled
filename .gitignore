@@ -46,6 +46,8 @@ paper_page*.png
 .ninja_deps
 .admits_verified
 .engine_tested
+.html_css_tested
+test_blink_html_css_formal
 
 # OS artifacts
 .DS_Store

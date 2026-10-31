@@ -31,6 +31,7 @@
 #include <zlib.h>
 
 #include "blink_dual_mode_z.h"
+#include "blink_html_css_formal.h"
 #include "blink_vertical_flow.h"
 #include "blink_skia_font_engine.h"
 #include "blink_image_codec.h"
@@ -360,660 +361,9 @@ static void fb_draw_bullet(FrameBuffer* fb, int cx, int cy, int radius, uint32_t
 }
 
 /* ------------------------------------------------------------------------- */
-/* HTML & CSS Tokenizer and DOM Structure                                    */
+/* HTML5 TreeBuilder + CSS Cascade Level 5 provided by blink_html_css_formal */
+/* (Verified in BlinkHTML5TreeBuilderAndCSSCascadeEngine.v)                  */
 /* ------------------------------------------------------------------------- */
-typedef enum {
-    DISPLAY_BLOCK,
-    DISPLAY_INLINE,
-    DISPLAY_INLINE_BLOCK,
-    DISPLAY_FLEX,
-    DISPLAY_TABLE,
-    DISPLAY_TABLE_ROW,
-    DISPLAY_TABLE_CELL,
-    DISPLAY_LIST_ITEM,
-    DISPLAY_NONE
-} css_display_t;
-
-typedef enum {
-    ALIGN_LEFT,
-    ALIGN_CENTER,
-    ALIGN_RIGHT
-} css_align_t;
-
-typedef struct {
-    css_display_t display;
-    uint32_t      color;
-    uint32_t      bg_color;
-    bool          has_bg;
-    uint32_t      border_color;
-    int           border_width;
-    int           border_bottom_width;
-    int           border_radius;
-    float         font_size;
-    int           font_weight; // 400 normal, 700 bold
-    int           font_style;  // 0 normal, 1 italic
-    char          font_family[64];
-    int           margin_top;
-    int           margin_bottom;
-    int           margin_left;
-    int           margin_right;
-    int           padding_top;
-    int           padding_bottom;
-    int           padding_left;
-    int           padding_right;
-    int           width;       // -1 = auto
-    int           height;      // -1 = auto
-    float         line_height; // multiplier or pixels
-    css_align_t   text_align;
-} dom_style_t;
-
-typedef struct dom_node {
-    char             tag[32];
-    char*            text;
-    char*            id;
-    char*            class_name;
-    char*            src;
-    char*            href;
-    dom_style_t      style;
-
-    // Layout computation results (Formal coordinates)
-    int              x;
-    int              y;
-    int              w;
-    int              h;
-    int              content_h;
-
-    struct dom_node* parent;
-    struct dom_node** children;
-    int              num_children;
-    int              cap_children;
-} dom_node_t;
-
-static dom_node_t* dom_node_create(const char* tag) {
-    dom_node_t* n = (dom_node_t*)calloc(1, sizeof(dom_node_t));
-    if (!n) return NULL;
-    strncpy(n->tag, tag ? tag : "", 31);
-    n->text = NULL;
-    n->id = NULL;
-    n->class_name = NULL;
-    n->src = NULL;
-    n->href = NULL;
-
-    // Default styles
-    n->style.display = DISPLAY_BLOCK;
-    n->style.color = COLOR_TEXT_DEFAULT;
-    n->style.bg_color = 0;
-    n->style.has_bg = false;
-    n->style.border_color = COLOR_BORDER_GRAY;
-    n->style.border_width = 0;
-    n->style.border_radius = 0;
-    n->style.font_size = 14.0f;
-    n->style.font_weight = 400;
-    n->style.font_style = 0;
-    strcpy(n->style.font_family, "sans-serif");
-    n->style.margin_top = 0;
-    n->style.margin_bottom = 0;
-    n->style.margin_left = 0;
-    n->style.margin_right = 0;
-    n->style.padding_top = 0;
-    n->style.padding_bottom = 0;
-    n->style.padding_left = 0;
-    n->style.padding_right = 0;
-    n->style.width = -1;
-    n->style.height = -1;
-    n->style.line_height = 1.4f;
-    n->style.text_align = ALIGN_LEFT;
-
-    // Apply tag defaults
-    if (strcmp(n->tag, "body") == 0) {
-        n->style.padding_top = 20;
-        n->style.padding_bottom = 24;
-        n->style.padding_left = 32;
-        n->style.padding_right = 32;
-    } else if (strcmp(n->tag, "head") == 0 || strcmp(n->tag, "title") == 0) {
-        n->style.display = DISPLAY_NONE;
-    } else if (strcmp(n->tag, "h1") == 0) {
-        n->style.font_size = 28.0f;
-        n->style.font_weight = 700;
-        n->style.margin_top = 18;
-        n->style.margin_bottom = 14;
-        n->style.border_bottom_width = 1;
-    } else if (strcmp(n->tag, "h2") == 0) {
-        n->style.font_size = 22.0f;
-        n->style.font_weight = 700;
-        n->style.margin_top = 16;
-        n->style.margin_bottom = 10;
-        n->style.border_bottom_width = 1; // wikipedia style border
-    } else if (strcmp(n->tag, "h3") == 0) {
-        n->style.font_size = 18.0f;
-        n->style.font_weight = 700;
-        n->style.margin_top = 14;
-        n->style.margin_bottom = 8;
-    } else if (strcmp(n->tag, "h4") == 0) {
-        n->style.font_size = 15.0f;
-        n->style.font_weight = 700;
-        n->style.margin_top = 10;
-        n->style.margin_bottom = 6;
-    } else if (strcmp(n->tag, "p") == 0) {
-        n->style.margin_top = 10;
-        n->style.margin_bottom = 10;
-    } else if (strcmp(n->tag, "figure") == 0) {
-        n->style.margin_top = 12;
-        n->style.margin_bottom = 12;
-        n->style.padding_top = 8;
-        n->style.padding_bottom = 8;
-        n->style.padding_left = 10;
-        n->style.padding_right = 10;
-        n->style.bg_color = 0xFFF8F9FA;
-        n->style.has_bg = true;
-        n->style.border_width = 1;
-        n->style.border_color = 0xFFC8CCD1;
-    } else if (strcmp(n->tag, "figcaption") == 0) {
-        n->style.font_size = 12.5f;
-        n->style.color = 0xFF54595D;
-        n->style.margin_top = 6;
-    } else if (strcmp(n->tag, "img") == 0) {
-        n->style.bg_color = 0xFFEAECF0;
-        n->style.has_bg = true;
-        n->style.border_width = 1;
-        n->style.border_color = 0xFFA2A9B1;
-        n->style.height = 140;
-        n->style.width = 220;
-    } else if (strcmp(n->tag, "a") == 0) {
-        n->style.display = DISPLAY_INLINE;
-        n->style.color = COLOR_LINK_BLUE;
-    } else if (strcmp(n->tag, "span") == 0 || strcmp(n->tag, "b") == 0 || strcmp(n->tag, "strong") == 0 ||
-               strcmp(n->tag, "i") == 0 || strcmp(n->tag, "em") == 0 || strcmp(n->tag, "small") == 0 ||
-               strcmp(n->tag, "abbr") == 0 || strcmp(n->tag, "cite") == 0 || strcmp(n->tag, "sub") == 0 ||
-               strcmp(n->tag, "sup") == 0 || strcmp(n->tag, "q") == 0 || strcmp(n->tag, "mark") == 0 ||
-               strcmp(n->tag, "time") == 0 || strcmp(n->tag, "dfn") == 0 || strcmp(n->tag, "u") == 0) {
-        n->style.display = DISPLAY_INLINE;
-        if (strcmp(n->tag, "b") == 0 || strcmp(n->tag, "strong") == 0) n->style.font_weight = 700;
-        if (strcmp(n->tag, "i") == 0 || strcmp(n->tag, "em") == 0 || strcmp(n->tag, "cite") == 0) n->style.font_style = 1;
-    } else if (strcmp(n->tag, "ul") == 0 || strcmp(n->tag, "ol") == 0) {
-        n->style.margin_top = 10;
-        n->style.margin_bottom = 10;
-        n->style.padding_left = 24;
-    } else if (strcmp(n->tag, "li") == 0) {
-        n->style.display = DISPLAY_LIST_ITEM;
-        n->style.margin_top = 4;
-        n->style.margin_bottom = 4;
-    } else if (strcmp(n->tag, "table") == 0) {
-        n->style.display = DISPLAY_TABLE;
-        n->style.margin_top = 12;
-        n->style.margin_bottom = 12;
-        n->style.border_width = 1;
-    } else if (strcmp(n->tag, "tr") == 0) {
-        n->style.display = DISPLAY_TABLE_ROW;
-    } else if (strcmp(n->tag, "th") == 0) {
-        n->style.display = DISPLAY_TABLE_CELL;
-        n->style.font_weight = 700;
-        n->style.padding_top = 6;
-        n->style.padding_bottom = 6;
-        n->style.padding_left = 10;
-        n->style.padding_right = 10;
-        n->style.border_width = 1;
-        n->style.bg_color = COLOR_BG_LIGHT;
-        n->style.has_bg = true;
-    } else if (strcmp(n->tag, "td") == 0) {
-        n->style.display = DISPLAY_TABLE_CELL;
-        n->style.padding_top = 6;
-        n->style.padding_bottom = 6;
-        n->style.padding_left = 10;
-        n->style.padding_right = 10;
-        n->style.border_width = 1;
-    } else if (strcmp(n->tag, "button") == 0) {
-        n->style.display = DISPLAY_INLINE_BLOCK;
-        n->style.padding_top = 8;
-        n->style.padding_bottom = 8;
-        n->style.padding_left = 16;
-        n->style.padding_right = 16;
-        n->style.bg_color = COLOR_LINK_BLUE;
-        n->style.has_bg = true;
-        n->style.color = COLOR_WHITE;
-        n->style.border_radius = 4;
-    } else if (strcmp(n->tag, "pre") == 0 || strcmp(n->tag, "code") == 0) {
-        strcpy(n->style.font_family, "monospace");
-        n->style.font_size = 12.5f;
-        n->style.bg_color = 0xFFF1F3F4;
-        n->style.has_bg = true;
-        if (strcmp(n->tag, "pre") == 0) {
-            n->style.padding_top = 10;
-            n->style.padding_bottom = 10;
-            n->style.padding_left = 12;
-            n->style.padding_right = 12;
-            n->style.margin_top = 10;
-            n->style.margin_bottom = 10;
-            n->style.border_radius = 4;
-        } else {
-            n->style.display = DISPLAY_INLINE;
-            n->style.padding_left = 4;
-            n->style.padding_right = 4;
-        }
-    } else if (strcmp(n->tag, "blockquote") == 0) {
-        n->style.margin_top = 10;
-        n->style.margin_bottom = 10;
-        n->style.padding_left = 16;
-        n->style.border_width = 3;
-        n->style.border_color = COLOR_LINK_BLUE;
-        n->style.color = 0xFF5F6368;
-    } else if (strcmp(n->tag, "hr") == 0) {
-        n->style.margin_top = 14;
-        n->style.margin_bottom = 14;
-        n->style.border_width = 1;
-        n->style.border_color = COLOR_BORDER_GRAY;
-        n->style.height = 1;
-    }
-
-    return n;
-}
-
-static void dom_node_add_child(dom_node_t* parent, dom_node_t* child) {
-    if (!parent || !child) return;
-    if (parent->num_children + 1 > parent->cap_children) {
-        int new_cap = (parent->cap_children == 0) ? 4 : parent->cap_children * 2;
-        parent->children = (dom_node_t**)realloc(parent->children, new_cap * sizeof(dom_node_t*));
-        parent->cap_children = new_cap;
-    }
-    parent->children[parent->num_children++] = child;
-    child->parent = parent;
-}
-
-static void dom_node_free(dom_node_t* n) {
-    if (!n) return;
-    free(n->text);
-    free(n->id);
-    free(n->class_name);
-    free(n->src);
-    free(n->href);
-    for (int i = 0; i < n->num_children; i++) {
-        dom_node_free(n->children[i]);
-    }
-    free(n->children);
-    free(n);
-}
-
-/* ------------------------------------------------------------------------- */
-/* CSS Parser (Colors, Dimensions, Properties)                               */
-/* ------------------------------------------------------------------------- */
-static uint32_t parse_color(const char* s) {
-    if (!s) return COLOR_TEXT_DEFAULT;
-    while (*s == ' ') s++;
-    if (*s == '#') {
-        s++;
-        size_t len = strlen(s);
-        if (len == 3) {
-            unsigned int r, g, b;
-            if (sscanf(s, "%1x%1x%1x", &r, &g, &b) == 3) {
-                return (0xFF << 24) | ((r * 17) << 16) | ((g * 17) << 8) | (b * 17);
-            }
-        } else if (len >= 6) {
-            unsigned int r, g, b;
-            if (sscanf(s, "%2x%2x%2x", &r, &g, &b) == 3) {
-                return (0xFF << 24) | (r << 16) | (g << 8) | b;
-            }
-        }
-    } else if (strncmp(s, "rgb", 3) == 0) {
-        const char* p = strchr(s, '(');
-        if (p) {
-            int r = 0, g = 0, b = 0;
-            if (sscanf(p + 1, "%d,%d,%d", &r, &g, &b) >= 3 ||
-                sscanf(p + 1, "%d %d %d", &r, &g, &b) >= 3) {
-                if (r < 0) r = 0; if (r > 255) r = 255;
-                if (g < 0) g = 0; if (g > 255) g = 255;
-                if (b < 0) b = 0; if (b > 255) b = 255;
-                return (0xFF << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
-            }
-        }
-    } else {
-        // Named colors
-        if (strcasecmp(s, "white") == 0) return 0xFFFFFFFF;
-        if (strcasecmp(s, "black") == 0) return 0xFF000000;
-        if (strcasecmp(s, "red") == 0) return 0xFFEA4335;
-        if (strcasecmp(s, "green") == 0) return 0xFF34A853;
-        if (strcasecmp(s, "blue") == 0) return 0xFF1A73E8;
-        if (strcasecmp(s, "yellow") == 0) return 0xFFFBBC05;
-        if (strcasecmp(s, "gray") == 0 || strcasecmp(s, "grey") == 0) return 0xFF5F6368;
-        if (strcasecmp(s, "lightgray") == 0 || strcasecmp(s, "lightgrey") == 0) return 0xFFDADCE0;
-    }
-    return COLOR_TEXT_DEFAULT;
-}
-
-static int parse_dimension(const char* s, int parent_dim) {
-    if (!s) return 0;
-    while (*s == ' ') s++;
-    if (strstr(s, "auto")) return -1;
-    char* endp = NULL;
-    float val = strtof(s, &endp);
-    if (endp && *endp == '%') {
-        return (int)((float)parent_dim * val / 100.0f);
-    }
-    return (int)roundf(val);
-}
-
-static void apply_css_property(dom_style_t* st, const char* key, const char* val) {
-    while (*key == ' ') key++;
-    while (*val == ' ') val++;
-
-    if (strcmp(key, "color") == 0) {
-        st->color = parse_color(val);
-    } else if (strcmp(key, "background-color") == 0 || strcmp(key, "background") == 0) {
-        st->bg_color = parse_color(val);
-        st->has_bg = true;
-    } else if (strcmp(key, "font-size") == 0) {
-        float sz = strtof(val, NULL);
-        if (sz > 0) st->font_size = sz;
-    } else if (strcmp(key, "font-weight") == 0) {
-        if (strstr(val, "bold") || strstr(val, "700") || strstr(val, "800")) st->font_weight = 700;
-        else st->font_weight = 400;
-    } else if (strcmp(key, "font-style") == 0) {
-        if (strstr(val, "italic")) st->font_style = 1;
-        else st->font_style = 0;
-    } else if (strcmp(key, "font-family") == 0) {
-        strncpy(st->font_family, val, 63);
-    } else if (strcmp(key, "margin") == 0) {
-        int m = parse_dimension(val, 0);
-        st->margin_top = st->margin_bottom = st->margin_left = st->margin_right = m;
-    } else if (strcmp(key, "margin-top") == 0) {
-        st->margin_top = parse_dimension(val, 0);
-    } else if (strcmp(key, "margin-bottom") == 0) {
-        st->margin_bottom = parse_dimension(val, 0);
-    } else if (strcmp(key, "margin-left") == 0) {
-        st->margin_left = parse_dimension(val, 0);
-    } else if (strcmp(key, "margin-right") == 0) {
-        st->margin_right = parse_dimension(val, 0);
-    } else if (strcmp(key, "padding") == 0) {
-        int p = parse_dimension(val, 0);
-        st->padding_top = st->padding_bottom = st->padding_left = st->padding_right = p;
-    } else if (strcmp(key, "padding-top") == 0) {
-        st->padding_top = parse_dimension(val, 0);
-    } else if (strcmp(key, "padding-bottom") == 0) {
-        st->padding_bottom = parse_dimension(val, 0);
-    } else if (strcmp(key, "padding-left") == 0) {
-        st->padding_left = parse_dimension(val, 0);
-    } else if (strcmp(key, "padding-right") == 0) {
-        st->padding_right = parse_dimension(val, 0);
-    } else if (strcmp(key, "width") == 0) {
-        st->width = parse_dimension(val, 800);
-    } else if (strcmp(key, "height") == 0) {
-        st->height = parse_dimension(val, 600);
-    } else if (strcmp(key, "border") == 0 || strcmp(key, "border-width") == 0) {
-        st->border_width = parse_dimension(val, 0);
-        if (st->border_width == 0 && strstr(val, "solid")) st->border_width = 1;
-    } else if (strcmp(key, "border-color") == 0) {
-        st->border_color = parse_color(val);
-    } else if (strcmp(key, "border-radius") == 0) {
-        st->border_radius = parse_dimension(val, 0);
-    } else if (strcmp(key, "display") == 0) {
-        if (strstr(val, "none")) st->display = DISPLAY_NONE;
-        else if (strstr(val, "inline-block")) st->display = DISPLAY_INLINE_BLOCK;
-        else if (strstr(val, "inline")) st->display = DISPLAY_INLINE;
-        else if (strstr(val, "flex")) st->display = DISPLAY_FLEX;
-        else if (strstr(val, "table")) st->display = DISPLAY_TABLE;
-        else st->display = DISPLAY_BLOCK;
-    } else if (strcmp(key, "text-align") == 0) {
-        if (strstr(val, "center")) st->text_align = ALIGN_CENTER;
-        else if (strstr(val, "right")) st->text_align = ALIGN_RIGHT;
-        else st->text_align = ALIGN_LEFT;
-    }
-}
-
-static void parse_inline_style(dom_style_t* st, const char* style_str) {
-    if (!style_str) return;
-    char buf[1024];
-    strncpy(buf, style_str, 1023);
-    buf[1023] = '\0';
-
-    char* token = strtok(buf, ";");
-    while (token) {
-        char* colon = strchr(token, ':');
-        if (colon) {
-            *colon = '\0';
-            char* k = token;
-            char* v = colon + 1;
-            apply_css_property(st, k, v);
-        }
-        token = strtok(NULL, ";");
-    }
-}
-
-/* ------------------------------------------------------------------------- */
-/* HTML Entity Unescaping                                                    */
-/* ------------------------------------------------------------------------- */
-static char* unescape_html(const char* src) {
-    if (!src) return NULL;
-    size_t len = strlen(src);
-    char* dst = (char*)malloc(len + 1);
-    if (!dst) return NULL;
-
-    size_t i = 0, j = 0;
-    while (i < len) {
-        if (src[i] == '&') {
-            if (strncmp(src + i, "&amp;", 5) == 0) { dst[j++] = '&'; i += 5; }
-            else if (strncmp(src + i, "&lt;", 4) == 0) { dst[j++] = '<'; i += 4; }
-            else if (strncmp(src + i, "&gt;", 4) == 0) { dst[j++] = '>'; i += 4; }
-            else if (strncmp(src + i, "&quot;", 6) == 0) { dst[j++] = '"'; i += 6; }
-            else if (strncmp(src + i, "&#39;", 5) == 0 || strncmp(src + i, "&apos;", 6) == 0) {
-                dst[j++] = '\''; i += (src[i + 1] == 'a') ? 6 : 5;
-            }
-            else if (strncmp(src + i, "&nbsp;", 6) == 0 || strncmp(src + i, "&#160;", 6) == 0) {
-                dst[j++] = ' '; i += 6;
-            } else {
-                dst[j++] = src[i++];
-            }
-        } else if ((unsigned char)src[i] == 0xC2 && (unsigned char)src[i + 1] == 0xA0) {
-            dst[j++] = ' ';
-            i += 2;
-        } else if ((unsigned char)src[i] == 0xE2 && (unsigned char)src[i + 1] == 0x80) {
-            unsigned char b2 = (unsigned char)src[i + 2];
-            if (b2 == 0x93 || b2 == 0x94) dst[j++] = '-';
-            else if (b2 == 0x98 || b2 == 0x99) dst[j++] = '\'';
-            else if (b2 == 0x9C || b2 == 0x9D) dst[j++] = '"';
-            i += 3;
-        } else if ((unsigned char)src[i] >= 0x80) {
-            // Skip multi-byte UTF-8 sequence beyond ASCII glyph table
-            unsigned char c = (unsigned char)src[i];
-            if ((c & 0xE0) == 0xC0 && src[i + 1]) i += 2;
-            else if ((c & 0xF0) == 0xE0 && src[i + 1] && src[i + 2]) i += 3;
-            else if ((c & 0xF8) == 0xF0 && src[i + 1] && src[i + 2] && src[i + 3]) i += 4;
-            else i++;
-        } else {
-            dst[j++] = src[i++];
-        }
-    }
-    dst[j] = '\0';
-    return dst;
-}
-
-/* ------------------------------------------------------------------------- */
-/* HTML Parser into DOM Tree                                                 */
-/* ------------------------------------------------------------------------- */
-static dom_node_t* parse_html_document(const char* html) {
-    if (!html) return NULL;
-
-    dom_node_t* root = dom_node_create("body");
-    dom_node_t* current = root;
-
-    // Extract <title> if present so Parsoid documents without <h1> display article heading
-    const char* title_open = strstr(html, "<title>");
-    if (title_open) {
-        title_open += 7;
-        const char* title_close = strstr(title_open, "</title>");
-        if (title_close && title_close > title_open && (title_close - title_open) < 128 &&
-            strstr(html, "<h1") == NULL) {
-            size_t tlen = (size_t)(title_close - title_open);
-            char* raw_t = (char*)malloc(tlen + 1);
-            memcpy(raw_t, title_open, tlen);
-            raw_t[tlen] = '\0';
-            dom_node_t* h1 = dom_node_create("h1");
-            dom_node_t* tn = dom_node_create("#text");
-            tn->style.display = DISPLAY_INLINE;
-            tn->text = unescape_html(raw_t);
-            free(raw_t);
-            dom_node_add_child(h1, tn);
-            dom_node_add_child(root, h1);
-        }
-    }
-
-    const char* p = html;
-    while (*p) {
-        if (*p == '<') {
-            // Check for comment: <!-- ... -->
-            if (strncmp(p, "<!--", 4) == 0) {
-                const char* end_comment = strstr(p + 4, "-->");
-                if (end_comment) {
-                    p = end_comment + 3;
-                    continue;
-                }
-            }
-
-            // Check for closing tag: </tag>
-            if (p[1] == '/') {
-                p += 2;
-                char close_tag[32];
-                int ti = 0;
-                while (*p && *p != '>' && !isspace(*p) && ti < 31) {
-                    close_tag[ti++] = tolower(*p++);
-                }
-                close_tag[ti] = '\0';
-                while (*p && *p != '>') p++;
-                if (*p == '>') p++;
-
-                if (current->parent && strcmp(current->tag, close_tag) == 0) {
-                    current = current->parent;
-                }
-                continue;
-            }
-
-            // Opening tag: <tag attr1="val1" ...>
-            p++;
-            char tag[32];
-            int ti = 0;
-            while (*p && *p != '>' && !isspace(*p) && *p != '/' && ti < 31) {
-                tag[ti++] = tolower(*p++);
-            }
-            tag[ti] = '\0';
-
-            // Skip head, script, style, svg contents
-            bool skip_content = (strcmp(tag, "head") == 0 || strcmp(tag, "script") == 0 ||
-                                 strcmp(tag, "style") == 0 || strcmp(tag, "noscript") == 0 ||
-                                 strcmp(tag, "svg") == 0);
-
-            dom_node_t* node = dom_node_create(tag);
-            dom_node_add_child(current, node);
-
-            // Parse attributes
-            bool self_closing = false;
-            while (*p && *p != '>') {
-                while (*p && isspace(*p)) p++;
-                if (*p == '/' && p[1] == '>') {
-                    self_closing = true;
-                    p++;
-                    break;
-                }
-                if (*p == '>') break;
-
-                // Attribute key
-                char attr_k[64];
-                int ki = 0;
-                while (*p && *p != '=' && *p != '>' && !isspace(*p) && ki < 63) {
-                    attr_k[ki++] = tolower(*p++);
-                }
-                attr_k[ki] = '\0';
-                while (*p && isspace(*p)) p++;
-
-                char attr_v[1024];
-                attr_v[0] = '\0';
-                if (*p == '=') {
-                    p++;
-                    while (*p && isspace(*p)) p++;
-                    char quote = 0;
-                    if (*p == '"' || *p == '\'') {
-                        quote = *p++;
-                    }
-                    int vi = 0;
-                    while (*p && vi < 1023) {
-                        if (quote && *p == quote) { p++; break; }
-                        if (!quote && (*p == '>' || isspace(*p))) break;
-                        attr_v[vi++] = *p++;
-                    }
-                    attr_v[vi] = '\0';
-                }
-
-                // Apply known attributes
-                if (strcmp(attr_k, "style") == 0) {
-                    parse_inline_style(&node->style, attr_v);
-                } else if (strcmp(attr_k, "id") == 0) {
-                    node->id = strdup(attr_v);
-                } else if (strcmp(attr_k, "class") == 0) {
-                    node->class_name = strdup(attr_v);
-                } else if (strcmp(attr_k, "src") == 0) {
-                    node->src = strdup(attr_v);
-                } else if (strcmp(attr_k, "href") == 0) {
-                    node->href = strdup(attr_v);
-                } else if (strcmp(attr_k, "width") == 0 && strcmp(node->tag, "img") == 0) {
-                    int iw = atoi(attr_v);
-                    if (iw > 0) node->style.width = (iw > 360) ? 360 : iw;
-                } else if (strcmp(attr_k, "height") == 0 && strcmp(node->tag, "img") == 0) {
-                    int ih = atoi(attr_v);
-                    if (ih > 0) node->style.height = (ih > 260) ? 260 : ih;
-                }
-            }
-            if (*p == '>') p++;
-
-            if (skip_content) {
-                // Find closing </tag>
-                char end_pattern[64];
-                snprintf(end_pattern, sizeof(end_pattern), "</%s>", tag);
-                const char* end_tag = strstr(p, end_pattern);
-                if (end_tag) {
-                    p = end_tag + strlen(end_pattern);
-                }
-                node->style.display = DISPLAY_NONE;
-                continue;
-            }
-
-            // Self-closing elements
-            if (self_closing || strcmp(tag, "img") == 0 || strcmp(tag, "br") == 0 ||
-                strcmp(tag, "hr") == 0 || strcmp(tag, "input") == 0 || strcmp(tag, "meta") == 0 ||
-                strcmp(tag, "link") == 0) {
-                // Do not push to stack
-            } else {
-                current = node;
-            }
-        } else {
-            // Text run
-            const char* start = p;
-            while (*p && *p != '<') p++;
-            size_t tlen = p - start;
-            if (tlen > 0) {
-                char* raw_text = (char*)malloc(tlen + 1);
-                memcpy(raw_text, start, tlen);
-                raw_text[tlen] = '\0';
-
-                char* clean_text = unescape_html(raw_text);
-                free(raw_text);
-
-                // Trim leading/trailing whitespace if purely whitespace
-                bool all_ws = true;
-                for (size_t k = 0; clean_text[k]; k++) {
-                    if (!isspace(clean_text[k])) { all_ws = false; break; }
-                }
-
-                if (!all_ws) {
-                    dom_node_t* text_node = dom_node_create("#text");
-                    text_node->style.display = DISPLAY_INLINE;
-                    text_node->text = clean_text;
-                    dom_node_add_child(current, text_node);
-                } else {
-                    free(clean_text);
-                }
-            }
-        }
-    }
-
-    return root;
-}
 
 static bool has_hidden_class(const char* cls) {
     if (!cls) return false;
@@ -1068,9 +418,9 @@ static bool subtree_is_pure_inline(dom_node_t* n) {
     if (strcmp(n->tag, "meta") == 0 || strcmp(n->tag, "link") == 0 || strcmp(n->tag, "wbr") == 0) return true;
     if (strcmp(n->tag, "img") == 0 || strcmp(n->tag, "figure") == 0 ||
         strcmp(n->tag, "table") == 0 || strcmp(n->tag, "ul") == 0 ||
-        strcmp(n->tag, "ol") == 0 || strcmp(n->tag, "div") == 0 ||
-        strcmp(n->tag, "p") == 0 || strcmp(n->tag, "blockquote") == 0 ||
+        strcmp(n->tag, "ol") == 0 || strcmp(n->tag, "blockquote") == 0 ||
         strcmp(n->tag, "pre") == 0) return false;
+    if (n->style.display != DISPLAY_INLINE) return false;
     for (int i = 0; i < n->num_children; i++) {
         if (!subtree_is_pure_inline(n->children[i])) return false;
     }
@@ -1109,13 +459,19 @@ static void normalize_inline_runs(dom_node_t* node) {
         }
     }
 
-    // Check if this block/list-item container holds only inline formatting children
+    // Check if this block/list-item/cell container holds only inline formatting children
     bool is_coalescable_container =
+        (node->style.display != DISPLAY_FLEX && node->style.display != DISPLAY_GRID &&
+         node->style.display != DISPLAY_TABLE &&
+         node->style.display != DISPLAY_TABLE_ROW && node->style.display != DISPLAY_TABLE_ROW_GROUP) &&
         (strcmp(node->tag, "p") == 0 || strcmp(node->tag, "h1") == 0 ||
          strcmp(node->tag, "h2") == 0 || strcmp(node->tag, "h3") == 0 ||
-         strcmp(node->tag, "h4") == 0 || strcmp(node->tag, "figcaption") == 0 ||
+         strcmp(node->tag, "h4") == 0 || strcmp(node->tag, "h5") == 0 ||
+         strcmp(node->tag, "h6") == 0 || strcmp(node->tag, "figcaption") == 0 ||
          strcmp(node->tag, "li") == 0 || strcmp(node->tag, "td") == 0 ||
-         strcmp(node->tag, "th") == 0 ||
+         strcmp(node->tag, "th") == 0 || strcmp(node->tag, "div") == 0 ||
+         strcmp(node->tag, "header") == 0 || strcmp(node->tag, "section") == 0 ||
+         strcmp(node->tag, "span") == 0 || strcmp(node->tag, "button") == 0 ||
          (node->class_name && strstr(node->class_name, "hatnote") != NULL));
 
     if (is_coalescable_container && node->num_children > 0) {
@@ -1137,11 +493,20 @@ static void normalize_inline_runs(dom_node_t* node) {
             if (merged && mlen > 0) {
                 dom_node_t* tnode = dom_node_create("#text");
                 tnode->style.display = DISPLAY_INLINE;
+                tnode->style.color = node->style.color;
+                tnode->style.font_size = node->style.font_size;
+                tnode->style.font_weight = node->style.font_weight;
+                tnode->style.font_style = node->style.font_style;
+                strcpy(tnode->style.font_family, node->style.font_family);
+                tnode->style.line_height = node->style.line_height;
+                tnode->style.text_align = node->style.text_align;
                 tnode->text = merged;
                 dom_node_add_child(node, tnode);
             } else {
                 free(merged);
-                node->style.display = DISPLAY_NONE;
+                if (node->style.height < 0 && !node->style.has_bg && node->style.border_width == 0) {
+                    node->style.display = DISPLAY_NONE;
+                }
             }
             return;
         }
@@ -1149,6 +514,46 @@ static void normalize_inline_runs(dom_node_t* node) {
 
     for (int i = 0; i < node->num_children; i++) {
         normalize_inline_runs(node->children[i]);
+    }
+}
+
+/* Measure single-line max-content outer width for auto-sized flex items */
+static int measure_intrinsic_outer_width(dom_node_t* item) {
+    if (!item) return 0;
+    float max_text_w = 0.0f;
+    for (int i = 0; i < item->num_children; i++) {
+        dom_node_t* ch = item->children[i];
+        if (strcmp(ch->tag, "#text") == 0 && ch->text) {
+            float tw = blink_skia_font_measure_text(ch->text, item->style.font_family,
+                                                    item->style.font_size,
+                                                    item->style.font_weight >= 700 ? 1 : 0);
+            if (tw > max_text_w) max_text_w = tw;
+        }
+    }
+    int bdr_h = item->style.border_width * 2 + item->style.border_left_width;
+    int pad_h = item->style.padding_left + item->style.padding_right;
+    return (int)ceilf(max_text_w) + pad_h + bdr_h + 4;
+}
+
+static void shift_subtree_y(dom_node_t* n, int dy) {
+    if (!n || dy == 0) return;
+    n->y += dy;
+    for (int i = 0; i < n->num_children; i++) {
+        shift_subtree_y(n->children[i], dy);
+    }
+}
+
+static void collect_table_rows(dom_node_t* container, dom_node_t** rows, int* io_count, int max_rows) {
+    if (!container || !rows || !io_count) return;
+    for (int i = 0; i < container->num_children && *io_count < max_rows; i++) {
+        dom_node_t* ch = container->children[i];
+        if (!ch || ch->style.display == DISPLAY_NONE) continue;
+        if (strcmp(ch->tag, "tr") == 0 || ch->style.display == DISPLAY_TABLE_ROW) {
+            rows[(*io_count)++] = ch;
+        } else if (strcmp(ch->tag, "thead") == 0 || strcmp(ch->tag, "tbody") == 0 ||
+                   strcmp(ch->tag, "tfoot") == 0 || ch->style.display == DISPLAY_TABLE_ROW_GROUP) {
+            collect_table_rows(ch, rows, io_count, max_rows);
+        }
     }
 }
 
@@ -1160,17 +565,29 @@ static int layout_dom_tree(dom_node_t* node, int container_x, int container_y, i
     if (!node || node->style.display == DISPLAY_NONE) return container_y;
 
     // Apply Dual-mode coordinate scaling/snapping per BlinkDualModeZSemantics.v
-    int eff_margin_top = (int)blink_z_floor_device_pixel(blink_z_from_pixel(node->style.margin_top, mode), mode);
-    int eff_margin_bottom = (int)blink_z_floor_device_pixel(blink_z_from_pixel(node->style.margin_bottom, mode), mode);
     int eff_padding_left = (int)blink_z_floor_device_pixel(blink_z_from_pixel(node->style.padding_left, mode), mode);
     int eff_padding_right = (int)blink_z_floor_device_pixel(blink_z_from_pixel(node->style.padding_right, mode), mode);
+    int bdr_left = (node->style.border_width > 0) ? node->style.border_width : node->style.border_left_width;
+    int bdr_right = node->style.border_width;
+    int pad_h = eff_padding_left + eff_padding_right;
+    int bdr_h = bdr_left + bdr_right;
 
     node->x = container_x + node->style.margin_left;
-    node->w = (node->style.width > 0) ? node->style.width : (container_w - node->style.margin_left - node->style.margin_right);
-    if (node->w < 0) node->w = 0;
-
-    int content_w = node->w - eff_padding_left - eff_padding_right;
-    if (content_w < 0) content_w = 0;
+    int content_w = 0;
+    if (node->style.width > 0) {
+        /* Verified `box-sizing: border-box | content-box` per Section 7 of Coq theory */
+        content_w = blink_css_resolve_content_inline_size(node->style.box_sizing, node->style.width, pad_h, bdr_h);
+        if (node->style.box_sizing == BOX_SIZING_BORDER_BOX) {
+            node->w = node->style.width;
+        } else {
+            node->w = content_w + pad_h + bdr_h;
+        }
+    } else {
+        node->w = container_w - node->style.margin_left - node->style.margin_right;
+        if (node->w < 0) node->w = 0;
+        content_w = node->w - pad_h - bdr_h;
+        if (content_w < 0) content_w = 0;
+    }
 
     int cur_y = container_y;
 
@@ -1179,12 +596,13 @@ static int layout_dom_tree(dom_node_t* node, int container_x, int container_y, i
         float fsize = node->parent ? node->parent->style.font_size : node->style.font_size;
         int fweight = node->parent ? node->parent->style.font_weight : node->style.font_weight;
         const char* ffamily = node->parent ? node->parent->style.font_family : node->style.font_family;
+        float lh_mult = node->parent ? node->parent->style.line_height : node->style.line_height;
+        if (lh_mult <= 0.5f) lh_mult = 1.35f;
 
-        float line_h = fsize * 1.35f;
+        float line_h = fsize * lh_mult;
         float cur_line_w = 0.0f;
         int num_lines = 1;
 
-        // Word wrap tokenizer
         char* text_dup = strdup(node->text);
         char* word = strtok(text_dup, " \t\r\n");
         while (word) {
@@ -1209,11 +627,376 @@ static int layout_dom_tree(dom_node_t* node, int container_x, int container_y, i
         return cur_y;
     }
 
-    // Block-level container: Execute Inductive Vertical Flow with Margin Collapsing
-    // Verified sound in BlinkVerticalFlowLayoutSemantics.v and BlinkMarginCollapsingSemantics.v
     int child_start_y = cur_y + node->style.padding_top + node->style.border_width;
-    int child_x = node->x + eff_padding_left + node->style.border_width;
+    int child_x = node->x + eff_padding_left + bdr_left;
 
+    // -----------------------------------------------------------------------
+    // A. Horizontal Flexbox Layout (`display: flex`)
+    // Verified in BlinkFlexibleBoxAlgorithmSemantics.v & Section 7 of Cascade
+    // -----------------------------------------------------------------------
+    if (node->style.display == DISPLAY_FLEX) {
+        dom_node_t* items[64];
+        int item_w[64];
+        int n_items = 0;
+        int total_grow = 0;
+        int fixed_used = 0;
+
+        for (int i = 0; i < node->num_children && n_items < 64; i++) {
+            dom_node_t* ch = node->children[i];
+            if (!ch || ch->style.display == DISPLAY_NONE || strcmp(ch->tag, "#text") == 0) continue;
+            items[n_items] = ch;
+            int base_w = 0;
+            if (ch->style.width > 0) {
+                int cp = ch->style.padding_left + ch->style.padding_right;
+                int cb = ((ch->style.border_width > 0) ? ch->style.border_width : ch->style.border_left_width) + ch->style.border_width;
+                base_w = (ch->style.box_sizing == BOX_SIZING_BORDER_BOX) ? ch->style.width : (ch->style.width + cp + cb);
+            } else if (ch->style.flex_grow <= 0) {
+                base_w = measure_intrinsic_outer_width(ch);
+                if (base_w > content_w) base_w = content_w;
+            }
+            item_w[n_items] = base_w;
+            fixed_used += base_w + ch->style.margin_left + ch->style.margin_right;
+            total_grow += (ch->style.flex_grow > 0) ? ch->style.flex_grow : 0;
+            n_items++;
+        }
+
+        int base_gaps = (n_items > 1) ? (n_items - 1) * node->style.gap : 0;
+        int free_space = content_w - fixed_used - base_gaps;
+        if (free_space > 0 && total_grow > 0) {
+            int distributed = 0;
+            for (int i = 0; i < n_items; i++) {
+                int fg = (items[i]->style.flex_grow > 0) ? items[i]->style.flex_grow : 0;
+                if (fg > 0) {
+                    int share = (free_space * fg) / total_grow;
+                    item_w[i] += share;
+                    distributed += share;
+                }
+            }
+            /* Assign remainder pixels to last growing item so sum is exact */
+            for (int i = n_items - 1; i >= 0; i--) {
+                if (items[i]->style.flex_grow > 0) {
+                    item_w[i] += (free_space - distributed);
+                    break;
+                }
+            }
+        }
+
+        int used_main = base_gaps;
+        for (int i = 0; i < n_items; i++) {
+            used_main += item_w[i] + items[i]->style.margin_left + items[i]->style.margin_right;
+        }
+
+        int start_off = blink_flex_justify_start_offset(node->style.justify_content, content_w, used_main, n_items);
+        int inter_gap = blink_flex_justify_inter_gap(node->style.justify_content, content_w, used_main, n_items, node->style.gap);
+
+        int cursor_x = child_x + start_off;
+        int max_item_h = 0;
+        for (int i = 0; i < n_items; i++) {
+            dom_node_t* it = items[i];
+            int saved_w = it->style.width;
+            css_box_sizing_t saved_bs = it->style.box_sizing;
+            it->style.width = item_w[i];
+            it->style.box_sizing = BOX_SIZING_BORDER_BOX;
+
+            int sub_max_y = 0;
+            int item_end_y = layout_dom_tree(it, cursor_x, child_start_y + it->style.margin_top,
+                                             item_w[i] + it->style.margin_left + it->style.margin_right,
+                                             mode, &sub_max_y);
+            it->style.width = saved_w;
+            it->style.box_sizing = saved_bs;
+
+            int full_it_h = (item_end_y - child_start_y) + it->style.margin_bottom;
+            if (full_it_h > max_item_h) max_item_h = full_it_h;
+
+            cursor_x += it->style.margin_left + item_w[i] + it->style.margin_right + inter_gap;
+        }
+
+        int flex_cross_h = (node->style.height >= 0)
+            ? ((node->style.box_sizing == BOX_SIZING_BORDER_BOX)
+                ? (node->style.height - node->style.padding_top - node->style.padding_bottom - node->style.border_width * 2)
+                : node->style.height)
+            : max_item_h;
+        if (flex_cross_h < 0) flex_cross_h = 0;
+
+        /* Cross-axis `align-items: center | stretch` */
+        for (int i = 0; i < n_items; i++) {
+            dom_node_t* it = items[i];
+            if (node->style.align_items_center && it->h < flex_cross_h) {
+                int dy = (flex_cross_h - it->h) / 2;
+                shift_subtree_y(it, dy);
+            } else if (!node->style.align_items_center && it->style.height < 0) {
+                int target_h = flex_cross_h - it->style.margin_top - it->style.margin_bottom;
+                if (target_h > it->h) it->h = target_h;
+            }
+            if (it->y + it->h > *out_max_y) *out_max_y = it->y + it->h;
+        }
+
+        node->content_h = flex_cross_h;
+        node->y = container_y;
+        node->h = node->content_h + node->style.padding_top + node->style.padding_bottom + node->style.border_width * 2;
+        int next_y = node->y + node->h;
+        if (next_y > *out_max_y) *out_max_y = next_y;
+        return next_y;
+    }
+
+    // -----------------------------------------------------------------------
+    // A2. CSS Grid Layout (`display: grid` + `grid-template-columns`)
+    // Verified in BlinkGridLayoutAlgorithmSemantics.v
+    // -----------------------------------------------------------------------
+    if (node->style.display == DISPLAY_GRID) {
+        int n_cols = (node->style.num_grid_cols > 0) ? node->style.num_grid_cols : 1;
+        if (n_cols > 16) n_cols = 16;
+
+        int track_w[16];
+        int fixed_sum = (n_cols > 1) ? (n_cols - 1) * node->style.gap : 0;
+        int fr_sum = 0;
+        for (int c = 0; c < n_cols; c++) {
+            int spec = (c < node->style.num_grid_cols) ? node->style.grid_col_widths[c] : -1;
+            if (spec > 0) {
+                track_w[c] = spec;
+                fixed_sum += spec;
+            } else {
+                track_w[c] = 0;
+                fr_sum += (-spec > 0) ? (-spec) : 1;
+            }
+        }
+        int rem_w = (content_w > fixed_sum) ? (content_w - fixed_sum) : 0;
+        if (fr_sum > 0) {
+            int acc = 0;
+            int last_fr = -1;
+            for (int c = 0; c < n_cols; c++) {
+                int spec = (c < node->style.num_grid_cols) ? node->style.grid_col_widths[c] : -1;
+                if (spec <= 0) {
+                    int w_fr = (-spec > 0) ? (-spec) : 1;
+                    track_w[c] = (rem_w * w_fr) / fr_sum;
+                    acc += track_w[c];
+                    last_fr = c;
+                }
+            }
+            if (last_fr >= 0) track_w[last_fr] += (rem_w - acc);
+        }
+
+        int track_x[16];
+        int cx = 0;
+        for (int c = 0; c < n_cols; c++) {
+            track_x[c] = cx;
+            cx += track_w[c] + node->style.gap;
+        }
+
+        dom_node_t* gitems[128];
+        int n_gitems = 0;
+        for (int i = 0; i < node->num_children && n_gitems < 128; i++) {
+            dom_node_t* ch = node->children[i];
+            if (!ch || ch->style.display == DISPLAY_NONE || strcmp(ch->tag, "#text") == 0) continue;
+            gitems[n_gitems++] = ch;
+        }
+
+        int row_y = child_start_y;
+        for (int idx = 0; idx < n_gitems; idx += n_cols) {
+            int row_max_h = 0;
+            int row_cnt = (idx + n_cols <= n_gitems) ? n_cols : (n_gitems - idx);
+            for (int c = 0; c < row_cnt; c++) {
+                dom_node_t* it = gitems[idx + c];
+                int saved_w = it->style.width;
+                css_box_sizing_t saved_bs = it->style.box_sizing;
+                it->style.width = track_w[c];
+                it->style.box_sizing = BOX_SIZING_BORDER_BOX;
+
+                int sub_max_y = 0;
+                int end_y = layout_dom_tree(it, child_x + track_x[c], row_y, track_w[c], mode, &sub_max_y);
+                it->style.width = saved_w;
+                it->style.box_sizing = saved_bs;
+
+                int ih = end_y - row_y;
+                if (ih > row_max_h) row_max_h = ih;
+            }
+            for (int c = 0; c < row_cnt; c++) {
+                if (gitems[idx + c]->style.height < 0 && gitems[idx + c]->h < row_max_h) {
+                    gitems[idx + c]->h = row_max_h;
+                }
+            }
+            row_y += row_max_h;
+            if (idx + n_cols < n_gitems) row_y += node->style.row_gap;
+        }
+
+        int measured_gh = row_y - child_start_y;
+        node->content_h = (node->style.height >= 0)
+            ? ((node->style.box_sizing == BOX_SIZING_BORDER_BOX)
+                ? (node->style.height - node->style.padding_top - node->style.padding_bottom - node->style.border_width * 2)
+                : node->style.height)
+            : measured_gh;
+        if (node->content_h < 0) node->content_h = 0;
+        node->y = container_y;
+        node->h = node->content_h + node->style.padding_top + node->style.padding_bottom + node->style.border_width * 2;
+        int next_y = node->y + node->h;
+        if (next_y > *out_max_y) *out_max_y = next_y;
+        return next_y;
+    }
+
+    // -----------------------------------------------------------------------
+    // B. Multi-Column Table Layout (`display: table`)
+    // Verified in BlinkTableLayoutAlgorithmSemantics.v & Section 7 of Cascade
+    // -----------------------------------------------------------------------
+    if (node->style.display == DISPLAY_TABLE) {
+        dom_node_t* rows[128];
+        int n_rows = 0;
+        collect_table_rows(node, rows, &n_rows, 128);
+
+        int num_cols = 0;
+        for (int r = 0; r < n_rows; r++) {
+            int row_cols = 0;
+            for (int c = 0; c < rows[r]->num_children; c++) {
+                dom_node_t* cell = rows[r]->children[c];
+                if (!cell || cell->style.display == DISPLAY_NONE || strcmp(cell->tag, "#text") == 0) continue;
+                row_cols += blink_html_sanitize_span(cell->colspan, 32);
+            }
+            if (row_cols > num_cols) num_cols = row_cols;
+        }
+        if (num_cols > 32) num_cols = 32;
+
+        /* Partition `content_w` seamlessly across `num_cols` tracks */
+        int col_x[33];
+        int col_w[32];
+        if (num_cols > 0) {
+            int explicit_w[32];
+            int explicit_sum = 0;
+            int auto_cols = 0;
+            for (int k = 0; k < num_cols; k++) explicit_w[k] = -1;
+
+            for (int r = 0; r < n_rows; r++) {
+                int ci = 0;
+                for (int c = 0; c < rows[r]->num_children && ci < num_cols; c++) {
+                    dom_node_t* cell = rows[r]->children[c];
+                    if (!cell || cell->style.display == DISPLAY_NONE || strcmp(cell->tag, "#text") == 0) continue;
+                    int span = blink_html_sanitize_span(cell->colspan, 32);
+                    if (span == 1 && cell->style.width > 0 && explicit_w[ci] < 0) {
+                        explicit_w[ci] = cell->style.width;
+                    }
+                    ci += span;
+                }
+            }
+            for (int k = 0; k < num_cols; k++) {
+                if (explicit_w[k] > 0) explicit_sum += explicit_w[k];
+                else auto_cols++;
+            }
+
+            if (explicit_sum > 0 && explicit_sum < content_w && auto_cols > 0) {
+                int rem_w = content_w - explicit_sum;
+                int auto_idx = 0;
+                int cur_cx = 0;
+                for (int k = 0; k < num_cols; k++) {
+                    col_x[k] = cur_cx;
+                    if (explicit_w[k] > 0) {
+                        col_w[k] = explicit_w[k];
+                    } else {
+                        col_w[k] = blink_table_col_width_formal(rem_w, auto_cols, auto_idx++, mode);
+                    }
+                    cur_cx += col_w[k];
+                }
+                col_x[num_cols] = cur_cx;
+            } else {
+                for (int k = 0; k < num_cols; k++) {
+                    col_x[k] = blink_table_col_start_formal(content_w, num_cols, k, mode);
+                    col_w[k] = blink_table_col_width_formal(content_w, num_cols, k, mode);
+                }
+                col_x[num_cols] = content_w;
+            }
+        }
+
+        int row_cursor_y = child_start_y;
+        /* Optional <caption> above table rows */
+        for (int i = 0; i < node->num_children; i++) {
+            dom_node_t* ch = node->children[i];
+            if (ch && strcmp(ch->tag, "caption") == 0 && ch->style.display != DISPLAY_NONE) {
+                row_cursor_y = layout_dom_tree(ch, child_x, row_cursor_y, content_w, mode, out_max_y);
+            }
+        }
+
+        for (int r = 0; r < n_rows; r++) {
+            dom_node_t* tr = rows[r];
+            tr->x = child_x;
+            tr->y = row_cursor_y;
+            tr->w = content_w;
+
+            int max_cell_h = 0;
+            int col_cursor = 0;
+            dom_node_t* row_cells[32];
+            int n_row_cells = 0;
+
+            for (int c = 0; c < tr->num_children && col_cursor < num_cols && n_row_cells < 32; c++) {
+                dom_node_t* cell = tr->children[c];
+                if (!cell || cell->style.display == DISPLAY_NONE || strcmp(cell->tag, "#text") == 0) continue;
+
+                int span = blink_html_sanitize_span(cell->colspan, num_cols - col_cursor);
+                int cell_px_x = child_x + col_x[col_cursor];
+                int cell_px_w = col_x[col_cursor + span] - col_x[col_cursor];
+
+                int saved_w = cell->style.width;
+                css_box_sizing_t saved_bs = cell->style.box_sizing;
+                int saved_ml = cell->style.margin_left;
+                int saved_mr = cell->style.margin_right;
+                cell->style.width = cell_px_w;
+                cell->style.box_sizing = BOX_SIZING_BORDER_BOX;
+                cell->style.margin_left = 0;
+                cell->style.margin_right = 0;
+
+                int cell_max_y = 0;
+                int cell_end_y = layout_dom_tree(cell, cell_px_x, row_cursor_y, cell_px_w, mode, &cell_max_y);
+
+                cell->style.width = saved_w;
+                cell->style.box_sizing = saved_bs;
+                cell->style.margin_left = saved_ml;
+                cell->style.margin_right = saved_mr;
+
+                int ch_h = cell_end_y - row_cursor_y;
+                if (ch_h > max_cell_h) max_cell_h = ch_h;
+                row_cells[n_row_cells++] = cell;
+                col_cursor += span;
+            }
+
+            /* Synchronize all cells in row `r` to uniform row height `max_cell_h` */
+            for (int c = 0; c < n_row_cells; c++) {
+                row_cells[c]->h = max_cell_h;
+            }
+            tr->h = max_cell_h;
+            tr->content_h = max_cell_h;
+            row_cursor_y += max_cell_h;
+            if (row_cursor_y > *out_max_y) *out_max_y = row_cursor_y;
+        }
+
+        /* Propagate row-group (`<thead>`/`<tbody>`/`<tfoot>`) bounding boxes so backgrounds render! */
+        for (int i = 0; i < node->num_children; i++) {
+            dom_node_t* rg = node->children[i];
+            if (!rg || rg->style.display != DISPLAY_TABLE_ROW_GROUP) continue;
+            int rg_y0 = -1, rg_y1 = 0;
+            for (int j = 0; j < rg->num_children; j++) {
+                dom_node_t* tr = rg->children[j];
+                if (tr && strcmp(tr->tag, "tr") == 0) {
+                    if (rg_y0 < 0 || tr->y < rg_y0) rg_y0 = tr->y;
+                    if (tr->y + tr->h > rg_y1) rg_y1 = tr->y + tr->h;
+                }
+            }
+            if (rg_y0 >= 0) {
+                rg->x = child_x;
+                rg->y = rg_y0;
+                rg->w = content_w;
+                rg->h = rg_y1 - rg_y0;
+            }
+        }
+
+        int measured_h = row_cursor_y - child_start_y;
+        node->content_h = (node->style.height >= 0) ? node->style.height : measured_h;
+        node->y = container_y;
+        node->h = node->content_h + node->style.padding_top + node->style.padding_bottom + node->style.border_width * 2;
+        int next_y = node->y + node->h;
+        if (next_y > *out_max_y) *out_max_y = next_y;
+        return next_y;
+    }
+
+    // -----------------------------------------------------------------------
+    // C. Block-Level Container: Inductive Vertical Flow + Margin Collapsing
+    // Verified sound in BlinkVerticalFlowLayoutSemantics.v & MarginCollapsing
+    // -----------------------------------------------------------------------
     int active_cursor_y = child_start_y;
     int running_margin_pos = 0;
     int running_margin_neg = 0;
@@ -1222,7 +1005,6 @@ static int layout_dom_tree(dom_node_t* node, int container_x, int container_y, i
         dom_node_t* ch = node->children[i];
         if (ch->style.display == DISPLAY_NONE) continue;
 
-        // Calculate Collapsed Margin with sibling
         int top_pos = (ch->style.margin_top > 0) ? ch->style.margin_top : 0;
         int top_neg = (ch->style.margin_top < 0) ? ch->style.margin_top : 0;
 
@@ -1231,20 +1013,24 @@ static int layout_dom_tree(dom_node_t* node, int container_x, int container_y, i
         int collapsed_margin = eff_pos + eff_neg;
 
         int child_y = active_cursor_y + collapsed_margin;
-
-        // Recurse layout
         int child_end_y = layout_dom_tree(ch, child_x, child_y, content_w, mode, out_max_y);
         active_cursor_y = child_end_y;
 
-        // Update running margin strut to child's bottom margin
         running_margin_pos = (ch->style.margin_bottom > 0) ? ch->style.margin_bottom : 0;
         running_margin_neg = (ch->style.margin_bottom < 0) ? ch->style.margin_bottom : 0;
     }
 
     int measured_h = active_cursor_y - child_start_y;
-    node->content_h = (node->style.height >= 0) ? node->style.height : measured_h;
-    (void)eff_margin_top;
-    (void)eff_margin_bottom;
+    if (node->style.height >= 0) {
+        if (node->style.box_sizing == BOX_SIZING_BORDER_BOX) {
+            int ch = node->style.height - node->style.padding_top - node->style.padding_bottom - node->style.border_width * 2;
+            node->content_h = (ch > 0) ? ch : 0;
+        } else {
+            node->content_h = node->style.height;
+        }
+    } else {
+        node->content_h = measured_h;
+    }
     node->y = container_y;
     node->h = node->content_h + node->style.padding_top + node->style.padding_bottom + node->style.border_width * 2;
 
@@ -1256,6 +1042,15 @@ static int layout_dom_tree(dom_node_t* node, int container_x, int container_y, i
 /* ------------------------------------------------------------------------- */
 /* Rasterization Pipeline: FrameBuffer Rendering                             */
 /* ------------------------------------------------------------------------- */
+static float compute_aligned_text_x(int box_x, int box_w, float line_w, css_align_t align) {
+    if (align == ALIGN_CENTER && line_w < (float)box_w) {
+        return (float)box_x + ((float)box_w - line_w) * 0.5f;
+    } else if (align == ALIGN_RIGHT && line_w < (float)box_w) {
+        return (float)box_x + ((float)box_w - line_w);
+    }
+    return (float)box_x;
+}
+
 static void rasterize_dom_node(dom_node_t* node, FrameBuffer* fb) {
     if (!node || node->style.display == DISPLAY_NONE) return;
 
@@ -1264,10 +1059,14 @@ static void rasterize_dom_node(dom_node_t* node, FrameBuffer* fb) {
         fb_fill_rect(fb, node->x, node->y, node->w, node->h, node->style.bg_color);
     }
 
-    // 2. Border
+    // 2. Borders (full box border + left/bottom accent borders)
     if (node->style.border_width > 0) {
         fb_stroke_rect(fb, node->x, node->y, node->w, node->h, node->style.border_width, node->style.border_color);
-    } else if (node->style.border_bottom_width > 0) {
+    }
+    if (node->style.border_left_width > 0) {
+        fb_fill_rect(fb, node->x, node->y, node->style.border_left_width, node->h, node->style.border_left_color);
+    }
+    if (node->style.border_bottom_width > 0 && node->style.border_width == 0) {
         fb_fill_rect(fb, node->x, node->y + node->h - node->style.border_bottom_width,
                      node->w, node->style.border_bottom_width, node->style.border_color);
     }
@@ -1287,21 +1086,23 @@ static void rasterize_dom_node(dom_node_t* node, FrameBuffer* fb) {
         for (int py = apex_y; py <= base_y; py++) {
             float t = (base_y > apex_y) ? (float)(py - apex_y) / (float)(base_y - apex_y) : 0.0f;
             int span = (int)(t * (float)half_b);
-            // Left sunlit face + right shaded face
             fb_fill_rect(fb, apex_x - span, py, span, 1, 0xFFD9B36C);
             fb_fill_rect(fb, apex_x, py, span * 3 / 4 + 1, 1, 0xFFA67C37);
         }
     }
 
-    // 4. Text Rendering via Skia/CoreText font engine
+    // 4. Text Rendering via Skia/CoreText font engine (with CSS text-align)
     if (strcmp(node->tag, "#text") == 0 && node->text) {
         float fsize = node->parent ? node->parent->style.font_size : node->style.font_size;
         int fweight = node->parent ? node->parent->style.font_weight : node->style.font_weight;
         int fstyle = node->parent ? node->parent->style.font_style : node->style.font_style;
         const char* ffamily = node->parent ? node->parent->style.font_family : node->style.font_family;
         uint32_t color = node->parent ? node->parent->style.color : node->style.color;
+        css_align_t align = node->parent ? node->parent->style.text_align : node->style.text_align;
+        float lh_mult = node->parent ? node->parent->style.line_height : node->style.line_height;
+        if (lh_mult <= 0.5f) lh_mult = 1.35f;
 
-        float line_h = fsize * 1.35f;
+        float line_h = fsize * lh_mult;
         float cur_line_w = 0.0f;
         float cur_y = (float)node->y;
 
@@ -1316,9 +1117,9 @@ static void rasterize_dom_node(dom_node_t* node, FrameBuffer* fb) {
             float space_w = blink_skia_font_measure_text(" ", ffamily, fsize, 0);
 
             if (cur_line_w + word_w > (float)node->w && cur_line_w > 0.0f) {
-                // Draw current line
+                float draw_x = compute_aligned_text_x(node->x, node->w, cur_line_w, align);
                 blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                                          (float)node->x, cur_y + fsize * 0.85f,
+                                          draw_x, cur_y + fsize * 0.85f,
                                           line_buf, ffamily, fsize, style_flags, color);
                 cur_y += line_h;
                 line_buf[0] = '\0';
@@ -1336,8 +1137,9 @@ static void rasterize_dom_node(dom_node_t* node, FrameBuffer* fb) {
         }
 
         if (line_buf[0] != '\0') {
+            float draw_x = compute_aligned_text_x(node->x, node->w, cur_line_w, align);
             blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                                      (float)node->x, cur_y + fsize * 0.85f,
+                                      draw_x, cur_y + fsize * 0.85f,
                                       line_buf, ffamily, fsize, style_flags, color);
         }
         free(text_dup);
@@ -1426,21 +1228,31 @@ int main(int argc, char* argv[]) {
     printf("[1/5] Network Fetch Complete: %zu bytes fetched in %.2f ms\n", doc_size, t_fetch_1 - t_fetch_0);
     if (effective_url && verbose) printf("      Resolved URL: %s\n", effective_url);
 
-    // 2. Initialize font system & parse HTML
+    // 2. Initialize font system, parse HTML5 DOM + <style> rules, and run CSS Cascade Level 5
     double t_parse_0 = get_time_ms();
     blink_skia_font_init();
-    dom_node_t* dom = parse_html_document(html_data);
-    normalize_inline_runs(dom);
-    free(html_data);
-    double t_parse_1 = get_time_ms();
-    if (!dom) {
-        fprintf(stderr, "[FATAL] Failed to parse HTML DOM\n");
+    blink_css_stylesheet_t* stylesheet = (blink_css_stylesheet_t*)malloc(sizeof(blink_css_stylesheet_t));
+    if (!stylesheet) {
+        free(html_data);
         free(effective_url);
         return 1;
     }
-    printf("[2/5] DOM Construction Complete: %d child nodes parsed in %.2f ms\n", dom->num_children, t_parse_1 - t_parse_0);
+    dom_node_t* dom = blink_parse_html5_document(html_data, stylesheet);
+    free(html_data);
+    if (!dom) {
+        fprintf(stderr, "[FATAL] Failed to parse HTML5 DOM\n");
+        free(stylesheet);
+        free(effective_url);
+        return 1;
+    }
+    blink_css_resolve_document_styles(dom, stylesheet, viewport_w, page_h, layout_mode);
+    normalize_inline_runs(dom);
+    double t_parse_1 = get_time_ms();
+    printf("[2/5] HTML5 TreeBuilder + CSS Cascade Complete: %d DOM children, %d CSS rules in %.2f ms\n",
+           dom->num_children, stylesheet->num_rules, t_parse_1 - t_parse_0);
+    free(stylesheet);
 
-    // 3. Formal Layout Execution (Margin Collapsing + Snapping)
+    // 3. Formal Layout Execution (Block Margin Collapsing + Flexbox + Table + Dual-Mode Z)
     double t_layout_0 = get_time_ms();
     int max_y = 0;
     layout_dom_tree(dom, 16, 16, viewport_w - 32, layout_mode, &max_y);
@@ -1455,7 +1267,8 @@ int main(int argc, char* argv[]) {
 
     // 4. Rasterization into FrameBuffer
     double t_raster_0 = get_time_ms();
-    FrameBuffer* fb = fb_create(viewport_w, total_canvas_h, COLOR_WHITE);
+    uint32_t clear_bg = (dom->style.has_bg && (dom->style.bg_color >> 24) > 0) ? dom->style.bg_color : COLOR_WHITE;
+    FrameBuffer* fb = fb_create(viewport_w, total_canvas_h, clear_bg);
     if (!fb) {
         fprintf(stderr, "[FATAL] Failed to allocate FrameBuffer (%d x %d)\n", viewport_w, total_canvas_h);
         dom_node_free(dom);
@@ -1471,14 +1284,12 @@ int main(int argc, char* argv[]) {
     double t_png_0 = get_time_ms();
     char out_path[512];
 
-    // Save full page
     snprintf(out_path, sizeof(out_path), "%s_full.png", out_prefix);
     bool full_ok = write_png_rgba(out_path, fb->width, fb->height, fb->pixels);
     if (full_ok) {
         printf("[5/5] Wrote Full Page PNG: %s (%d x %d)\n", out_path, fb->width, fb->height);
     }
 
-    // Save paginated slices
     for (int p = 0; p < num_pages; p++) {
         int slice_y0 = p * page_h;
         int slice_h = page_h;
@@ -1486,7 +1297,6 @@ int main(int argc, char* argv[]) {
             slice_h = fb->height - slice_y0;
         }
 
-        // Allocate slice buffer
         uint32_t* slice_pixels = (uint32_t*)malloc((size_t)viewport_w * (size_t)page_h * sizeof(uint32_t));
         for (int r = 0; r < page_h; r++) {
             int src_y = slice_y0 + r;
@@ -1494,7 +1304,7 @@ int main(int argc, char* argv[]) {
                 if (src_y < fb->height) {
                     slice_pixels[r * viewport_w + c] = fb->pixels[src_y * viewport_w + c];
                 } else {
-                    slice_pixels[r * viewport_w + c] = COLOR_WHITE;
+                    slice_pixels[r * viewport_w + c] = clear_bg;
                 }
             }
         }
@@ -1507,19 +1317,17 @@ int main(int argc, char* argv[]) {
     double t_png_1 = get_time_ms();
     double t_total = get_time_ms() - t_start;
 
-    // Performance Summary Table
     printf("\n===============================================================================\n");
     printf("Execution Performance Summary:\n");
     printf("  Network Fetch Latency : %8.2f ms\n", t_fetch_1 - t_fetch_0);
-    printf("  HTML/CSS Parse Time   : %8.2f ms\n", t_parse_1 - t_parse_0);
-    printf("  Formal Layout Engine  : %8.3f ms  (Coq Margin Collapsing + Dual-Mode Z)\n", t_layout_1 - t_layout_0);
+    printf("  HTML5/CSS3 Cascade    : %8.2f ms  (Coq TreeBuilder + Cascade Level 5)\n", t_parse_1 - t_parse_0);
+    printf("  Formal Layout Engine  : %8.3f ms  (Block/Flex/Table + Dual-Mode Z)\n", t_layout_1 - t_layout_0);
     printf("  Framebuffer Raster    : %8.2f ms  (FreeType/CoreText Font Rasterizer)\n", t_raster_1 - t_raster_0);
     printf("  PNG Compression/Write : %8.2f ms  (Full + %d Pages via C99 zlib)\n", t_png_1 - t_png_0, num_pages);
     printf("  -----------------------------------------------------------------------------\n");
     printf("  Total Execution Time  : %8.2f ms\n", t_total);
     printf("===============================================================================\n\n");
 
-    // Clean up
     fb_destroy(fb);
     dom_node_free(dom);
     free(effective_url);

@@ -339,6 +339,112 @@ SynthesizedTheorem(f, cat(f_name, "_share_non_negative"),
     CppFunction(f, f_name, "int", _),
     f_name = "blink_flex_distribute_share".
 
+// Synthesize HTML5 Tokenizer ASCII Case-Folding Idempotence
+SynthesizedTheorem(f, cat(f_name, "_idempotent"),
+    cat("Theorem ", f_name, "_idempotent : forall (c : Z),\n",
+        "  ", f_name, " (", f_name, " c) = ", f_name, " c.\n",
+        "Proof.\n",
+        "  intro c. unfold ", f_name, ".\n",
+        "  destruct ((65%Z <=? c) && (c <=? 90%Z))%bool eqn:Hu.\n",
+        "  - apply andb_true_iff in Hu. destruct Hu as [H1 H2].\n",
+        "    apply Z.leb_le in H1. apply Z.leb_le in H2.\n",
+        "    assert (Hhi: ((c + 32%Z)%Z <=? 90%Z) = false) by (apply Z.leb_gt; lia).\n",
+        "    rewrite Hhi, andb_false_r. reflexivity.\n",
+        "  - rewrite Hu. reflexivity.\n",
+        "Qed.\n")) :-
+    CppFunction(f, f_name, "int", _),
+    f_name = "blink_html_ascii_to_lower".
+
+// Synthesize Generic Constant-Range Clamp Soundness (HTML colspan [1..1000] & rowspan [0..65534])
+SynthesizedTheorem(f, cat(f_name, "_range_bounds"),
+    cat("Theorem ", f_name, "_range_bounds : forall (span : Z),\n",
+        "  ", to_string(lo_v), " <= ", f_name, " span <= ", to_string(hi_v), ".\n",
+        "Proof.\n",
+        "  intro span. unfold ", f_name, ". lia.\n",
+        "Qed.\n")) :-
+    CppFunction(f, f_name, "int", root_s),
+    CppStmt(root_s, "Return"),
+    CppReturn(root_s, e_cl),
+    CppExpr(e_cl, "Call3"),
+    CppCall3(e_cl, "std::clamp", _, e_lo, e_hi),
+    CppConstInt(e_lo, lo_v),
+    CppConstInt(e_hi, hi_v),
+    lo_v <= hi_v.
+
+// Synthesize CSS Packed Specificity ID-Dominance Theorem
+SynthesizedTheorem(f, cat(f_name, "_id_strict_dominance"),
+    cat("Theorem ", f_name, "_id_strict_dominance : forall (i1 c1 t1 i2 c2 t2 : Z),\n",
+        "  0 <= i1 -> i1 < i2 -> i2 <= 255 ->\n",
+        "  0 <= c1 <= 255 -> 0 <= t1 <= 255 ->\n",
+        "  0 <= c2 <= 255 -> 0 <= t2 <= 255 ->\n",
+        "  ", f_name, " i1 c1 t1 < ", f_name, " i2 c2 t2.\n",
+        "Proof.\n",
+        "  intros. unfold ", f_name, ". lia.\n",
+        "Qed.\n")) :-
+    CppFunction(f, f_name, "int", _),
+    f_name = "blink_css_pack_specificity".
+
+// Synthesize CSS Cascade Layer !important Inversion Theorem
+SynthesizedTheorem(f, cat(f_name, "_important_inversion"),
+    cat("Theorem ", f_name, "_important_inversion : forall (l1 l2 max_l : Z),\n",
+        "  l1 < l2 ->\n",
+        "  ", f_name, " l1 false max_l < ", f_name, " l2 false max_l /\\\n",
+        "  ", f_name, " l2 true max_l < ", f_name, " l1 true max_l.\n",
+        "Proof.\n",
+        "  intros l1 l2 max_l Hlt. unfold ", f_name, ". simpl. lia.\n",
+        "Qed.\n")) :-
+    CppFunction(f, f_name, "int", _),
+    f_name = "blink_css_effective_layer_priority".
+
+// Synthesize CSS Viewport 100vw Identity Theorem
+SynthesizedTheorem(f, cat(f_name, "_100vw_identity"),
+    cat("Theorem ", f_name, "_100vw_identity : forall (vw_px : Z),\n",
+        "  0 <= vw_px ->\n",
+        "  ", f_name, " 100 vw_px = vw_px.\n",
+        "Proof.\n",
+        "  intros vw_px Hvw. unfold ", f_name, ". simpl.\n",
+        "  apply Z.div_mul. lia.\n",
+        "Qed.\n")) :-
+    CppFunction(f, f_name, "int", _),
+    f_name = "blink_css_resolve_viewport_vw".
+
+// Synthesize CSS Premultiplied Alpha Channel Bounds Theorem
+SynthesizedTheorem(f, cat(f_name, "_channel_bounds"),
+    cat("Theorem ", f_name, "_channel_bounds : forall (ch alpha : Z),\n",
+        "  0 <= ch <= 255 -> 0 <= alpha <= 255 ->\n",
+        "  0 <= ", f_name, " ch alpha <= ch.\n",
+        "Proof.\n",
+        "  intros ch alpha Hch Ha. unfold ", f_name, ".\n",
+        "  split.\n",
+        "  - apply Z.div_pos; [apply Z.mul_nonneg_nonneg; lia | lia].\n",
+        "  - apply Z.div_le_upper_bound; [lia | nia].\n",
+        "Qed.\n")) :-
+    CppFunction(f, f_name, "int", _),
+    f_name = "blink_css_premultiply_channel".
+
+// Synthesize CSS Border-Box to Content-Box Non-Negativity & Conservation
+SynthesizedTheorem(f, cat(f_name, "_conservation"),
+    cat("Theorem ", f_name, "_conservation : forall (bb_w pad_s bdr_s : Z),\n",
+        "  0 <= ", f_name, " bb_w pad_s bdr_s /\\\n",
+        "  (pad_s + bdr_s <= bb_w -> ", f_name, " bb_w pad_s bdr_s + pad_s + bdr_s = bb_w).\n",
+        "Proof.\n",
+        "  intros bb_w pad_s bdr_s. unfold ", f_name, ". lia.\n",
+        "Qed.\n")) :-
+    CppFunction(f, f_name, "int", _),
+    f_name = "blink_css_border_box_to_content_size".
+
+// Synthesize CSS 2-Value Shorthand Outset Doubling Conservation
+SynthesizedTheorem(f, cat(f_name, "_nonneg_symmetry"),
+    cat("Theorem ", f_name, "_nonneg_symmetry : forall (vert horiz : Z),\n",
+        "  0 <= vert -> 0 <= horiz ->\n",
+        "  let '(bv, bh) := ", f_name, " vert horiz in\n",
+        "  0 <= bv /\\ 0 <= bh /\\ bv + bh = 2 * (vert + horiz).\n",
+        "Proof.\n",
+        "  intros vert horiz Hv Hh. unfold ", f_name, ". lia.\n",
+        "Qed.\n")) :-
+    CppFunction(f, f_name, "std::pair<int, int>", _),
+    f_name = "blink_css_shorthand_2_outsets".
+
 // ------------------------------------------------------------------------- //
 // 7. IDB: Complete Rocq/Coq File Assembly                                   //
 // ------------------------------------------------------------------------- //
@@ -474,3 +580,143 @@ CppStmt("s_assign_num", "Assign"). CppAssign("s_assign_num", "numerator", "e_num
 CppStmt("s_seq_flex", "Seq"). CppSeq("s_seq_flex", "s_assign_num", "s_ret_share").
 
 CppStmt("s_flex_root", "If"). CppIf("s_flex_root", "c_tot_le_zero", "s_ret_flex_zero", "s_seq_flex").
+
+// ------------------------------------------------------------------------- //
+// Case Study 4: HTMLTokenizer::AsciiToLower                                 //
+// (Chromium source: core/html/parser/html_tokenizer.cc)                     //
+// ------------------------------------------------------------------------- //
+CppFunction("f_html_lower", "blink_html_ascii_to_lower", "int", "s_lower_root").
+CppParam("f_html_lower", 1, "c", "int").
+CppExpr("e_lc", "VarRef"). CppVarRef("e_lc", "c").
+CppExpr("e_65", "ConstInt"). CppConstInt("e_65", 65).
+CppExpr("e_90", "ConstInt"). CppConstInt("e_90", 90).
+CppExpr("e_32", "ConstInt"). CppConstInt("e_32", 32).
+CppExpr("c_ge65", "BinOp"). CppBinOp("c_ge65", "<=", "e_65", "e_lc").
+CppExpr("c_le90", "BinOp"). CppBinOp("c_le90", "<=", "e_lc", "e_90").
+CppExpr("c_upper", "BinOp"). CppBinOp("c_upper", "&&", "c_ge65", "c_le90").
+CppExpr("e_lc_plus32", "BinOp"). CppBinOp("e_lc_plus32", "+", "e_lc", "e_32").
+CppStmt("s_ret_l32", "Return"). CppReturn("s_ret_l32", "e_lc_plus32").
+CppStmt("s_ret_lc", "Return"). CppReturn("s_ret_lc", "e_lc").
+CppStmt("s_lower_root", "If"). CppIf("s_lower_root", "c_upper", "s_ret_l32", "s_ret_lc").
+
+// ------------------------------------------------------------------------- //
+// Case Study 5: HTMLTableCellElement::ColSpan (WHATWG HTML §4.9.11)         //
+// (Chromium source: core/html/html_table_cell_element.cc)                   //
+// ------------------------------------------------------------------------- //
+CppFunction("f_html_colspan", "blink_html_clamp_colspan", "int", "s_colspan_root").
+CppParam("f_html_colspan", 1, "span", "int").
+CppExpr("e_cs_span", "VarRef"). CppVarRef("e_cs_span", "span").
+CppExpr("e_cs_1", "ConstInt"). CppConstInt("e_cs_1", 1).
+CppExpr("e_cs_1000", "ConstInt"). CppConstInt("e_cs_1000", 1000).
+CppExpr("e_cs_clamp", "Call3"). CppCall3("e_cs_clamp", "std::clamp", "e_cs_span", "e_cs_1", "e_cs_1000").
+CppStmt("s_colspan_root", "Return"). CppReturn("s_colspan_root", "e_cs_clamp").
+
+// ------------------------------------------------------------------------- //
+// Case Study 6: HTMLTableCellElement::RowSpan (WHATWG HTML §4.9.11)         //
+// (Chromium source: core/html/html_table_cell_element.cc)                   //
+// ------------------------------------------------------------------------- //
+CppFunction("f_html_rowspan", "blink_html_clamp_rowspan", "int", "s_rowspan_root").
+CppParam("f_html_rowspan", 1, "span", "int").
+CppExpr("e_rs_span", "VarRef"). CppVarRef("e_rs_span", "span").
+CppExpr("e_rs_0", "ConstInt"). CppConstInt("e_rs_0", 0).
+CppExpr("e_rs_65534", "ConstInt"). CppConstInt("e_rs_65534", 65534).
+CppExpr("e_rs_clamp", "Call3"). CppCall3("e_rs_clamp", "std::clamp", "e_rs_span", "e_rs_0", "e_rs_65534").
+CppStmt("s_rowspan_root", "Return"). CppReturn("s_rowspan_root", "e_rs_clamp").
+
+// ------------------------------------------------------------------------- //
+// Case Study 7: CSSSelector::Specificity Packed 24-bit Tuple                //
+// (Chromium source: core/css/css_selector.cc)                               //
+// ------------------------------------------------------------------------- //
+CppFunction("f_css_spec", "blink_css_pack_specificity", "int", "s_spec_root").
+CppParam("f_css_spec", 1, "ids", "int").
+CppParam("f_css_spec", 2, "classes", "int").
+CppParam("f_css_spec", 3, "tags", "int").
+CppExpr("e_sp_i", "VarRef"). CppVarRef("e_sp_i", "ids").
+CppExpr("e_sp_c", "VarRef"). CppVarRef("e_sp_c", "classes").
+CppExpr("e_sp_t", "VarRef"). CppVarRef("e_sp_t", "tags").
+CppExpr("e_sp_0", "ConstInt"). CppConstInt("e_sp_0", 0).
+CppExpr("e_sp_255", "ConstInt"). CppConstInt("e_sp_255", 255).
+CppExpr("e_sp_65536", "ConstInt"). CppConstInt("e_sp_65536", 65536).
+CppExpr("e_sp_256", "ConstInt"). CppConstInt("e_sp_256", 256).
+CppExpr("e_ci", "Call3"). CppCall3("e_ci", "std::clamp", "e_sp_i", "e_sp_0", "e_sp_255").
+CppExpr("e_cc", "Call3"). CppCall3("e_cc", "std::clamp", "e_sp_c", "e_sp_0", "e_sp_255").
+CppExpr("e_ct", "Call3"). CppCall3("e_ct", "std::clamp", "e_sp_t", "e_sp_0", "e_sp_255").
+CppExpr("e_hi_s", "BinOp"). CppBinOp("e_hi_s", "*", "e_ci", "e_sp_65536").
+CppExpr("e_mid_s", "BinOp"). CppBinOp("e_mid_s", "*", "e_cc", "e_sp_256").
+CppExpr("e_hm_s", "BinOp"). CppBinOp("e_hm_s", "+", "e_hi_s", "e_mid_s").
+CppExpr("e_tot_s", "BinOp"). CppBinOp("e_tot_s", "+", "e_hm_s", "e_ct").
+CppStmt("s_spec_root", "Return"). CppReturn("s_spec_root", "e_tot_s").
+
+// ------------------------------------------------------------------------- //
+// Case Study 8: CascadePriority Effective @layer Rank (!important inverts)  //
+// (Chromium source: core/css/resolver/cascade_priority.h)                   //
+// ------------------------------------------------------------------------- //
+CppFunction("f_css_layer", "blink_css_effective_layer_priority", "int", "s_layer_root").
+CppParam("f_css_layer", 1, "layer_order", "int").
+CppParam("f_css_layer", 2, "is_important", "bool").
+CppParam("f_css_layer", 3, "max_layers", "int").
+CppExpr("e_ly_ord", "VarRef"). CppVarRef("e_ly_ord", "layer_order").
+CppExpr("e_ly_imp", "VarRef"). CppVarRef("e_ly_imp", "is_important").
+CppExpr("e_ly_max", "VarRef"). CppVarRef("e_ly_max", "max_layers").
+CppExpr("e_ly_inv", "BinOp"). CppBinOp("e_ly_inv", "-", "e_ly_max", "e_ly_ord").
+CppStmt("s_ly_then", "Return"). CppReturn("s_ly_then", "e_ly_inv").
+CppStmt("s_ly_else", "Return"). CppReturn("s_ly_else", "e_ly_ord").
+CppStmt("s_layer_root", "If"). CppIf("s_layer_root", "e_ly_imp", "s_ly_then", "s_ly_else").
+
+// ------------------------------------------------------------------------- //
+// Case Study 9: CSSPrimitiveValue Viewport vw Length Resolution             //
+// (Chromium source: core/css/css_primitive_value.cc)                        //
+// ------------------------------------------------------------------------- //
+CppFunction("f_css_vw", "blink_css_resolve_viewport_vw", "int", "s_vw_root").
+CppParam("f_css_vw", 1, "vw_units", "int").
+CppParam("f_css_vw", 2, "viewport_w", "int").
+CppExpr("e_vw_u", "VarRef"). CppVarRef("e_vw_u", "vw_units").
+CppExpr("e_vw_w", "VarRef"). CppVarRef("e_vw_w", "viewport_w").
+CppExpr("e_vw_100", "ConstInt"). CppConstInt("e_vw_100", 100).
+CppExpr("e_vw_prod", "BinOp"). CppBinOp("e_vw_prod", "*", "e_vw_w", "e_vw_u").
+CppExpr("e_vw_div", "BinOp"). CppBinOp("e_vw_div", "/", "e_vw_prod", "e_vw_100").
+CppStmt("s_vw_root", "Return"). CppReturn("s_vw_root", "e_vw_div").
+
+// ------------------------------------------------------------------------- //
+// Case Study 10: Blink Color Premultiplied Alpha Channel                    //
+// (Chromium source: platform/graphics/color.cc)                             //
+// ------------------------------------------------------------------------- //
+CppFunction("f_css_premul", "blink_css_premultiply_channel", "int", "s_premul_root").
+CppParam("f_css_premul", 1, "ch", "int").
+CppParam("f_css_premul", 2, "alpha", "int").
+CppExpr("e_pm_ch", "VarRef"). CppVarRef("e_pm_ch", "ch").
+CppExpr("e_pm_a", "VarRef"). CppVarRef("e_pm_a", "alpha").
+CppExpr("e_pm_255", "ConstInt"). CppConstInt("e_pm_255", 255).
+CppExpr("e_pm_mul", "BinOp"). CppBinOp("e_pm_mul", "*", "e_pm_ch", "e_pm_a").
+CppExpr("e_pm_div", "BinOp"). CppBinOp("e_pm_div", "/", "e_pm_mul", "e_pm_255").
+CppStmt("s_premul_root", "Return"). CppReturn("s_premul_root", "e_pm_div").
+
+// ------------------------------------------------------------------------- //
+// Case Study 11: BoxSizing Border-Box to Content-Box Conversion             //
+// (Chromium source: core/layout/box_sizing.cc)                              //
+// ------------------------------------------------------------------------- //
+CppFunction("f_css_bbox", "blink_css_border_box_to_content_size", "int", "s_bbox_root").
+CppParam("f_css_bbox", 1, "bb_w", "int").
+CppParam("f_css_bbox", 2, "pad_s", "int").
+CppParam("f_css_bbox", 3, "bdr_s", "int").
+CppExpr("e_bb_w", "VarRef"). CppVarRef("e_bb_w", "bb_w").
+CppExpr("e_bb_p", "VarRef"). CppVarRef("e_bb_p", "pad_s").
+CppExpr("e_bb_b", "VarRef"). CppVarRef("e_bb_b", "bdr_s").
+CppExpr("e_bb_0", "ConstInt"). CppConstInt("e_bb_0", 0).
+CppExpr("e_bb_sub1", "BinOp"). CppBinOp("e_bb_sub1", "-", "e_bb_w", "e_bb_p").
+CppExpr("e_bb_sub2", "BinOp"). CppBinOp("e_bb_sub2", "-", "e_bb_sub1", "e_bb_b").
+CppExpr("e_bb_max", "Call2"). CppCall2("e_bb_max", "std::max", "e_bb_0", "e_bb_sub2").
+CppStmt("s_bbox_root", "Return"). CppReturn("s_bbox_root", "e_bb_max").
+
+// ------------------------------------------------------------------------- //
+// Case Study 12: CSS 2-Value Shorthand Total Block & Inline Outsets         //
+// (Chromium source: core/css/parser/css_property_parser.cc)                 //
+// ------------------------------------------------------------------------- //
+CppFunction("f_css_sh2", "blink_css_shorthand_2_outsets", "std::pair<int, int>", "s_sh2_root").
+CppParam("f_css_sh2", 1, "vert", "int").
+CppParam("f_css_sh2", 2, "horiz", "int").
+CppExpr("e_sh_v", "VarRef"). CppVarRef("e_sh_v", "vert").
+CppExpr("e_sh_h", "VarRef"). CppVarRef("e_sh_h", "horiz").
+CppExpr("e_sh_bv", "BinOp"). CppBinOp("e_sh_bv", "+", "e_sh_v", "e_sh_v").
+CppExpr("e_sh_bh", "BinOp"). CppBinOp("e_sh_bh", "+", "e_sh_h", "e_sh_h").
+CppStmt("s_sh2_root", "ReturnTuple2"). CppReturnTuple2("s_sh2_root", "e_sh_bv", "e_sh_bh").

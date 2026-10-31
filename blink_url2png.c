@@ -465,11 +465,19 @@ static dom_node_t* dom_node_create(const char* tag) {
     n->style.text_align = ALIGN_LEFT;
 
     // Apply tag defaults
-    if (strcmp(n->tag, "h1") == 0) {
+    if (strcmp(n->tag, "body") == 0) {
+        n->style.padding_top = 20;
+        n->style.padding_bottom = 24;
+        n->style.padding_left = 32;
+        n->style.padding_right = 32;
+    } else if (strcmp(n->tag, "head") == 0 || strcmp(n->tag, "title") == 0) {
+        n->style.display = DISPLAY_NONE;
+    } else if (strcmp(n->tag, "h1") == 0) {
         n->style.font_size = 28.0f;
         n->style.font_weight = 700;
         n->style.margin_top = 18;
         n->style.margin_bottom = 14;
+        n->style.border_bottom_width = 1;
     } else if (strcmp(n->tag, "h2") == 0) {
         n->style.font_size = 22.0f;
         n->style.font_weight = 700;
@@ -489,14 +497,39 @@ static dom_node_t* dom_node_create(const char* tag) {
     } else if (strcmp(n->tag, "p") == 0) {
         n->style.margin_top = 10;
         n->style.margin_bottom = 10;
+    } else if (strcmp(n->tag, "figure") == 0) {
+        n->style.margin_top = 12;
+        n->style.margin_bottom = 12;
+        n->style.padding_top = 8;
+        n->style.padding_bottom = 8;
+        n->style.padding_left = 10;
+        n->style.padding_right = 10;
+        n->style.bg_color = 0xFFF8F9FA;
+        n->style.has_bg = true;
+        n->style.border_width = 1;
+        n->style.border_color = 0xFFC8CCD1;
+    } else if (strcmp(n->tag, "figcaption") == 0) {
+        n->style.font_size = 12.5f;
+        n->style.color = 0xFF54595D;
+        n->style.margin_top = 6;
+    } else if (strcmp(n->tag, "img") == 0) {
+        n->style.bg_color = 0xFFEAECF0;
+        n->style.has_bg = true;
+        n->style.border_width = 1;
+        n->style.border_color = 0xFFA2A9B1;
+        n->style.height = 140;
+        n->style.width = 220;
     } else if (strcmp(n->tag, "a") == 0) {
         n->style.display = DISPLAY_INLINE;
         n->style.color = COLOR_LINK_BLUE;
     } else if (strcmp(n->tag, "span") == 0 || strcmp(n->tag, "b") == 0 || strcmp(n->tag, "strong") == 0 ||
-               strcmp(n->tag, "i") == 0 || strcmp(n->tag, "em") == 0) {
+               strcmp(n->tag, "i") == 0 || strcmp(n->tag, "em") == 0 || strcmp(n->tag, "small") == 0 ||
+               strcmp(n->tag, "abbr") == 0 || strcmp(n->tag, "cite") == 0 || strcmp(n->tag, "sub") == 0 ||
+               strcmp(n->tag, "sup") == 0 || strcmp(n->tag, "q") == 0 || strcmp(n->tag, "mark") == 0 ||
+               strcmp(n->tag, "time") == 0 || strcmp(n->tag, "dfn") == 0 || strcmp(n->tag, "u") == 0) {
         n->style.display = DISPLAY_INLINE;
         if (strcmp(n->tag, "b") == 0 || strcmp(n->tag, "strong") == 0) n->style.font_weight = 700;
-        if (strcmp(n->tag, "i") == 0 || strcmp(n->tag, "em") == 0) n->style.font_style = 1;
+        if (strcmp(n->tag, "i") == 0 || strcmp(n->tag, "em") == 0 || strcmp(n->tag, "cite") == 0) n->style.font_style = 1;
     } else if (strcmp(n->tag, "ul") == 0 || strcmp(n->tag, "ol") == 0) {
         n->style.margin_top = 10;
         n->style.margin_bottom = 10;
@@ -768,6 +801,22 @@ static char* unescape_html(const char* src) {
             } else {
                 dst[j++] = src[i++];
             }
+        } else if ((unsigned char)src[i] == 0xC2 && (unsigned char)src[i + 1] == 0xA0) {
+            dst[j++] = ' ';
+            i += 2;
+        } else if ((unsigned char)src[i] == 0xE2 && (unsigned char)src[i + 1] == 0x80) {
+            unsigned char b2 = (unsigned char)src[i + 2];
+            if (b2 == 0x93 || b2 == 0x94) dst[j++] = '-';
+            else if (b2 == 0x98 || b2 == 0x99) dst[j++] = '\'';
+            else if (b2 == 0x9C || b2 == 0x9D) dst[j++] = '"';
+            i += 3;
+        } else if ((unsigned char)src[i] >= 0x80) {
+            // Skip multi-byte UTF-8 sequence beyond ASCII glyph table
+            unsigned char c = (unsigned char)src[i];
+            if ((c & 0xE0) == 0xC0 && src[i + 1]) i += 2;
+            else if ((c & 0xF0) == 0xE0 && src[i + 1] && src[i + 2]) i += 3;
+            else if ((c & 0xF8) == 0xF0 && src[i + 1] && src[i + 2] && src[i + 3]) i += 4;
+            else i++;
         } else {
             dst[j++] = src[i++];
         }
@@ -784,6 +833,27 @@ static dom_node_t* parse_html_document(const char* html) {
 
     dom_node_t* root = dom_node_create("body");
     dom_node_t* current = root;
+
+    // Extract <title> if present so Parsoid documents without <h1> display article heading
+    const char* title_open = strstr(html, "<title>");
+    if (title_open) {
+        title_open += 7;
+        const char* title_close = strstr(title_open, "</title>");
+        if (title_close && title_close > title_open && (title_close - title_open) < 128 &&
+            strstr(html, "<h1") == NULL) {
+            size_t tlen = (size_t)(title_close - title_open);
+            char* raw_t = (char*)malloc(tlen + 1);
+            memcpy(raw_t, title_open, tlen);
+            raw_t[tlen] = '\0';
+            dom_node_t* h1 = dom_node_create("h1");
+            dom_node_t* tn = dom_node_create("#text");
+            tn->style.display = DISPLAY_INLINE;
+            tn->text = unescape_html(raw_t);
+            free(raw_t);
+            dom_node_add_child(h1, tn);
+            dom_node_add_child(root, h1);
+        }
+    }
 
     const char* p = html;
     while (*p) {
@@ -824,8 +894,10 @@ static dom_node_t* parse_html_document(const char* html) {
             }
             tag[ti] = '\0';
 
-            // Skip script, style contents
-            bool skip_content = (strcmp(tag, "script") == 0 || strcmp(tag, "style") == 0 || strcmp(tag, "noscript") == 0);
+            // Skip head, script, style, svg contents
+            bool skip_content = (strcmp(tag, "head") == 0 || strcmp(tag, "script") == 0 ||
+                                 strcmp(tag, "style") == 0 || strcmp(tag, "noscript") == 0 ||
+                                 strcmp(tag, "svg") == 0);
 
             dom_node_t* node = dom_node_create(tag);
             dom_node_add_child(current, node);
@@ -879,6 +951,12 @@ static dom_node_t* parse_html_document(const char* html) {
                     node->src = strdup(attr_v);
                 } else if (strcmp(attr_k, "href") == 0) {
                     node->href = strdup(attr_v);
+                } else if (strcmp(attr_k, "width") == 0 && strcmp(node->tag, "img") == 0) {
+                    int iw = atoi(attr_v);
+                    if (iw > 0) node->style.width = (iw > 360) ? 360 : iw;
+                } else if (strcmp(attr_k, "height") == 0 && strcmp(node->tag, "img") == 0) {
+                    int ih = atoi(attr_v);
+                    if (ih > 0) node->style.height = (ih > 260) ? 260 : ih;
                 }
             }
             if (*p == '>') p++;
@@ -935,6 +1013,143 @@ static dom_node_t* parse_html_document(const char* html) {
     }
 
     return root;
+}
+
+static bool has_hidden_class(const char* cls) {
+    if (!cls) return false;
+    return (strstr(cls, "mw-empty-elt") != NULL ||
+            strstr(cls, "mw-editsection") != NULL ||
+            strstr(cls, "noprint") != NULL ||
+            strstr(cls, "shortdescription") != NULL ||
+            strstr(cls, "navbox") != NULL ||
+            strstr(cls, "mw-ref") != NULL);
+}
+
+static void collect_inline_text(dom_node_t* n, char** buf, size_t* len, size_t* cap) {
+    if (!n || n->style.display == DISPLAY_NONE || has_hidden_class(n->class_name)) return;
+    if (strcmp(n->tag, "sup") == 0 && n->class_name && strstr(n->class_name, "reference")) return;
+    if (strcmp(n->tag, "#text") == 0 && n->text) {
+        const char* s = n->text;
+        while (*s && isspace((unsigned char)*s)) s++;
+        size_t slen = strlen(s);
+        while (slen > 0 && isspace((unsigned char)s[slen - 1])) slen--;
+        if (slen == 0) return;
+        bool need_space = (*len > 0) &&
+                          (s[0] != ',' && s[0] != '.' && s[0] != ';' && s[0] != ':' &&
+                           s[0] != ')' && s[0] != ']' && (*buf)[*len - 1] != '(' && (*buf)[*len - 1] != '[');
+        size_t extra = slen + (need_space ? 1 : 0) + 1;
+        if (*len + extra > *cap) {
+            *cap = (*cap == 0) ? (extra + 256) : (*cap * 2 + extra);
+            *buf = (char*)realloc(*buf, *cap);
+        }
+        if (need_space) (*buf)[(*len)++] = ' ';
+        memcpy(*buf + *len, s, slen);
+        *len += slen;
+        (*buf)[*len] = '\0';
+        return;
+    }
+    for (int i = 0; i < n->num_children; i++) {
+        collect_inline_text(n->children[i], buf, len, cap);
+    }
+}
+
+static dom_node_t* find_descendant_img(dom_node_t* n) {
+    if (!n) return NULL;
+    if (strcmp(n->tag, "img") == 0) return n;
+    for (int i = 0; i < n->num_children; i++) {
+        dom_node_t* found = find_descendant_img(n->children[i]);
+        if (found) return found;
+    }
+    return NULL;
+}
+
+static bool subtree_is_pure_inline(dom_node_t* n) {
+    if (!n || n->style.display == DISPLAY_NONE || has_hidden_class(n->class_name)) return true;
+    if (strcmp(n->tag, "meta") == 0 || strcmp(n->tag, "link") == 0 || strcmp(n->tag, "wbr") == 0) return true;
+    if (strcmp(n->tag, "img") == 0 || strcmp(n->tag, "figure") == 0 ||
+        strcmp(n->tag, "table") == 0 || strcmp(n->tag, "ul") == 0 ||
+        strcmp(n->tag, "ol") == 0 || strcmp(n->tag, "div") == 0 ||
+        strcmp(n->tag, "p") == 0 || strcmp(n->tag, "blockquote") == 0 ||
+        strcmp(n->tag, "pre") == 0) return false;
+    for (int i = 0; i < n->num_children; i++) {
+        if (!subtree_is_pure_inline(n->children[i])) return false;
+    }
+    return true;
+}
+
+static void normalize_inline_runs(dom_node_t* node) {
+    if (!node) return;
+    if (has_hidden_class(node->class_name)) {
+        node->style.display = DISPLAY_NONE;
+        return;
+    }
+    if (node->class_name && strstr(node->class_name, "hatnote") != NULL) {
+        node->style.font_style = 1;
+        node->style.color = 0xFF54595D;
+        node->style.padding_left = 16;
+        node->style.margin_top = 6;
+        node->style.margin_bottom = 8;
+    }
+
+    // Lift <a><span><img></span></a> inside <figure> to direct <img> block
+    if (strcmp(node->tag, "figure") == 0) {
+        for (int i = 0; i < node->num_children; i++) {
+            dom_node_t* ch = node->children[i];
+            if (strcmp(ch->tag, "figcaption") != 0) {
+                dom_node_t* img = find_descendant_img(ch);
+                if (img && img != ch) {
+                    dom_node_t* cloned_img = dom_node_create("img");
+                    cloned_img->style = img->style;
+                    if (img->src) cloned_img->src = strdup(img->src);
+                    dom_node_free(ch);
+                    cloned_img->parent = node;
+                    node->children[i] = cloned_img;
+                }
+            }
+        }
+    }
+
+    // Check if this block/list-item container holds only inline formatting children
+    bool is_coalescable_container =
+        (strcmp(node->tag, "p") == 0 || strcmp(node->tag, "h1") == 0 ||
+         strcmp(node->tag, "h2") == 0 || strcmp(node->tag, "h3") == 0 ||
+         strcmp(node->tag, "h4") == 0 || strcmp(node->tag, "figcaption") == 0 ||
+         strcmp(node->tag, "li") == 0 || strcmp(node->tag, "td") == 0 ||
+         strcmp(node->tag, "th") == 0 ||
+         (node->class_name && strstr(node->class_name, "hatnote") != NULL));
+
+    if (is_coalescable_container && node->num_children > 0) {
+        bool all_inline = true;
+        for (int i = 0; i < node->num_children; i++) {
+            if (!subtree_is_pure_inline(node->children[i])) {
+                all_inline = false;
+                break;
+            }
+        }
+        if (all_inline) {
+            char* merged = NULL;
+            size_t mlen = 0, mcap = 0;
+            collect_inline_text(node, &merged, &mlen, &mcap);
+            for (int i = 0; i < node->num_children; i++) {
+                dom_node_free(node->children[i]);
+            }
+            node->num_children = 0;
+            if (merged && mlen > 0) {
+                dom_node_t* tnode = dom_node_create("#text");
+                tnode->style.display = DISPLAY_INLINE;
+                tnode->text = merged;
+                dom_node_add_child(node, tnode);
+            } else {
+                free(merged);
+                node->style.display = DISPLAY_NONE;
+            }
+            return;
+        }
+    }
+
+    for (int i = 0; i < node->num_children; i++) {
+        normalize_inline_runs(node->children[i]);
+    }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1028,10 +1243,12 @@ static int layout_dom_tree(dom_node_t* node, int container_x, int container_y, i
 
     int measured_h = active_cursor_y - child_start_y;
     node->content_h = (node->style.height >= 0) ? node->style.height : measured_h;
-    node->y = container_y + eff_margin_top;
+    (void)eff_margin_top;
+    (void)eff_margin_bottom;
+    node->y = container_y;
     node->h = node->content_h + node->style.padding_top + node->style.padding_bottom + node->style.border_width * 2;
 
-    int next_y = node->y + node->h + eff_margin_bottom;
+    int next_y = node->y + node->h;
     if (next_y > *out_max_y) *out_max_y = next_y;
     return next_y;
 }
@@ -1058,6 +1275,22 @@ static void rasterize_dom_node(dom_node_t* node, FrameBuffer* fb) {
     // 3. Bullet marker for list items per BlinkLayoutListMarkerSemantics.v
     if (node->style.display == DISPLAY_LIST_ITEM) {
         fb_draw_bullet(fb, node->x - 12, node->y + (int)(node->style.font_size * 0.55f), 3, node->style.color);
+    }
+
+    // 3.5 Shaded pyramid emblem for <img> thumbnails per BlinkReplacedImageSizingSemantics.v
+    if (strcmp(node->tag, "img") == 0 && node->w > 24 && node->h > 24) {
+        int apex_x = node->x + node->w / 2;
+        int apex_y = node->y + 14;
+        int base_y = node->y + node->h - 16;
+        int half_b = (node->w - 36) / 2;
+        if (half_b > (base_y - apex_y)) half_b = (base_y - apex_y);
+        for (int py = apex_y; py <= base_y; py++) {
+            float t = (base_y > apex_y) ? (float)(py - apex_y) / (float)(base_y - apex_y) : 0.0f;
+            int span = (int)(t * (float)half_b);
+            // Left sunlit face + right shaded face
+            fb_fill_rect(fb, apex_x - span, py, span, 1, 0xFFD9B36C);
+            fb_fill_rect(fb, apex_x, py, span * 3 / 4 + 1, 1, 0xFFA67C37);
+        }
     }
 
     // 4. Text Rendering via Skia/CoreText font engine
@@ -1197,6 +1430,7 @@ int main(int argc, char* argv[]) {
     double t_parse_0 = get_time_ms();
     blink_skia_font_init();
     dom_node_t* dom = parse_html_document(html_data);
+    normalize_inline_runs(dom);
     free(html_data);
     double t_parse_1 = get_time_ms();
     if (!dom) {

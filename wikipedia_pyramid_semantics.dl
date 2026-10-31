@@ -1,0 +1,220 @@
+// =========================================================================
+// wikipedia_pyramid_semantics.dl
+// Souffle Datalog Relational Model of Live Wikipedia 'Pyramid' Article
+// (MediaWiki PageId 23704, Revision 1382372480, 111 DOM Blocks, 10 Monuments)
+// =========================================================================
+
+.decl WikiBlock(id: number, region: symbol, kind: symbol, words: number, lines: number, img_w: number, img_h: number, content_h: number, m_top: number, m_bottom: number, p_top: number, p_bottom: number, b_top: number, b_bottom: number)
+.decl Monument(id: symbol, region: symbol, base_dm: number, height_dm: number, extant_count: number, is_stepped: number)
+
+// 1. Regime Analysis & Dead-Branch Elimination (blink_regimes.dl style)
+.decl NonNegativeMarginBlock(id: number)
+.decl NegativeMarginViolation(id: number)
+.decl GlobalPositiveMarginRegime(status: symbol, verified_blocks: number)
+.decl BlockVisualRegime(id: number, regime: symbol)
+
+NonNegativeMarginBlock(id) :- WikiBlock(id, _, _, _, _, _, _, _, mt, mb, _, _, _, _), mt >= 0, mb >= 0.
+NegativeMarginViolation(id) :- WikiBlock(id, _, _, _, _, _, _, _, mt, mb, _, _, _, _), (mt < 0 ; mb < 0).
+GlobalPositiveMarginRegime("ACTIVE_FASTPATH_MNEG_ZERO", n) :-
+    !NegativeMarginViolation(_),
+    n = count : { NonNegativeMarginBlock(_) }.
+
+BlockVisualRegime(id, "BorderedSectionHeading") :- WikiBlock(id, _, k, _, _, _, _, _, _, _, _, _, _, bb), (k = "BK_H1" ; k = "BK_H2"), bb > 0.
+BlockVisualRegime(id, "SubHeadingClean") :- WikiBlock(id, _, k, _, _, _, _, _, _, _, _, _, _, 0), (k = "BK_H3" ; k = "BK_H4").
+BlockVisualRegime(id, "FramedFigureCard") :- WikiBlock(id, _, "BK_Figure", _, _, _, _, _, _, _, _, _, 1, 1).
+BlockVisualRegime(id, "ItalicHatnote") :- WikiBlock(id, _, "BK_Hatnote", _, _, _, _, _, _, _, _, _, _, _).
+BlockVisualRegime(id, "BodyProseFlow") :- WikiBlock(id, _, k, _, _, _, _, _, _, _, _, _, 0, 0), (k = "BK_Paragraph" ; k = "BK_List").
+
+// 2. Inductive Vertical Flow & W3C Margin Collapsing Fixpoint
+.decl BlockBoxHeight(id: number, box_h: number)
+BlockBoxHeight(id, bt + pt + ch + pb + bb) :- WikiBlock(id, _, _, _, _, _, _, ch, _, _, pt, pb, bt, bb).
+
+.decl FlowState(id: number, y: number, h: number, collapsed_m: number, next_cursor: number, out_m_pos: number)
+
+// Base block id = 0 at INITIAL_Y = 64
+FlowState(0, 64 + mt, h, mt, 64 + mt + h, mb) :-
+    WikiBlock(0, _, _, _, _, _, _, _, mt, mb, _, _, _, _),
+    BlockBoxHeight(0, h).
+
+// Inductive step id = prev + 1: collapsed = max(prev_mb, cur_mt)
+FlowState(id, prev_cur + cm, h, cm, prev_cur + cm + h, mb) :-
+    FlowState(prev_id, _, _, _, prev_cur, prev_mb),
+    id = prev_id + 1,
+    WikiBlock(id, _, _, _, _, _, _, _, mt, mb, _, _, _, _),
+    BlockBoxHeight(id, h),
+    cm = max(prev_mb, mt).
+
+// 3. Continuous Multi-Page Pagination (Viewport 800 x 600)
+.decl BlockPageSlice(id: number, region: symbol, kind: symbol, y: number, h: number, start_page: number, end_page: number)
+BlockPageSlice(id, reg, k, y, h, y / 600, (y + h - 1) / 600) :-
+    WikiBlock(id, reg, k, _, _, _, _, _, _, _, _, _, _, _),
+    FlowState(id, y, h, _, _, _), h > 0.
+
+.decl ArticleSummary(total_blocks: number, total_words: number, total_figures: number, canvas_height: number, total_pages: number)
+ArticleSummary(nb, nw, nf, canvas_h, (canvas_h + 599) / 600) :-
+    nb = count : { WikiBlock(_, _, _, _, _, _, _, _, _, _, _, _, _, _) },
+    nw = sum w : { WikiBlock(_, _, _, w, _, _, _, _, _, _, _, _, _, _) },
+    nf = count : { WikiBlock(_, _, "BK_Figure", _, _, _, _, _, _, _, _, _, _, _) },
+    max_end = max nc : { FlowState(_, _, _, _, nc, _) },
+    last_mb = max mb : { FlowState(nb - 1, _, _, _, _, mb) },
+    canvas_h = max_end + last_mb + 32.
+
+// 4. Regional Semantic Aggregation
+.decl RegionSummary(region: symbol, blk_count: number, word_count: number, fig_count: number, min_y: number, max_y_end: number)
+RegionSummary(reg, bc, wc, fc, min_y, max_end) :-
+    WikiBlock(_, reg, _, _, _, _, _, _, _, _, _, _, _, _),
+    bc = count : { WikiBlock(_, reg, _, _, _, _, _, _, _, _, _, _, _, _) },
+    wc = sum w : { WikiBlock(id2, reg, _, w, _, _, _, _, _, _, _, _, _, _), id2 >= 0 },
+    fc = count : { WikiBlock(_, reg, "BK_Figure", _, _, _, _, _, _, _, _, _, _, _) },
+    min_y = min y : { WikiBlock(id3, reg, _, _, _, _, _, _, _, _, _, _, _, _), FlowState(id3, y, _, _, _, _) },
+    max_end = max nc : { WikiBlock(id4, reg, _, _, _, _, _, _, _, _, _, _, _, _), FlowState(id4, _, _, _, nc, _) }.
+
+// 5. Encyclopedic Knowledge Graph Superlatives (using scaled kdm^3 volume to fit 64-bit signed int)
+.decl MonumentVolumeProxy(id: symbol, vol_proxy: number)
+MonumentVolumeProxy(id, ((base / 10) * (base / 10) * height) / 10) :- Monument(id, _, base, height, _, _).
+
+.decl LargestByVolume(id: symbol, vol_proxy: number)
+LargestByVolume(id, v) :- MonumentVolumeProxy(id, v), v = max v2 : { MonumentVolumeProxy(_, v2) }.
+
+.decl TallestModernMonument(id: symbol, height_dm: number)
+TallestModernMonument(id, h) :- Monument(id, "Reg_Modern", _, h, _, _), h = max h2 : { Monument(_, "Reg_Modern", _, h2, _, _) }.
+
+.decl TallestAncientMonument(id: symbol, height_dm: number)
+TallestAncientMonument(id, h) :- Monument(id, reg, _, h, _, _), reg != "Reg_Modern", h = max h2 : { Monument(_, r2, _, h2, _, _), r2 != "Reg_Modern" }.
+
+.decl MostExtantPyramids(id: symbol, extant: number)
+MostExtantPyramids(id, c) :- Monument(id, _, _, _, c, _), c = max c2 : { Monument(_, _, _, _, c2, _) }.
+
+.output GlobalPositiveMarginRegime(IO=stdout)
+.output ArticleSummary(IO=stdout)
+.output RegionSummary(IO=stdout)
+.output LargestByVolume(IO=stdout)
+.output TallestAncientMonument(IO=stdout)
+.output TallestModernMonument(IO=stdout)
+.output MostExtantPyramids(IO=stdout)
+.output BlockPageSlice(IO=stdout)
+
+// --- EDB Facts: 111 Live Wikipedia Pyramid DOM Blocks ---
+WikiBlock(0, "Reg_Lead", "BK_H1", 1, 1, 0, 0, 34, 0, 8, 0, 4, 0, 1).
+WikiBlock(1, "Reg_Lead", "BK_Hatnote", 20, 2, 0, 0, 38, 4, 8, 2, 2, 0, 0).
+WikiBlock(2, "Reg_Lead", "BK_Figure", 8, 2, 250, 187, 225, 8, 12, 6, 6, 1, 1).
+WikiBlock(3, "Reg_Lead", "BK_Paragraph", 67, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
+WikiBlock(4, "Reg_Lead", "BK_Paragraph", 52, 4, 0, 0, 80, 8, 10, 0, 0, 0, 0).
+WikiBlock(5, "Reg_Lead", "BK_Figure", 7, 2, 250, 188, 226, 8, 12, 6, 6, 1, 1).
+WikiBlock(6, "Reg_Lead", "BK_Paragraph", 72, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
+WikiBlock(7, "Reg_Lead", "BK_H2", 2, 1, 0, 0, 26, 18, 8, 0, 3, 0, 1).
+WikiBlock(8, "Reg_Lead", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
+WikiBlock(9, "Reg_WestAsia", "BK_H3", 2, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
+WikiBlock(10, "Reg_WestAsia", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(11, "Reg_WestAsia", "BK_Hatnote", 3, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
+WikiBlock(12, "Reg_WestAsia", "BK_Figure", 13, 3, 250, 158, 212, 8, 12, 6, 6, 1, 1).
+WikiBlock(13, "Reg_WestAsia", "BK_Paragraph", 69, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
+WikiBlock(14, "Reg_WestAsia", "BK_Paragraph", 156, 11, 0, 0, 220, 8, 10, 0, 0, 0, 0).
+WikiBlock(15, "Reg_Africa", "BK_H3", 1, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
+WikiBlock(16, "Reg_Africa", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(17, "Reg_Africa", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
+WikiBlock(18, "Reg_Africa", "BK_Figure", 11, 2, 250, 165, 203, 8, 12, 6, 6, 1, 1).
+WikiBlock(19, "Reg_Africa", "BK_Paragraph", 73, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
+WikiBlock(20, "Reg_Africa", "BK_Paragraph", 135, 10, 0, 0, 200, 8, 10, 0, 0, 0, 0).
+WikiBlock(21, "Reg_Africa", "BK_Paragraph", 69, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
+WikiBlock(22, "Reg_Africa", "BK_Paragraph", 52, 4, 0, 0, 80, 8, 10, 0, 0, 0, 0).
+WikiBlock(23, "Reg_Africa", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(24, "Reg_Africa", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
+WikiBlock(25, "Reg_Africa", "BK_Figure", 6, 2, 250, 188, 226, 8, 12, 6, 6, 1, 1).
+WikiBlock(26, "Reg_Africa", "BK_Figure", 10, 2, 250, 188, 226, 8, 12, 6, 6, 1, 1).
+WikiBlock(27, "Reg_Africa", "BK_Paragraph", 80, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
+WikiBlock(28, "Reg_Africa", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(29, "Reg_Africa", "BK_Hatnote", 5, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
+WikiBlock(30, "Reg_Africa", "BK_Paragraph", 45, 3, 0, 0, 60, 8, 10, 0, 0, 0, 0).
+WikiBlock(31, "Reg_Africa", "BK_Paragraph", 63, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
+WikiBlock(32, "Reg_Africa", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(33, "Reg_Africa", "BK_Hatnote", 5, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
+WikiBlock(34, "Reg_Africa", "BK_Paragraph", 117, 8, 0, 0, 160, 8, 10, 0, 0, 0, 0).
+WikiBlock(35, "Reg_Europe", "BK_H3", 1, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
+WikiBlock(36, "Reg_Europe", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(37, "Reg_Europe", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
+WikiBlock(38, "Reg_Europe", "BK_Figure", 3, 1, 250, 141, 163, 8, 12, 6, 6, 1, 1).
+WikiBlock(39, "Reg_Europe", "BK_Paragraph", 67, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
+WikiBlock(40, "Reg_Europe", "BK_Paragraph", 102, 8, 0, 0, 160, 8, 10, 0, 0, 0, 0).
+WikiBlock(41, "Reg_Europe", "BK_Paragraph", 65, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
+WikiBlock(42, "Reg_Europe", "BK_Paragraph", 119, 9, 0, 0, 180, 8, 10, 0, 0, 0, 0).
+WikiBlock(43, "Reg_Europe", "BK_Paragraph", 11, 2, 0, 0, 40, 8, 10, 0, 0, 0, 0).
+WikiBlock(44, "Reg_Europe", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(45, "Reg_Europe", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
+WikiBlock(46, "Reg_Europe", "BK_Paragraph", 20, 2, 0, 0, 40, 8, 10, 0, 0, 0, 0).
+WikiBlock(47, "Reg_Europe", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(48, "Reg_Europe", "BK_Figure", 5, 1, 250, 180, 202, 8, 12, 6, 6, 1, 1).
+WikiBlock(49, "Reg_Europe", "BK_Paragraph", 57, 5, 0, 0, 100, 8, 10, 0, 0, 0, 0).
+WikiBlock(50, "Reg_Europe", "BK_Paragraph", 48, 4, 0, 0, 80, 8, 10, 0, 0, 0, 0).
+WikiBlock(51, "Reg_Europe", "BK_H4", 2, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(52, "Reg_Europe", "BK_Hatnote", 5, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
+WikiBlock(53, "Reg_Europe", "BK_Figure", 6, 1, 250, 166, 188, 8, 12, 6, 6, 1, 1).
+WikiBlock(54, "Reg_Europe", "BK_Paragraph", 44, 3, 0, 0, 60, 8, 10, 0, 0, 0, 0).
+WikiBlock(55, "Reg_Europe", "BK_H4", 2, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(56, "Reg_Europe", "BK_Paragraph", 22, 2, 0, 0, 40, 8, 10, 0, 0, 0, 0).
+WikiBlock(57, "Reg_Americas", "BK_H3", 1, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
+WikiBlock(58, "Reg_Americas", "BK_Figure", 11, 2, 250, 169, 207, 8, 12, 6, 6, 1, 1).
+WikiBlock(59, "Reg_Americas", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(60, "Reg_Americas", "BK_Paragraph", 28, 3, 0, 0, 60, 8, 10, 0, 0, 0, 0).
+WikiBlock(61, "Reg_Americas", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(62, "Reg_Americas", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
+WikiBlock(63, "Reg_Americas", "BK_Figure", 5, 1, 250, 133, 155, 8, 12, 6, 6, 1, 1).
+WikiBlock(64, "Reg_Americas", "BK_Paragraph", 25, 3, 0, 0, 60, 8, 10, 0, 0, 0, 0).
+WikiBlock(65, "Reg_Americas", "BK_Paragraph", 103, 8, 0, 0, 160, 8, 10, 0, 0, 0, 0).
+WikiBlock(66, "Reg_Americas", "BK_Paragraph", 39, 3, 0, 0, 60, 8, 10, 0, 0, 0, 0).
+WikiBlock(67, "Reg_Americas", "BK_H4", 2, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(68, "Reg_Americas", "BK_Figure", 12, 3, 250, 121, 175, 8, 12, 6, 6, 1, 1).
+WikiBlock(69, "Reg_Americas", "BK_Figure", 3, 1, 250, 188, 210, 8, 12, 6, 6, 1, 1).
+WikiBlock(70, "Reg_Americas", "BK_Paragraph", 121, 11, 0, 0, 220, 8, 10, 0, 0, 0, 0).
+WikiBlock(71, "Reg_Asia", "BK_H3", 1, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
+WikiBlock(72, "Reg_Asia", "BK_Hatnote", 4, 1, 0, 0, 19, 4, 8, 2, 2, 0, 0).
+WikiBlock(73, "Reg_Asia", "BK_Figure", 7, 2, 250, 188, 226, 8, 12, 6, 6, 1, 1).
+WikiBlock(74, "Reg_Asia", "BK_Figure", 4, 1, 250, 188, 210, 8, 12, 6, 6, 1, 1).
+WikiBlock(75, "Reg_Asia", "BK_Paragraph", 50, 4, 0, 0, 80, 8, 10, 0, 0, 0, 0).
+WikiBlock(76, "Reg_Asia", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(77, "Reg_Asia", "BK_Paragraph", 90, 7, 0, 0, 140, 8, 10, 0, 0, 0, 0).
+WikiBlock(78, "Reg_Asia", "BK_List", 39, 4, 90, 120, 80, 6, 10, 0, 0, 0, 0).
+WikiBlock(79, "Reg_Asia", "BK_H4", 1, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(80, "Reg_Asia", "BK_Figure", 4, 1, 250, 98, 120, 8, 12, 6, 6, 1, 1).
+WikiBlock(81, "Reg_Asia", "BK_Figure", 5, 1, 250, 167, 189, 8, 12, 6, 6, 1, 1).
+WikiBlock(82, "Reg_Asia", "BK_Paragraph", 48, 4, 0, 0, 80, 8, 10, 0, 0, 0, 0).
+WikiBlock(83, "Reg_Asia", "BK_Paragraph", 68, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
+WikiBlock(84, "Reg_Asia", "BK_H4", 7, 1, 0, 0, 19, 12, 4, 0, 0, 0, 0).
+WikiBlock(85, "Reg_Asia", "BK_Figure", 9, 2, 250, 167, 205, 8, 12, 6, 6, 1, 1).
+WikiBlock(86, "Reg_Asia", "BK_Paragraph", 66, 6, 0, 0, 120, 8, 10, 0, 0, 0, 0).
+WikiBlock(87, "Reg_Oceania", "BK_H3", 1, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
+WikiBlock(88, "Reg_Oceania", "BK_Paragraph", 24, 2, 0, 0, 40, 8, 10, 0, 0, 0, 0).
+WikiBlock(89, "Reg_Oceania", "BK_Figure", 8, 2, 250, 167, 205, 8, 12, 6, 6, 1, 1).
+WikiBlock(90, "Reg_Modern", "BK_H2", 2, 1, 0, 0, 26, 18, 8, 0, 3, 0, 1).
+WikiBlock(91, "Reg_Modern", "BK_Figure", 35, 7, 310, 194, 312, 8, 12, 6, 6, 1, 1).
+WikiBlock(92, "Reg_Modern", "BK_List", 17, 2, 0, 0, 40, 6, 10, 0, 0, 0, 0).
+WikiBlock(93, "Reg_Modern", "BK_Figure", 4, 1, 250, 122, 144, 8, 12, 6, 6, 1, 1).
+WikiBlock(94, "Reg_Modern", "BK_List", 83, 7, 0, 0, 140, 6, 10, 0, 0, 0, 0).
+WikiBlock(95, "Reg_Modern", "BK_Figure", 5, 1, 130, 240, 262, 8, 12, 6, 6, 1, 1).
+WikiBlock(96, "Reg_Modern", "BK_List", 136, 11, 0, 0, 220, 6, 10, 0, 0, 0, 0).
+WikiBlock(97, "Reg_Modern", "BK_Figure", 6, 2, 130, 226, 264, 8, 12, 6, 6, 1, 1).
+WikiBlock(98, "Reg_Modern", "BK_List", 241, 19, 0, 0, 380, 6, 10, 0, 0, 0, 0).
+WikiBlock(99, "Reg_Modern", "BK_Figure", 14, 3, 250, 167, 221, 8, 12, 6, 6, 1, 1).
+WikiBlock(100, "Reg_Modern", "BK_List", 144, 11, 0, 0, 220, 6, 10, 0, 0, 0, 0).
+WikiBlock(101, "Reg_Modern", "BK_Figure", 8, 2, 250, 137, 175, 8, 12, 6, 6, 1, 1).
+WikiBlock(102, "Reg_Modern", "BK_List", 46, 5, 184, 120, 100, 6, 10, 0, 0, 0, 0).
+WikiBlock(103, "Reg_Modern", "BK_H3", 2, 1, 0, 0, 22, 14, 6, 0, 0, 0, 0).
+WikiBlock(104, "Reg_Modern", "BK_Figure", 4, 1, 250, 333, 355, 8, 12, 6, 6, 1, 1).
+WikiBlock(105, "Reg_Modern", "BK_Paragraph", 79, 7, 0, 0, 140, 8, 10, 0, 0, 0, 0).
+WikiBlock(106, "Reg_Meta", "BK_H2", 2, 1, 0, 0, 26, 18, 8, 0, 3, 0, 1).
+WikiBlock(107, "Reg_Meta", "BK_List", 23, 2, 0, 0, 40, 6, 10, 0, 0, 0, 0).
+WikiBlock(108, "Reg_Meta", "BK_H2", 1, 1, 0, 0, 26, 18, 8, 0, 3, 0, 1).
+WikiBlock(109, "Reg_Meta", "BK_H2", 2, 1, 0, 0, 26, 18, 8, 0, 3, 0, 1).
+WikiBlock(110, "Reg_Meta", "BK_List", 12, 2, 12, 16, 40, 6, 10, 0, 0, 0, 0).
+
+// --- EDB Facts: 10 Canonical Monuments from Live Article ---
+Monument("Mon_ChoghaZanbil", "Reg_WestAsia", 1052, 420, 30, 1).
+Monument("Mon_KhufuGiza", "Reg_Africa", 2303, 1466, 118, 0).
+Monument("Mon_KhafreGiza", "Reg_Africa", 2152, 1364, 118, 0).
+Monument("Mon_MeroeNubia", "Reg_Africa", 120, 300, 220, 0).
+Monument("Mon_CestiusRome", "Reg_Europe", 296, 270, 2, 0).
+Monument("Mon_CholulaMexico", "Reg_Americas", 4500, 660, 50, 1).
+Monument("Mon_BorobudurJava", "Reg_Asia", 1230, 350, 15, 1).
+Monument("Mon_LouvreParis", "Reg_Modern", 354, 206, 5, 0).
+Monument("Mon_TransamericaSF", "Reg_Modern", 530, 2600, 12, 0).
+Monument("Mon_TheShardLondon", "Reg_Modern", 650, 3096, 3, 0).

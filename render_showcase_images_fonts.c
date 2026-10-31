@@ -168,3 +168,4 @@ int main(void) {
     fb_destroy(fb);
     return 0;
 }
+

@@ -74,6 +74,8 @@ typedef struct {
     Color* pixels;
 } FrameBuffer;
 
+#include "blink_dual_mode_z.h"
+
 /* Core Formal Layout & Sizing Functions */
 int64_t collapse_margins(int64_t m1, int64_t m2);
 int64_t resolve_percent_col_width(int64_t avail_w, int64_t pct);

@@ -5,8 +5,8 @@
 
 /* ========================================================================= */
 /* Blink Formal Layout & Rasterizer Engine (C99 Implementation)              */
-/* Formally proven in BlinkInteractivePagePipelineModel.v and               */
-/* BlinkFrameBufferRasterizerSemantics.v.                                    */
+/* Formally proven in BlinkInteractivePagePipelineModel.v,                   */
+/* BlinkFrameBufferRasterizerSemantics.v, and BlinkDualModeZSemantics.v.    */
 /* ========================================================================= */
 
 int64_t collapse_margins(int64_t m1, int64_t m2) {

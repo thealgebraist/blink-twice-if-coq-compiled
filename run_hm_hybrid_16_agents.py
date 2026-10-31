@@ -100,3 +100,4 @@ if __name__ == "__main__":
     print(f"{'Admits / Unsound Axioms':<35} | {'0 admits':<20} | {'0 admits':<20}")
     print(f"{'End-to-End Elapsed Time':<35} | {f'{base_time:.2f}s':<20} | {f'{hm_time:.2f}s':<20}")
     print("=" * 80)
+

@@ -235,8 +235,8 @@ def generate_ninja(checker):
     ninja_lines.append("build .admits_verified: verify_admits coq_all\n")
 
     # Drop-in engine targets
-    ninja_lines.append("build blink_formal_engine.o: c_compile blink_formal_engine.c")
-    ninja_lines.append("build blink_formal_runner.o: c_compile blink_formal_runner.c")
+    ninja_lines.append("build blink_formal_engine.o: c_compile blink_formal_engine.c | blink_formal_engine.h blink_dual_mode_z.h")
+    ninja_lines.append("build blink_formal_runner.o: c_compile blink_formal_runner.c | blink_formal_engine.h blink_dual_mode_z.h")
     ninja_lines.append("build blink_formal_runner: c_link blink_formal_engine.o blink_formal_runner.o")
     ninja_lines.append("build blink_formal_engine_cpp.o: cpp_compile blink_formal_engine.cpp")
     ninja_lines.append("build libblink_formal.dylib: shared_lib blink_formal_engine.c")

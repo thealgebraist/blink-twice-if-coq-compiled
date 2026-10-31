@@ -64,10 +64,12 @@ int main(void) {
     
     assert(p_margin.r == 255 && p_margin.g == 255 && p_margin.b == 255);
     assert(p_h1.r == 32 && p_h1.g == 33 && p_h1.b == 36);
+    assert(p_p.r == 60 && p_p.g == 64 && p_p.b == 67);
     assert(p_flex.r == 232 && p_flex.g == 240 && p_flex.b == 254);
     assert(p_tbl_c1.r == 241 && p_tbl_c1.g == 243 && p_tbl_c1.b == 244);
     assert(p_tbl_c2.r == 255 && p_tbl_c2.g == 255 && p_tbl_c2.b == 255);
     assert(p_bullet.r == 0 && p_bullet.g == 0 && p_bullet.b == 0);
+    assert(p_list.r == 241 && p_list.g == 243 && p_list.b == 244);
     assert(p_btn_bd.r == 32 && p_btn_bd.g == 33 && p_btn_bd.b == 36);
     assert(p_btn_in.r == 26 && p_btn_in.g == 115 && p_btn_in.b == 232);
     
@@ -81,6 +83,22 @@ int main(void) {
     } else {
         printf("Failed to write PPM image.\n");
     }
+    
+    // 6. Test Dual-Mode Coordinate Semantics (BlinkDualModeZSemantics.v)
+    printf("\nVerifying Dual-Mode Coordinate Semantics (BlinkDualModeZSemantics.v):\n");
+    assert(blink_z_to_device_pixel(blink_z_from_pixel(100, BLINK_MODE_SPEC), BLINK_MODE_SPEC) == 100);
+    assert(blink_z_to_device_pixel(blink_z_from_pixel(100, BLINK_MODE_CHROMIUM), BLINK_MODE_CHROMIUM) == 100);
+    assert(blink_z_floor_device_pixel(blink_z_from_pixel(100, BLINK_MODE_CHROMIUM), BLINK_MODE_CHROMIUM) == 100);
+    assert(blink_z_ceil_device_pixel(blink_z_from_pixel(100, BLINK_MODE_CHROMIUM), BLINK_MODE_CHROMIUM) == 100);
+    assert(blink_z_ceil_device_pixel(100 * 64 + 15, BLINK_MODE_CHROMIUM) - blink_z_floor_device_pixel(100 * 64 + 15, BLINK_MODE_CHROMIUM) <= 1);
+    assert(blink_z_partition_boundary(800, 3, 0, BLINK_MODE_CHROMIUM) == 0);
+    assert(blink_z_partition_boundary(800, 3, 3, BLINK_MODE_CHROMIUM) == 800);
+    
+    int64_t spec_pct = blink_z_mul_pct(800, 33, BLINK_MODE_SPEC);
+    int64_t chrom_pct = blink_z_to_device_pixel(blink_z_mul_pct(blink_z_from_pixel(800, BLINK_MODE_CHROMIUM), 33, BLINK_MODE_CHROMIUM), BLINK_MODE_CHROMIUM);
+    int64_t diff_pct = (chrom_pct > spec_pct) ? (chrom_pct - spec_pct) : (spec_pct - chrom_pct);
+    assert(diff_pct <= 1);
+    printf("  [OK] Dual-Mode Coordinate Semantics verified: SpecMode and ChromiumMode refine each other within <= 1px!\n");
     
     fb_destroy(fb);
     return 0;

@@ -44,3 +44,4 @@ Proof.
   unfold compute_heading_text_baseline, compute_heading_border_y, p2_section_1_2_heading.
   split; reflexivity.
 Qed.
+

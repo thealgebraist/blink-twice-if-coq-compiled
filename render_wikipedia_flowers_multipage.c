@@ -7,6 +7,9 @@
 #include "blink_vertical_flow.h"
 #include "blink_image_codec.h"
 #include "blink_skia_font_engine.h"
+#include "blink_dual_mode_z.h"
+
+static blink_layout_mode_t g_layout_mode = BLINK_MODE_CHROMIUM;
 
 #define VIEWPORT_WIDTH  800
 #define PAGE_HEIGHT     600
@@ -600,8 +603,16 @@ static void render_flower_page_3(FrameBuffer* fb, int base_y) {
                               549, base_y + 500, "Wikipedia: Featured Article \xE2\x80\xA2 CC BY-SA 4.0", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
 }
 
-int main(void) {
+int main(int argc, char** argv) {
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--mode=spec") == 0) {
+            g_layout_mode = BLINK_MODE_SPEC;
+        } else if (strcmp(argv[i], "--mode=chromium") == 0) {
+            g_layout_mode = BLINK_MODE_CHROMIUM;
+        }
+    }
     printf("=== Generating Wikipedia Flower Full Multi-Page Article (3 Pages) ===\n");
+    printf("Layout Mode: %s\n", (g_layout_mode == BLINK_MODE_CHROMIUM) ? "Chromium (26.6 LayoutUnits, snapped)" : "Spec (Pure Z integers)");
     blink_skia_font_init();
 
     // 1. Render Page 1 (800x600)

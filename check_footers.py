@@ -36,3 +36,4 @@ if __name__ == "__main__":
     p3_c = np.array(Image.open("chromium_wikipedia_flowers_p3.png").convert("RGB"))
     p3_f = np.array(Image.open("blink_formal_wikipedia_flowers_p3.png").convert("RGB"))
     inspect_footer(p2_c, p2_f, p3_c, p3_f)
+

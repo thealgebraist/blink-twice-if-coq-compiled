@@ -58,3 +58,4 @@ Proof.
   unfold compute_inner_content_x, compute_inner_baseline_y, p3_category_box.
   split; reflexivity.
 Qed.
+

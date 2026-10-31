@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <ApplicationServices/ApplicationServices.h>
 
 void blink_skia_font_init(void) {
@@ -9,20 +10,22 @@ void blink_skia_font_init(void) {
 }
 
 static CTFontRef create_ct_font(const char* family, float size, int bold) {
-    const char* actual_family = "Helvetica";
-    if (family) {
-        if (strstr(family, "serif") || strstr(family, "Georgia") || strstr(family, "Libertine")) {
-            actual_family = "Georgia";
-        } else if (strstr(family, "monospace") || strstr(family, "Courier") || strstr(family, "Menlo")) {
-            actual_family = "Menlo";
-        } else {
-            actual_family = "Helvetica";
-        }
-    }
+    CTFontRef base_font = NULL;
 
-    CFStringRef cf_name = CFStringCreateWithCString(kCFAllocatorDefault, actual_family, kCFStringEncodingUTF8);
-    CTFontRef base_font = CTFontCreateWithName(cf_name, size, NULL);
-    CFRelease(cf_name);
+    if (family && (strstr(family, "-apple-system") || strstr(family, "BlinkMacSystemFont") ||
+                   strstr(family, "SF Pro") || strstr(family, "system-ui"))) {
+        // Blink's exact font instantiation for macOS system font in FontPlatformDataMac.mm
+        base_font = CTFontCreateUIFontForLanguage(kCTFontUIFontSystem, size, NULL);
+    } else if (family && (strstr(family, "serif") || strstr(family, "Georgia") || strstr(family, "Libertine"))) {
+        CFStringRef cf_name = CFSTR("Georgia");
+        base_font = CTFontCreateWithName(cf_name, size, NULL);
+    } else if (family && (strstr(family, "monospace") || strstr(family, "Courier") || strstr(family, "Menlo"))) {
+        CFStringRef cf_name = CFSTR("Menlo");
+        base_font = CTFontCreateWithName(cf_name, size, NULL);
+    } else {
+        // Default sans-serif resolves to system font in modern macOS Blink
+        base_font = CTFontCreateUIFontForLanguage(kCTFontUIFontSystem, size, NULL);
+    }
 
     if (bold && base_font) {
         CTFontRef bold_font = CTFontCreateCopyWithSymbolicTraits(base_font, size, NULL,
@@ -137,22 +140,44 @@ void blink_skia_font_draw_text_box(uint32_t* fb, int fb_w, int fb_h,
 
     CFIndex start = 0;
     CFIndex total_len = CFAttributedStringGetLength(attr_str);
-    float current_y = top_y + font_size; // initial baseline
 
+    // W3C CSS Inline 3 §3 Half-Leading distribution:
+    // Leading L = line_height - (ascent + descent)
+    // First line baseline = top_y + half_leading + ascent
+    CGFloat ascent = CTFontGetAscent(font);
+    CGFloat descent = CTFontGetDescent(font);
     if (line_height <= 0) {
-        line_height = font_size * 1.4f;
+        line_height = font_size * 1.5f;
     }
+    CGFloat font_box_h = ascent + descent;
+    CGFloat half_leading = (line_height - font_box_h) / 2.0f;
+    if (half_leading < 0) half_leading = 0;
 
-    while (start < total_len && (current_y - top_y) <= h) {
+    float current_baseline = top_y + half_leading + ascent;
+
+    while (start < total_len && (current_baseline - top_y - ascent) <= h) {
         CFIndex count = CTTypesetterSuggestLineBreak(typesetter, start, w);
         CTLineRef line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, count));
 
-        CGContextSetTextPosition(ctx, x, current_y);
-        CTLineDraw(line, ctx);
+        // W3C CSS Text 3 §7.1 Justification:
+        // If not the last line of paragraph, justify to w
+        CTLineRef line_to_draw = line;
+        CTLineRef justified_line = NULL;
+        if (start + count < total_len) {
+            justified_line = CTLineCreateJustifiedLine(line, 1.0f, w);
+            if (justified_line) {
+                line_to_draw = justified_line;
+            }
+        }
 
+        CGContextSetTextPosition(ctx, x, current_baseline);
+        CTLineDraw(line_to_draw, ctx);
+
+        if (justified_line) CFRelease(justified_line);
         CFRelease(line);
+
         start += count;
-        current_y += line_height;
+        current_baseline += line_height;
     }
 
     CFRelease(typesetter);

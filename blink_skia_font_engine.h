@@ -47,3 +47,4 @@ float blink_skia_font_measure_text(const char* text,
 #endif
 
 #endif // BLINK_SKIA_FONT_ENGINE_H
+

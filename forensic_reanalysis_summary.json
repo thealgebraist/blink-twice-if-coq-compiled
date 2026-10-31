@@ -1,0 +1,334 @@
+[
+  {
+    "name": "Page 1 (Overview & Infobox)",
+    "total_px": 480000,
+    "exact": 447173,
+    "diff_px": 32827,
+    "exact_pct": 93.16104166666666,
+    "near_pct": 96.73333333333333,
+    "perceptible_pct": 98.81729166666666,
+    "bucket_1_5": 9727,
+    "bucket_6_15": 7420,
+    "bucket_16_50": 10003,
+    "bucket_51_100": 4359,
+    "bucket_gt100": 1318,
+    "far": 5677,
+    "mae": 1.7235131944444444,
+    "rmse": 10.01049182247195,
+    "top_blocks": [
+      {
+        "y": 380,
+        "x": 320,
+        "far": 84,
+        "total_diff": 134,
+        "max_val": 153,
+        "mean_d": 22.49
+      },
+      {
+        "y": 400,
+        "x": 720,
+        "far": 82,
+        "total_diff": 121,
+        "max_val": 118,
+        "mean_d": 21.44
+      },
+      {
+        "y": 360,
+        "x": 660,
+        "far": 79,
+        "total_diff": 118,
+        "max_val": 114,
+        "mean_d": 20.0475
+      },
+      {
+        "y": 380,
+        "x": 300,
+        "far": 77,
+        "total_diff": 128,
+        "max_val": 161,
+        "mean_d": 24.7475
+      },
+      {
+        "y": 380,
+        "x": 280,
+        "far": 75,
+        "total_diff": 129,
+        "max_val": 155,
+        "mean_d": 21.1825
+      },
+      {
+        "y": 400,
+        "x": 620,
+        "far": 75,
+        "total_diff": 128,
+        "max_val": 116,
+        "mean_d": 19.9425
+      },
+      {
+        "y": 280,
+        "x": 80,
+        "far": 74,
+        "total_diff": 144,
+        "max_val": 154,
+        "mean_d": 20.235
+      },
+      {
+        "y": 300,
+        "x": 80,
+        "far": 73,
+        "total_diff": 208,
+        "max_val": 105,
+        "mean_d": 21.7325
+      }
+    ]
+  },
+  {
+    "name": "Page 2 (Anatomy & Perianth)",
+    "total_px": 480000,
+    "exact": 433640,
+    "diff_px": 46360,
+    "exact_pct": 90.34166666666667,
+    "near_pct": 94.96333333333334,
+    "perceptible_pct": 98.56708333333334,
+    "bucket_1_5": 10072,
+    "bucket_6_15": 12112,
+    "bucket_16_50": 17298,
+    "bucket_51_100": 5950,
+    "bucket_gt100": 928,
+    "far": 6878,
+    "mae": 2.4166381944444444,
+    "rmse": 10.959992935166012,
+    "top_blocks": [
+      {
+        "y": 20,
+        "x": 720,
+        "far": 84,
+        "total_diff": 148,
+        "max_val": 164,
+        "mean_d": 25.8025
+      },
+      {
+        "y": 340,
+        "x": 620,
+        "far": 76,
+        "total_diff": 192,
+        "max_val": 118,
+        "mean_d": 22.145
+      },
+      {
+        "y": 20,
+        "x": 740,
+        "far": 76,
+        "total_diff": 111,
+        "max_val": 164,
+        "mean_d": 23.4675
+      },
+      {
+        "y": 20,
+        "x": 760,
+        "far": 69,
+        "total_diff": 116,
+        "max_val": 164,
+        "mean_d": 21.91
+      },
+      {
+        "y": 280,
+        "x": 700,
+        "far": 68,
+        "total_diff": 121,
+        "max_val": 118,
+        "mean_d": 18.2825
+      },
+      {
+        "y": 480,
+        "x": 560,
+        "far": 68,
+        "total_diff": 111,
+        "max_val": 109,
+        "mean_d": 17.73
+      },
+      {
+        "y": 200,
+        "x": 160,
+        "far": 67,
+        "total_diff": 115,
+        "max_val": 120,
+        "mean_d": 18.31
+      },
+      {
+        "y": 340,
+        "x": 680,
+        "far": 66,
+        "total_diff": 154,
+        "max_val": 118,
+        "mean_d": 19.8325
+      }
+    ]
+  },
+  {
+    "name": "Page 3 (Taxonomy & Syndromes)",
+    "total_px": 480000,
+    "exact": 421538,
+    "diff_px": 58462,
+    "exact_pct": 87.82041666666667,
+    "near_pct": 92.9825,
+    "perceptible_pct": 97.36,
+    "bucket_1_5": 11094,
+    "bucket_6_15": 13684,
+    "bucket_16_50": 21012,
+    "bucket_51_100": 9344,
+    "bucket_gt100": 3328,
+    "far": 12672,
+    "mae": 3.8429805555555556,
+    "rmse": 15.589418731591273,
+    "top_blocks": [
+      {
+        "y": 480,
+        "x": 560,
+        "far": 99,
+        "total_diff": 133,
+        "max_val": 188,
+        "mean_d": 31.23
+      },
+      {
+        "y": 480,
+        "x": 580,
+        "far": 83,
+        "total_diff": 133,
+        "max_val": 200,
+        "mean_d": 27.775
+      },
+      {
+        "y": 360,
+        "x": 180,
+        "far": 81,
+        "total_diff": 135,
+        "max_val": 167,
+        "mean_d": 24.1475
+      },
+      {
+        "y": 20,
+        "x": 720,
+        "far": 80,
+        "total_diff": 149,
+        "max_val": 163,
+        "mean_d": 24.805
+      },
+      {
+        "y": 480,
+        "x": 660,
+        "far": 78,
+        "total_diff": 118,
+        "max_val": 190,
+        "mean_d": 23.8525
+      },
+      {
+        "y": 400,
+        "x": 200,
+        "far": 77,
+        "total_diff": 120,
+        "max_val": 152,
+        "mean_d": 20.735
+      },
+      {
+        "y": 200,
+        "x": 240,
+        "far": 77,
+        "total_diff": 116,
+        "max_val": 115,
+        "mean_d": 18.91
+      },
+      {
+        "y": 160,
+        "x": 160,
+        "far": 76,
+        "total_diff": 135,
+        "max_val": 111,
+        "mean_d": 19.395
+      }
+    ]
+  },
+  {
+    "name": "Full Continuous 3-Page Stack",
+    "total_px": 1440000,
+    "exact": 1302353,
+    "diff_px": 137647,
+    "exact_pct": 90.44118055555556,
+    "near_pct": 94.89305555555556,
+    "perceptible_pct": 98.248125,
+    "bucket_1_5": 30891,
+    "bucket_6_15": 33216,
+    "bucket_16_50": 48313,
+    "bucket_51_100": 19653,
+    "bucket_gt100": 5574,
+    "far": 25227,
+    "mae": 2.6610439814814817,
+    "rmse": 12.427943890758915,
+    "top_blocks": [
+      {
+        "y": 1680,
+        "x": 560,
+        "far": 99,
+        "total_diff": 133,
+        "max_val": 188,
+        "mean_d": 31.23
+      },
+      {
+        "y": 620,
+        "x": 720,
+        "far": 84,
+        "total_diff": 148,
+        "max_val": 164,
+        "mean_d": 25.8025
+      },
+      {
+        "y": 380,
+        "x": 320,
+        "far": 84,
+        "total_diff": 134,
+        "max_val": 153,
+        "mean_d": 22.49
+      },
+      {
+        "y": 1680,
+        "x": 580,
+        "far": 83,
+        "total_diff": 133,
+        "max_val": 200,
+        "mean_d": 27.775
+      },
+      {
+        "y": 400,
+        "x": 720,
+        "far": 82,
+        "total_diff": 121,
+        "max_val": 118,
+        "mean_d": 21.44
+      },
+      {
+        "y": 1560,
+        "x": 180,
+        "far": 81,
+        "total_diff": 135,
+        "max_val": 167,
+        "mean_d": 24.1475
+      },
+      {
+        "y": 1220,
+        "x": 720,
+        "far": 80,
+        "total_diff": 149,
+        "max_val": 163,
+        "mean_d": 24.805
+      },
+      {
+        "y": 360,
+        "x": 660,
+        "far": 79,
+        "total_diff": 118,
+        "max_val": 114,
+        "mean_d": 20.0475
+      }
+    ]
+  }
+]

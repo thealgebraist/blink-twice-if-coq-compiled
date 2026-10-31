@@ -368,7 +368,7 @@ static void render_flower_page_2(FrameBuffer* fb, int base_y) {
     // H2 Section 1.2: Reproductive Organs
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
                               25, base_y + 282, "1.2 Reproductive Organs: Androecium & Gynoecium", "Georgia", 16.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
-    fb_fill_rect(fb, 25, base_y + 289, 460, 1, COLOR_BORDER_GRAY);
+    fb_fill_rect(fb, 25, base_y + 288, 460, 1, COLOR_BORDER_GRAY);
 
     // Paragraph 2 (4 lines)
     const char* p2 = "The fertile organs comprise the male androecium (stamens bearing pollen sacs) and the female gynoecium (one or more carpels enclosing ovules). Double fertilization within the ovary produces the diploid zygote and triploid nutritive endosperm.";
@@ -428,28 +428,28 @@ static void render_flower_page_2(FrameBuffer* fb, int base_y) {
 
     // Infobox metadata rows
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 516, base_y + 298, "Petal", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
-    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 613.5f, base_y + 298, "Corolla attraction lobe", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
+    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 613, base_y + 298, "Corolla attraction lobe", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
 
-    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 516, base_y + 315, "Sepal", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
-    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 613.5f, base_y + 315, "Calyx protective leaf", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
+    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 516, base_y + 314, "Sepal", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
+    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 613, base_y + 314, "Calyx protective leaf", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
 
-    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 516, base_y + 331, "Stamen", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
-    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 613.5f, base_y + 331, "Anther + pollen filament", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
+    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 516, base_y + 330, "Stamen", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
+    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 613, base_y + 330, "Anther + pollen filament", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
 
-    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 516, base_y + 347, "Pistil", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
-    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 613.5f, base_y + 347, "Stigma, style & ovary", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
+    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 516, base_y + 346, "Pistil", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
+    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 613, base_y + 346, "Stigma, style & ovary", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
 
-    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 516, base_y + 363, "Receptacle", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
-    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 613.5f, base_y + 363, "Thickened stem base", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
+    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 516, base_y + 362, "Receptacle", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
+    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height, 613, base_y + 362, "Thickened stem base", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_BLACK);
 
     // Page Footer Nav Line
     fb_fill_rect(fb, 25, base_y + 470, 750, 1, COLOR_TABLE_HEAD);
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                              25, base_y + 489, "\xE2\x86\x90 Page 1 (Overview & Classification)", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
+                              25, base_y + 490, "\xE2\x86\x90 Page 1 (Overview & Classification)", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                              348, base_y + 489, "Page 2 of 3", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
+                              348, base_y + 490, "Page 2 of 3", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                              537, base_y + 489, "Continued on Page 3 (Ecology & Evolution) \xE2\x86\x92", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
+                              537, base_y + 490, "Continued on Page 3 (Ecology & Evolution) \xE2\x86\x92", "Helvetica", 11.0f, BLINK_FONT_STYLE_NORMAL, COLOR_LINK_BLUE);
 }
 
 // ----------------------------------------------------------------------------
@@ -586,7 +586,9 @@ static void render_flower_page_3(FrameBuffer* fb, int base_y) {
     fb_fill_rect(fb, 25, base_y + 446, 750, 26, COLOR_WIKI_GRAY);
     fb_stroke_rect(fb, 25, base_y + 446, 750, 26, COLOR_BORDER_GRAY);
     blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
-                              32, base_y + 463, "Categories: Flowers \xE2\x80\xA2 Plant anatomy \xE2\x80\xA2 Angiosperm morphology \xE2\x80\xA2 Botany \xE2\x80\xA2 Reproductive biology", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
+                              39, base_y + 462, "Categories:", "Helvetica", 10.0f, BLINK_FONT_STYLE_BOLD, COLOR_TEXT_MUTED);
+    blink_skia_font_draw_text(fb->pixels, fb->width, fb->height,
+                              102, base_y + 462, "Flowers \xE2\x80\xA2 Plant anatomy \xE2\x80\xA2 Angiosperm morphology \xE2\x80\xA2 Botany \xE2\x80\xA2 Reproductive biology", "Helvetica", 10.0f, BLINK_FONT_STYLE_NORMAL, COLOR_TEXT_MUTED);
 
     // Page Footer Nav Line
     fb_fill_rect(fb, 25, base_y + 480, 750, 1, COLOR_TABLE_HEAD);

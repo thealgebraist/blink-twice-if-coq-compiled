@@ -321,21 +321,51 @@ void blink_skia_font_draw_text_box(uint32_t* fb, int fb_w, int fb_h,
         }
         CTLineRef line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, visible_count));
 
-        // W3C CSS Text 3 §7.1 Justification:
-        // If not the last line of paragraph, justify to w
-        CTLineRef line_to_draw = line;
-        CTLineRef justified_line = NULL;
+        // W3C CSS Text 3 §7.1 & Blink ShapeResultSpacing Justification:
+        // When text-align: justify is active, only space opportunities are expanded.
+        // Inter-letter spacing within words remains pristine per CSS Text 3 §7.3.
         if (start + count < total_len) {
-            justified_line = CTLineCreateJustifiedLine(line, 1.0f, w);
-            if (justified_line) {
-                line_to_draw = justified_line;
+            int space_count = 0;
+            for (CFIndex i = 0; i < visible_count; i++) {
+                if (CFStringGetCharacterAtIndex(cf_str, start + i) == ' ') {
+                    space_count++;
+                }
+            }
+            if (space_count > 0) {
+                CGFloat natural_w = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
+                CGFloat excess = (CGFloat)w - natural_w;
+                if (excess > 0) {
+                    CGFloat extra_space = excess / (CGFloat)space_count;
+                    CGFloat cur_x = x;
+                    CFIndex word_start = start;
+                    for (CFIndex i = 0; i <= visible_count; i++) {
+                        if (i == visible_count || CFStringGetCharacterAtIndex(cf_str, start + i) == ' ') {
+                            CFIndex word_len = (start + i) - word_start;
+                            if (word_len > 0) {
+                                CTLineRef word_line = CTTypesetterCreateLine(typesetter, CFRangeMake(word_start, word_len));
+                                CGContextSetTextPosition(ctx, cur_x, current_baseline);
+                                CTLineDraw(word_line, ctx);
+                                cur_x += CTLineGetTypographicBounds(word_line, NULL, NULL, NULL);
+                                CFRelease(word_line);
+                            }
+                            if (i < visible_count) {
+                                CTLineRef sp_line = CTTypesetterCreateLine(typesetter, CFRangeMake(start + i, 1));
+                                cur_x += CTLineGetTypographicBounds(sp_line, NULL, NULL, NULL) + extra_space;
+                                CFRelease(sp_line);
+                            }
+                            word_start = start + i + 1;
+                        }
+                    }
+                    CFRelease(line);
+                    start += count;
+                    current_baseline += line_height;
+                    continue;
+                }
             }
         }
 
         CGContextSetTextPosition(ctx, x, current_baseline);
-        CTLineDraw(line_to_draw, ctx);
-
-        if (justified_line) CFRelease(justified_line);
+        CTLineDraw(line, ctx);
         CFRelease(line);
 
         start += count;

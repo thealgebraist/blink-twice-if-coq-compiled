@@ -43,6 +43,53 @@ static bool is_georgia_family(const char* family) {
     return family && (strstr(family, "Georgia") || strstr(family, "serif") || strstr(family, "Libertine"));
 }
 
+static FT_ULong next_utf8_or_latin1_cp(const char* s, int* io_idx) {
+    int i = *io_idx;
+    unsigned char b0 = (unsigned char)s[i];
+    if (b0 < 0x80u) {
+        *io_idx = i + 1;
+        return (FT_ULong)b0;
+    }
+    if ((b0 & 0xE0u) == 0xC0u) {
+        unsigned char b1 = (unsigned char)s[i + 1];
+        if ((b1 & 0xC0u) == 0x80u) {
+            FT_ULong cp = ((FT_ULong)(b0 & 0x1Fu) << 6) | (FT_ULong)(b1 & 0x3Fu);
+            if (cp >= 0x80u) {
+                *io_idx = i + 2;
+                return cp;
+            }
+        }
+    } else if ((b0 & 0xF0u) == 0xE0u) {
+        unsigned char b1 = (unsigned char)s[i + 1];
+        unsigned char b2 = (unsigned char)s[i + 2];
+        if ((b1 & 0xC0u) == 0x80u && (b2 & 0xC0u) == 0x80u) {
+            FT_ULong cp = ((FT_ULong)(b0 & 0x0Fu) << 12) |
+                          ((FT_ULong)(b1 & 0x3Fu) << 6) |
+                          (FT_ULong)(b2 & 0x3Fu);
+            if (cp >= 0x800u) {
+                *io_idx = i + 3;
+                return cp;
+            }
+        }
+    } else if ((b0 & 0xF8u) == 0xF0u) {
+        unsigned char b1 = (unsigned char)s[i + 1];
+        unsigned char b2 = (unsigned char)s[i + 2];
+        unsigned char b3 = (unsigned char)s[i + 3];
+        if ((b1 & 0xC0u) == 0x80u && (b2 & 0xC0u) == 0x80u && (b3 & 0xC0u) == 0x80u) {
+            FT_ULong cp = ((FT_ULong)(b0 & 0x07u) << 18) |
+                          ((FT_ULong)(b1 & 0x3Fu) << 12) |
+                          ((FT_ULong)(b2 & 0x3Fu) << 6) |
+                          (FT_ULong)(b3 & 0x3Fu);
+            if (cp >= 0x10000u && cp <= 0x10FFFFu) {
+                *io_idx = i + 4;
+                return cp;
+            }
+        }
+    }
+    *io_idx = i + 1;
+    return (FT_ULong)b0;
+}
+
 static bool draw_text_skia_freetype(uint32_t* fb, int fb_w, int fb_h,
                                     float x, float baseline_y,
                                     const char* text,
@@ -73,8 +120,14 @@ static bool draw_text_skia_freetype(uint32_t* fb, int fb_w, int fb_h,
     uint8_t fg_g = (color_argb >> 8) & 0xFF;
     uint8_t fg_b = color_argb & 0xFF;
 
-    for (int i = 0; text[i]; i++) {
-        FT_UInt g = FT_Get_Char_Index(face, (unsigned char)text[i]);
+    for (int i = 0; text[i]; ) {
+        FT_ULong cp = next_utf8_or_latin1_cp(text, &i);
+        FT_UInt g = FT_Get_Char_Index(face, cp);
+        if (g == 0 && cp > 127) {
+            if (cp == 0x2192u) g = FT_Get_Char_Index(face, '>');
+            else if (cp == 0x2190u) g = FT_Get_Char_Index(face, '<');
+            else g = FT_Get_Char_Index(face, '?');
+        }
         if (FT_HAS_KERNING(face) && prev_glyph && g) {
             FT_Vector kern;
             FT_Get_Kerning(face, prev_glyph, g, FT_KERNING_DEFAULT, &kern);
@@ -213,6 +266,7 @@ void blink_skia_font_draw_text_ex(uint32_t* fb, int fb_w, int fb_h,
     CGColorRef color = create_cg_color(cs, color_argb);
 
     CFStringRef cf_str = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingUTF8);
+    if (!cf_str) cf_str = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingISOLatin1);
     
     CFStringRef keys[3];
     CFTypeRef values[3];
@@ -281,6 +335,7 @@ void blink_skia_font_draw_text_box(uint32_t* fb, int fb_w, int fb_h,
     CGColorRef color = create_cg_color(cs, color_argb);
 
     CFStringRef cf_str = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingUTF8);
+    if (!cf_str) cf_str = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingISOLatin1);
     CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
     CFTypeRef values[] = { font, color };
 
@@ -395,8 +450,14 @@ float blink_skia_font_measure_text(const char* text,
             FT_Set_Pixel_Sizes(face, 0, (FT_UInt)roundf(font_size));
             float advance = 0.0f;
             FT_UInt prev_glyph = 0;
-            for (int i = 0; text[i]; i++) {
-                FT_UInt g = FT_Get_Char_Index(face, (unsigned char)text[i]);
+            for (int i = 0; text[i]; ) {
+                FT_ULong cp = next_utf8_or_latin1_cp(text, &i);
+                FT_UInt g = FT_Get_Char_Index(face, cp);
+                if (g == 0 && cp > 127) {
+                    if (cp == 0x2192u) g = FT_Get_Char_Index(face, '>');
+                    else if (cp == 0x2190u) g = FT_Get_Char_Index(face, '<');
+                    else g = FT_Get_Char_Index(face, '?');
+                }
                 if (FT_HAS_KERNING(face) && prev_glyph && g) {
                     FT_Vector kern;
                     FT_Get_Kerning(face, prev_glyph, g, FT_KERNING_DEFAULT, &kern);
@@ -412,6 +473,7 @@ float blink_skia_font_measure_text(const char* text,
 
     CTFontRef font = create_ct_font(font_family, font_size, weight_bold);
     CFStringRef cf_str = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingUTF8);
+    if (!cf_str) cf_str = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingISOLatin1);
     CFStringRef keys[] = { kCTFontAttributeName };
     CFTypeRef values[] = { font };
 

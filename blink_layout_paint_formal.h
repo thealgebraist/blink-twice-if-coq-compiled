@@ -36,11 +36,34 @@ blink_framebuffer_t* blink_fb_create(int w, int h, uint32_t clear_color);
 void blink_fb_destroy(blink_framebuffer_t* fb);
 void blink_fb_fill_rect(blink_framebuffer_t* fb, int x, int y, int w, int h, uint32_t color);
 void blink_fb_stroke_rect(blink_framebuffer_t* fb, int x, int y, int w, int h, int bw, uint32_t color);
+void blink_fb_fill_rrect(blink_framebuffer_t* fb, int x, int y, int w, int h, int radius, uint32_t color);
+void blink_fb_stroke_rrect(blink_framebuffer_t* fb, int x, int y, int w, int h, int radius, int bw, uint32_t color);
+void blink_fb_fill_rrect_gradient(blink_framebuffer_t* fb,
+                                  int x, int y, int w, int h, int radius,
+                                  float angle_deg,
+                                  const uint32_t* colors,
+                                  const int* pos_pct,
+                                  int num_stops);
+void blink_fb_draw_box_shadow(blink_framebuffer_t* fb,
+                              int x, int y, int w, int h, int radius,
+                              int dx, int dy, int blur, int spread,
+                              uint32_t color);
 void blink_fb_draw_bullet(blink_framebuffer_t* fb, int cx, int cy, int radius, uint32_t color);
 
 /* ------------------------------------------------------------------------- */
-/* 2. Pure Formal Layout Helpers (Exact Mirrors of Gallina Definitions)      */
+/* 2. Pure Formal Layout & Paint Helpers (Exact Mirrors of Gallina)          */
 /* ------------------------------------------------------------------------- */
+
+/* CSS Backgrounds 3 §5.3 Corner Radius Clamping (`clamp_corner_radius`) */
+int32_t blink_clamp_corner_radius(int32_t w, int32_t h, int32_t r);
+
+/* Subpixel Q8 Signed-Distance-Field Coverage (`sdf_alpha_255`) */
+int32_t blink_sdf_alpha_255(int32_t sd_q8);
+
+/* Overflow Scissor Rectangle Intersection (`intersect_scissor`) */
+void blink_intersect_scissor(int px0, int py0, int px1, int py1,
+                             int cx0, int cy0, int cx1, int cy1,
+                             int* ox0, int* oy0, int* ox1, int* oy1);
 
 typedef struct {
     int32_t            width;
@@ -92,3 +115,4 @@ void blink_paint_dom_stacking_context(dom_node_t* root, blink_framebuffer_t* fb)
 #endif
 
 #endif /* BLINK_LAYOUT_PAINT_FORMAL_H */
+

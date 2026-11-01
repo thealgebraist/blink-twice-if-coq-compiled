@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Blink Formal Engine — Pillars 1 &amp; 5 Showcase</title>
+<style>
+  body { background: #f1f5f9; }
+  .hero { height: 70px; border-radius: 16px; padding: 14px 20px; color: #ffffff;
+          background: linear-gradient(to right, #1d4ed8, #7c3aed 55%, #db2777);
+          box-shadow: 0px 8px 16px 0px rgba(15, 23, 42, 0.35); }
+  .hero b { font-size: 22px; }
+  .row { display: flex; gap: 18px; margin-top: 26px; }
+  .card { width: 180px; height: 110px; padding: 10px; background: #ffffff;
+          border: 2px solid #94a3b8; border-radius: 20px; overflow: hidden;
+          box-shadow: 0px 10px 18px 2px rgba(0, 0, 0, 0.30); }
+  .ribbon { width: 300px; height: 24px; margin-top: 12px; background: #ef4444; }
+  .glass { position: relative; width: 200px; height: 110px; opacity: 0.5; margin-top: 4px; }
+  .g1 { position: absolute; left: 0; top: 0; width: 140px; height: 80px; background: #ef4444; border-radius: 12px; }
+  .g2 { position: absolute; left: 50px; top: 25px; width: 140px; height: 80px; background: #2563eb; border-radius: 12px; }
+  .stage { position: relative; margin-top: 24px; width: 420px; height: 90px; background: #e2e8f0; border-radius: 10px; }
+  .centered { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+              padding: 8px 18px; background: #10b981; color: #ffffff; border-radius: 22px; }
+  .bar { height: 18px; width: 380px; margin-top: 8px; border-radius: 9px;
+         background: linear-gradient(90deg, #22c55e, #eab308, #ef4444); }
+  .note { margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="hero"><b>Pillar 5</b> — gradient, shadow, rounded corners</div>
+
+<table><div class="card" style="width:300px;height:30px;margin-top:10px;background:#fef3c7">Foster-parented banner</div><tr><td>Recovered A</td><td>Recovered B</td></tr></table>
+
+<p class="note"><b>Bold <i>Both</b> ItalicOnly</i> — adoption agency. Entities: &copy; &#x00A7; &rarr; &plusmn;5 &le; &ge; &#169;.</p>
+
+<div class="row">
+  <div class="card"><div>overflow: hidden clips the 300px ribbon</div><div class="ribbon"></div></div>
+  <div class="glass"><div class="g1"></div><div class="g2"></div></div>
+</div>
+
+<div class="stage"><div class="centered">translate(-50%, -50%)</div></div>
+<div class="bar"></div>
+<div class="bar" style="opacity:0.4"></div>
+</body>
+</html>

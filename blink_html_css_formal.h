@@ -6,8 +6,9 @@
 /* Verified in Rocq/Coq 9.3.0:                                               */
 /*   - BlinkHTML5TreeBuilderAndCSSCascadeEngine.v                            */
 /*   - BlinkCSS4InlineAndPositionedLayoutEngine.v                            */
+/*   - BlinkHTML5AdoptionAgencyAndSkiaPaintEngine.v                          */
 /*   - BlinkDualModeZSemantics.v                                             */
-/*   - BlinkHMHybrid_17_HTMLToken.v .. BlinkHMHybrid_44_TableCollapsedBorder */
+/*   - BlinkHMHybrid_17_HTMLToken.v .. BlinkHMHybrid_54_OverflowClipScissor  */
 /* ========================================================================= */
 
 #include <stdbool.h>
@@ -188,6 +189,10 @@ typedef struct {
     int                right;
     int                bottom;
     int                left;
+    bool               top_is_pct;
+    bool               bottom_is_pct;
+    float              top_pct;
+    float              bottom_pct;
     bool               has_top;
     bool               has_right;
     bool               has_bottom;
@@ -196,6 +201,27 @@ typedef struct {
     bool               has_z_index;
     css_float_t        css_float;
     css_clear_t        css_clear;
+
+    /* Pillar 5: Skia/Paint Visual Effects (`SkRRect`, `box-shadow`, `linear-gradient`,
+       group `opacity`, `overflow: hidden` scissor/rounded clip, and 2D `transform`) */
+    int                opacity_u8;       /* 0..255 (initial 255 = 1.0) */
+    bool               overflow_hidden;  /* overflow: hidden | clip */
+    bool               has_box_shadow;
+    int                shadow_dx;
+    int                shadow_dy;
+    int                shadow_blur;
+    int                shadow_spread;
+    uint32_t           shadow_color;
+    bool               has_gradient;
+    float              grad_angle_deg;
+    uint32_t           grad_colors[4];
+    int                grad_pos_pct[4];
+    int                num_grad_stops;
+    bool               has_transform;
+    int                translate_x_px;
+    float              translate_x_pct;
+    int                translate_y_px;
+    float              translate_y_pct;
 
     /* Active custom property environment on this element */
     blink_custom_prop_t custom_props[BLINK_MAX_CUSTOM_PROPS];
@@ -413,10 +439,11 @@ typedef struct {
 /* 3. Formally Verified Pure Functions (Exact Mirrors of Gallina Definitions)*/
 /* ------------------------------------------------------------------------- */
 
-/* HTML5 TreeBuilder & Attribute Sanitization */
+/* HTML5 TreeBuilder, Character Reference & Attribute Sanitization */
 bool blink_html_is_void_tag(const char* tag);
 bool blink_html_is_scope_boundary(const char* tag);
 int32_t blink_html_sanitize_span(int32_t raw_span, int32_t max_cap);
+int32_t blink_html_sanitize_char_ref(int32_t cp);
 
 /* Specificity & Cascade Priority Algebra */
 blink_specificity_t blink_specificity_add(blink_specificity_t a, blink_specificity_t b);
@@ -494,6 +521,7 @@ int32_t blink_table_col_width_formal(int32_t avail_w,
 dom_node_t* dom_node_create(const char* tag);
 void dom_node_add_child(dom_node_t* parent, dom_node_t* child);
 void dom_node_insert_child_first(dom_node_t* parent, dom_node_t* child);
+void dom_node_insert_before(dom_node_t* parent, dom_node_t* ref_child, dom_node_t* new_child);
 void dom_node_free(dom_node_t* n);
 char* blink_unescape_html(const char* src);
 

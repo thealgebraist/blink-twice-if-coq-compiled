@@ -102,6 +102,15 @@ int32_t blink_html_sanitize_span(int32_t raw_span, int32_t max_cap) {
     return raw_span;
 }
 
+/* WHATWG HTML5 §13.2.5.73 Numeric Character Reference Sanitizer
+   Mirrors `resolve_numeric_char_ref` in `BlinkHTML5AdoptionAgencyAndSkiaPaintEngine.v` */
+int32_t blink_html_sanitize_char_ref(int32_t cp) {
+    if (cp <= 0 || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {
+        return 0xFFFD;
+    }
+    return cp;
+}
+
 static bool is_heading_tag(const char* tag) {
     return tag && tag[0] == 'h' && tag[1] >= '1' && tag[1] <= '6' && tag[2] == '\0';
 }
@@ -306,6 +315,11 @@ static void init_initial_style(dom_style_t* st) {
     st->position = POS_STATIC;
     st->css_float = FLOAT_NONE;
     st->css_clear = CLEAR_NONE;
+    st->opacity_u8 = 255;
+    st->overflow_hidden = false;
+    st->has_box_shadow = false;
+    st->has_gradient = false;
+    st->has_transform = false;
 }
 
 dom_node_t* dom_node_create(const char* tag) {
@@ -529,6 +543,48 @@ void dom_node_insert_child_first(dom_node_t* parent, dom_node_t* child) {
     parent->children[0] = child;
     parent->num_children++;
     child->parent = parent;
+}
+
+/* WHATWG Foster Parenting & Adoption Agency `insert_before_target` */
+void dom_node_insert_before(dom_node_t* parent, dom_node_t* ref_child, dom_node_t* new_child) {
+    if (!parent || !new_child) return;
+    int idx = -1;
+    if (ref_child) {
+        for (int i = 0; i < parent->num_children; i++) {
+            if (parent->children[i] == ref_child) {
+                idx = i;
+                break;
+            }
+        }
+    }
+    if (idx < 0) {
+        dom_node_add_child(parent, new_child);
+        return;
+    }
+    if (parent->num_children + 1 > parent->cap_children) {
+        int new_cap = (parent->cap_children == 0) ? 4 : parent->cap_children * 2;
+        parent->children = (dom_node_t**)realloc(parent->children, (size_t)new_cap * sizeof(dom_node_t*));
+        parent->cap_children = new_cap;
+    }
+    for (int i = parent->num_children; i > idx; i--) {
+        parent->children[i] = parent->children[i - 1];
+    }
+    parent->children[idx] = new_child;
+    parent->num_children++;
+    new_child->parent = parent;
+}
+
+static void dom_node_detach_from_parent(dom_node_t* child) {
+    if (!child || !child->parent) return;
+    dom_node_t* p = child->parent;
+    int w = 0;
+    for (int i = 0; i < p->num_children; i++) {
+        if (p->children[i] != child) {
+            p->children[w++] = p->children[i];
+        }
+    }
+    p->num_children = w;
+    child->parent = NULL;
 }
 
 void dom_node_free(dom_node_t* n) {
@@ -2624,6 +2680,23 @@ static void apply_keyword_reset(dom_style_t* st, const dom_style_t* src, const c
     else if (strcmp(prop, "background") == 0 || strcmp(prop, "background-color") == 0) {
         st->bg_color = src->bg_color;
         st->has_bg = src->has_bg;
+        if (strcmp(prop, "background") == 0) {
+            st->has_gradient = src->has_gradient;
+            st->grad_angle_deg = src->grad_angle_deg;
+            st->num_grad_stops = src->num_grad_stops;
+            for (int k = 0; k < 4; k++) {
+                st->grad_colors[k] = src->grad_colors[k];
+                st->grad_pos_pct[k] = src->grad_pos_pct[k];
+            }
+        }
+    } else if (strcmp(prop, "background-image") == 0) {
+        st->has_gradient = src->has_gradient;
+        st->grad_angle_deg = src->grad_angle_deg;
+        st->num_grad_stops = src->num_grad_stops;
+        for (int k = 0; k < 4; k++) {
+            st->grad_colors[k] = src->grad_colors[k];
+            st->grad_pos_pct[k] = src->grad_pos_pct[k];
+        }
     } else if (strcmp(prop, "font-size") == 0) st->font_size = src->font_size;
     else if (strcmp(prop, "font-weight") == 0) st->font_weight = src->font_weight;
     else if (strcmp(prop, "font-style") == 0) st->font_style = src->font_style;
@@ -2668,6 +2741,24 @@ static void apply_keyword_reset(dom_style_t* st, const dom_style_t* src, const c
     else if (strcmp(prop, "z-index") == 0) { st->z_index = src->z_index; st->has_z_index = src->has_z_index; }
     else if (strcmp(prop, "float") == 0) st->css_float = src->css_float;
     else if (strcmp(prop, "clear") == 0) st->css_clear = src->css_clear;
+    else if (strcmp(prop, "border-radius") == 0) st->border_radius = src->border_radius;
+    else if (strcmp(prop, "opacity") == 0) st->opacity_u8 = src->opacity_u8;
+    else if (strcmp(prop, "overflow") == 0 || strcmp(prop, "overflow-x") == 0 || strcmp(prop, "overflow-y") == 0) {
+        st->overflow_hidden = src->overflow_hidden;
+    } else if (strcmp(prop, "box-shadow") == 0) {
+        st->has_box_shadow = src->has_box_shadow;
+        st->shadow_dx = src->shadow_dx;
+        st->shadow_dy = src->shadow_dy;
+        st->shadow_blur = src->shadow_blur;
+        st->shadow_spread = src->shadow_spread;
+        st->shadow_color = src->shadow_color;
+    } else if (strcmp(prop, "transform") == 0) {
+        st->has_transform = src->has_transform;
+        st->translate_x_px = src->translate_x_px;
+        st->translate_x_pct = src->translate_x_pct;
+        st->translate_y_px = src->translate_y_px;
+        st->translate_y_pct = src->translate_y_pct;
+    }
 }
 
 static bool parse_border_style_kw(const char* tok, css_border_style_t* out_style) {
@@ -2792,6 +2883,291 @@ static void parse_grid_track_spec(const char* track_str,
     }
 }
 
+static bool parse_linear_gradient_decl(dom_style_t* st, const char* val) {
+    if (!st || !val) return false;
+    const char* lg = strcasestr_portable(val, "linear-gradient(");
+    if (!lg) return false;
+
+    char inner[256];
+    read_paren_arg(lg + 15, inner, sizeof(inner));
+
+    char args[8][128];
+    int n_args = 0;
+    const char* cur = inner;
+    while (*cur && n_args < 8) {
+        const char* s0 = cur;
+        int paren = 0;
+        while (*cur && !(paren == 0 && *cur == ',')) {
+            if (*cur == '(') paren++;
+            else if (*cur == ')' && paren > 0) paren--;
+            cur++;
+        }
+        size_t alen = (size_t)(cur - s0);
+        if (alen >= 128) alen = 127;
+        memcpy(args[n_args], s0, alen);
+        args[n_args][alen] = '\0';
+        trim_inplace(args[n_args]);
+        if (args[n_args][0]) n_args++;
+        if (*cur == ',') cur++;
+    }
+    if (n_args < 2) return false;
+
+    float angle = 180.0f;
+    int first_stop = 0;
+    const char* a0 = args[0];
+    if (strncasecmp(a0, "to ", 3) == 0) {
+        first_stop = 1;
+        bool has_top = (strcasestr_portable(a0, "top") != NULL);
+        bool has_bot = (strcasestr_portable(a0, "bottom") != NULL);
+        bool has_left = (strcasestr_portable(a0, "left") != NULL);
+        bool has_right = (strcasestr_portable(a0, "right") != NULL);
+        if (has_top && has_right) angle = 45.0f;
+        else if (has_bot && has_right) angle = 135.0f;
+        else if (has_bot && has_left) angle = 225.0f;
+        else if (has_top && has_left) angle = 315.0f;
+        else if (has_right) angle = 90.0f;
+        else if (has_left) angle = 270.0f;
+        else if (has_top) angle = 0.0f;
+        else angle = 180.0f;
+    } else if (strcasestr_portable(a0, "deg") != NULL) {
+        first_stop = 1;
+        angle = strtof(a0, NULL);
+    } else if (strcasestr_portable(a0, "turn") != NULL) {
+        first_stop = 1;
+        angle = strtof(a0, NULL) * 360.0f;
+    }
+
+    int stop_cnt = 0;
+    uint32_t cols[4];
+    int pos[4];
+    for (int i = first_stop; i < n_args && stop_cnt < 4; i++) {
+        char buf[128];
+        strcpy(buf, args[i]);
+        int pct = -1;
+        size_t l = strlen(buf);
+        if (l > 1 && buf[l - 1] == '%') {
+            size_t k = l - 1;
+            while (k > 0 && (isdigit((unsigned char)buf[k - 1]) || buf[k - 1] == '.')) k--;
+            if (k > 0 && isspace((unsigned char)buf[k - 1])) {
+                pct = (int)lround(strtod(buf + k, NULL));
+                if (pct < 0) pct = 0;
+                if (pct > 100) pct = 100;
+                buf[k] = '\0';
+                trim_inplace(buf);
+            }
+        }
+        bool cok = false;
+        uint32_t c = blink_parse_css_color_with_current(buf, st->color, &cok);
+        if (cok) {
+            cols[stop_cnt] = c;
+            pos[stop_cnt] = pct;
+            stop_cnt++;
+        }
+    }
+
+    if (stop_cnt < 2) return false;
+    if (pos[0] < 0) pos[0] = 0;
+    if (pos[stop_cnt - 1] < 0) pos[stop_cnt - 1] = 100;
+    for (int i = 1; i < stop_cnt - 1; i++) {
+        if (pos[i] < 0) {
+            int next_known = i + 1;
+            while (next_known < stop_cnt - 1 && pos[next_known] < 0) next_known++;
+            int span_idx = next_known - (i - 1);
+            pos[i] = pos[i - 1] + (pos[next_known] - pos[i - 1]) / span_idx;
+        }
+        if (pos[i] < pos[i - 1]) pos[i] = pos[i - 1];
+    }
+
+    st->has_gradient = true;
+    st->grad_angle_deg = angle;
+    st->num_grad_stops = stop_cnt;
+    for (int i = 0; i < stop_cnt; i++) {
+        st->grad_colors[i] = cols[i];
+        st->grad_pos_pct[i] = pos[i];
+    }
+    st->bg_color = cols[0];
+    st->has_bg = true;
+    return true;
+}
+
+static void parse_box_shadow_decl(dom_style_t* st,
+                                  const char* val,
+                                  int32_t em_px, int32_t root_font_px, int32_t vw_px, int32_t vh_px,
+                                  blink_layout_mode_t mode) {
+    if (!st || !val) return;
+    if (strcasecmp(val, "none") == 0) {
+        st->has_box_shadow = false;
+        return;
+    }
+
+    /* Take first outer shadow in comma-separated list */
+    char first_sh[192];
+    const char* p = val;
+    int paren = 0;
+    size_t flen = 0;
+    while (*p && !(paren == 0 && *p == ',') && flen + 1 < sizeof(first_sh)) {
+        if (*p == '(') paren++;
+        else if (*p == ')' && paren > 0) paren--;
+        first_sh[flen++] = *p++;
+    }
+    first_sh[flen] = '\0';
+    trim_inplace(first_sh);
+
+    int32_t lens[4] = {0, 0, 0, 0};
+    int n_lens = 0;
+    uint32_t sh_col = st->color;
+    bool saw_col = false;
+    bool is_inset = false;
+
+    const char* cur = first_sh;
+    while (*cur) {
+        while (*cur && isspace((unsigned char)*cur)) cur++;
+        if (!*cur) break;
+        const char* ts = cur;
+        int tparen = 0;
+        while (*cur && (tparen > 0 || !isspace((unsigned char)*cur))) {
+            if (*cur == '(') tparen++;
+            else if (*cur == ')' && tparen > 0) tparen--;
+            cur++;
+        }
+        char tok[128];
+        size_t tlen = (size_t)(cur - ts);
+        if (tlen >= sizeof(tok)) tlen = sizeof(tok) - 1;
+        memcpy(tok, ts, tlen);
+        tok[tlen] = '\0';
+
+        if (strcasecmp(tok, "inset") == 0) {
+            is_inset = true;
+            continue;
+        }
+        bool looks_len = (isdigit((unsigned char)tok[0]) ||
+                          ((tok[0] == '-' || tok[0] == '+') && isdigit((unsigned char)tok[1])) ||
+                          strncasecmp(tok, "calc(", 5) == 0 ||
+                          strncasecmp(tok, "min(", 4) == 0 ||
+                          strncasecmp(tok, "max(", 4) == 0 ||
+                          strncasecmp(tok, "clamp(", 6) == 0);
+        if (looks_len && n_lens < 4) {
+            lens[n_lens++] = blink_css_eval_length_or_calc(tok, 0, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+        } else {
+            bool cok = false;
+            uint32_t c = blink_parse_css_color_with_current(tok, st->color, &cok);
+            if (cok) {
+                sh_col = c;
+                saw_col = true;
+            }
+        }
+    }
+
+    if (!is_inset && n_lens >= 2) {
+        st->has_box_shadow = true;
+        st->shadow_dx = lens[0];
+        st->shadow_dy = lens[1];
+        st->shadow_blur = (n_lens >= 3 && lens[2] > 0) ? lens[2] : 0;
+        st->shadow_spread = (n_lens >= 4) ? lens[3] : 0;
+        st->shadow_color = saw_col ? sh_col : st->color;
+    } else if (is_inset) {
+        st->has_box_shadow = false;
+    }
+}
+
+static void parse_translate_component(const char* raw_tok,
+                                      int32_t em_px, int32_t root_font_px, int32_t vw_px, int32_t vh_px,
+                                      blink_layout_mode_t mode,
+                                      int* io_px,
+                                      float* io_pct) {
+    char tok[96];
+    strncpy(tok, raw_tok ? raw_tok : "", sizeof(tok) - 1);
+    tok[sizeof(tok) - 1] = '\0';
+    trim_inplace(tok);
+    if (!tok[0]) return;
+    size_t l = strlen(tok);
+    if (l > 1 && tok[l - 1] == '%' && strncasecmp(tok, "calc(", 5) != 0) {
+        *io_pct += strtof(tok, NULL);
+    } else {
+        *io_px += blink_css_eval_length_or_calc(tok, 0, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+    }
+}
+
+static void parse_transform_decl(dom_style_t* st,
+                                 const char* val,
+                                 int32_t em_px, int32_t root_font_px, int32_t vw_px, int32_t vh_px,
+                                 blink_layout_mode_t mode) {
+    if (!st || !val) return;
+    if (strcasecmp(val, "none") == 0) {
+        st->has_transform = false;
+        st->translate_x_px = st->translate_y_px = 0;
+        st->translate_x_pct = st->translate_y_pct = 0.0f;
+        return;
+    }
+
+    int tx_px = 0, ty_px = 0;
+    float tx_pct = 0.0f, ty_pct = 0.0f;
+    bool any_fn = false;
+
+    const char* p = val;
+    while (*p) {
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (!*p) break;
+        const char* fn_s = p;
+        while (*p && *p != '(' && !isspace((unsigned char)*p)) p++;
+        char fn_name[40];
+        copy_lower_bounded(fn_name, sizeof(fn_name), fn_s, (size_t)(p - fn_s));
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (*p != '(') {
+            if (*p) p++;
+            continue;
+        }
+        char inner[128];
+        p = read_paren_arg(p, inner, sizeof(inner));
+        any_fn = true;
+
+        if (strcmp(fn_name, "translatex") == 0) {
+            parse_translate_component(inner, em_px, root_font_px, vw_px, vh_px, mode, &tx_px, &tx_pct);
+        } else if (strcmp(fn_name, "translatey") == 0) {
+            parse_translate_component(inner, em_px, root_font_px, vw_px, vh_px, mode, &ty_px, &ty_pct);
+        } else if (strcmp(fn_name, "translate") == 0 || strcmp(fn_name, "translate3d") == 0) {
+            /* Split first two comma-separated args */
+            char a1[96] = "", a2[96] = "";
+            const char* c = inner;
+            int paren = 0;
+            const char* comma1 = NULL;
+            const char* comma2 = NULL;
+            while (*c) {
+                if (*c == '(') paren++;
+                else if (*c == ')' && paren > 0) paren--;
+                else if (paren == 0 && *c == ',') {
+                    if (!comma1) comma1 = c;
+                    else if (!comma2) { comma2 = c; break; }
+                }
+                c++;
+            }
+            if (comma1) {
+                size_t l1 = (size_t)(comma1 - inner);
+                if (l1 >= sizeof(a1)) l1 = sizeof(a1) - 1;
+                memcpy(a1, inner, l1); a1[l1] = '\0';
+                const char* s2 = comma1 + 1;
+                size_t l2 = comma2 ? (size_t)(comma2 - s2) : strlen(s2);
+                if (l2 >= sizeof(a2)) l2 = sizeof(a2) - 1;
+                memcpy(a2, s2, l2); a2[l2] = '\0';
+            } else {
+                strncpy(a1, inner, sizeof(a1) - 1);
+            }
+            parse_translate_component(a1, em_px, root_font_px, vw_px, vh_px, mode, &tx_px, &tx_pct);
+            if (a2[0]) {
+                parse_translate_component(a2, em_px, root_font_px, vw_px, vh_px, mode, &ty_px, &ty_pct);
+            }
+        }
+    }
+
+    if (any_fn) {
+        st->has_transform = true;
+        st->translate_x_px = tx_px;
+        st->translate_x_pct = tx_pct;
+        st->translate_y_px = ty_px;
+        st->translate_y_pct = ty_pct;
+    }
+}
+
 static void apply_resolved_css_decl(dom_style_t* st,
                                     const dom_style_t* parent_st,
                                     const dom_style_t* initial_st,
@@ -2825,16 +3201,26 @@ static void apply_resolved_css_decl(dom_style_t* st,
         uint32_t inh_c = parent_st ? parent_st->color : initial_st->color;
         uint32_t c = blink_parse_css_color_with_current(val, inh_c, &ok);
         if (ok) st->color = c;
+    } else if (strcmp(prop, "background-image") == 0) {
+        if (strcasecmp(val, "none") == 0) {
+            st->has_gradient = false;
+        } else {
+            parse_linear_gradient_decl(st, val);
+        }
     } else if (strcmp(prop, "background-color") == 0 || strcmp(prop, "background") == 0) {
         if (strcasecmp(val, "none") == 0 || strcasecmp(val, "transparent") == 0) {
             st->bg_color = 0;
             st->has_bg = false;
+            if (strcmp(prop, "background") == 0) st->has_gradient = false;
+        } else if (strcmp(prop, "background") == 0 && parse_linear_gradient_decl(st, val)) {
+            /* Parsed multi-stop linear-gradient(...) */
         } else {
             bool ok = false;
             uint32_t c = blink_parse_css_color_with_current(val, st->color, &ok);
             if (ok) {
                 st->bg_color = c;
                 st->has_bg = ((c >> 24) > 0);
+                if (strcmp(prop, "background") == 0) st->has_gradient = false;
             }
         }
     } else if (strcmp(prop, "font-size") == 0) {
@@ -2959,11 +3345,17 @@ static void apply_resolved_css_decl(dom_style_t* st,
     } else if (strcmp(prop, "top") == 0) {
         bool is_auto = false;
         int32_t v = blink_css_eval_length_or_calc(val, vh_px, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        size_t vl_ = strlen(val);
+        st->top_is_pct = (!is_auto && vl_ > 1 && val[vl_ - 1] == '%' && strchr(val, '(') == NULL);
+        st->top_pct = st->top_is_pct ? strtof(val, NULL) : 0.0f;
         st->has_top = !is_auto;
         st->top = is_auto ? 0 : v;
     } else if (strcmp(prop, "bottom") == 0) {
         bool is_auto = false;
         int32_t v = blink_css_eval_length_or_calc(val, vh_px, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        size_t vl_ = strlen(val);
+        st->bottom_is_pct = (!is_auto && vl_ > 1 && val[vl_ - 1] == '%' && strchr(val, '(') == NULL);
+        st->bottom_pct = st->bottom_is_pct ? strtof(val, NULL) : 0.0f;
         st->has_bottom = !is_auto;
         st->bottom = is_auto ? 0 : v;
     } else if (strcmp(prop, "left") == 0) {
@@ -3122,6 +3514,23 @@ static void apply_resolved_css_decl(dom_style_t* st,
         if (strcasestr_portable(val, "center")) st->text_align = ALIGN_CENTER;
         else if (strcasestr_portable(val, "right") || strcasestr_portable(val, "end")) st->text_align = ALIGN_RIGHT;
         else st->text_align = ALIGN_LEFT;
+    } else if (strcmp(prop, "opacity") == 0) {
+        size_t vl = strlen(val);
+        float opf = strtof(val, NULL);
+        if (vl > 1 && val[vl - 1] == '%') opf /= 100.0f;
+        if (opf < 0.0f) opf = 0.0f;
+        if (opf > 1.0f) opf = 1.0f;
+        st->opacity_u8 = (int)lroundf(opf * 255.0f);
+    } else if (strcmp(prop, "overflow") == 0 || strcmp(prop, "overflow-x") == 0 || strcmp(prop, "overflow-y") == 0) {
+        if (strcasestr_portable(val, "hidden") || strcasestr_portable(val, "clip")) {
+            st->overflow_hidden = true;
+        } else if (strcasestr_portable(val, "visible")) {
+            st->overflow_hidden = false;
+        }
+    } else if (strcmp(prop, "box-shadow") == 0) {
+        parse_box_shadow_decl(st, val, em_px, root_font_px, vw_px, vh_px, mode);
+    } else if (strcmp(prop, "transform") == 0) {
+        parse_transform_decl(st, val, em_px, root_font_px, vw_px, vh_px, mode);
     }
 }
 
@@ -3173,19 +3582,9 @@ static void unquote_css_content(const char* raw, char* out, size_t out_cap) {
                 if (*p == '\\' && p[1]) {
                     p++;
                     out[j++] = *p++;
-                } else if ((unsigned char)p[0] == 0xC2 && ((unsigned char)p[1] & 0xC0) == 0x80) {
-                    /* UTF-8 U+0080..U+00BF (e.g. '§' = 0xC2 0xA7) -> Latin-1 byte */
-                    out[j++] = (char)((unsigned char)p[1] == 0xA0 ? ' ' : p[1]);
+                } else if ((unsigned char)p[0] == 0xC2 && (unsigned char)p[1] == 0xA0) {
+                    out[j++] = ' ';
                     p += 2;
-                } else if ((unsigned char)p[0] == 0xC3 && ((unsigned char)p[1] & 0xC0) == 0x80) {
-                    /* UTF-8 U+00C0..U+00FF -> Latin-1 byte */
-                    out[j++] = (char)((unsigned char)p[1] + 0x40);
-                    p += 2;
-                } else if ((unsigned char)p[0] >= 0x80) {
-                    unsigned char c = (unsigned char)p[0];
-                    if ((c & 0xF0) == 0xE0 && p[1] && p[2]) p += 3;
-                    else if ((c & 0xF8) == 0xF0 && p[1] && p[2] && p[3]) p += 4;
-                    else p++;
                 } else {
                     out[j++] = *p++;
                 }
@@ -3529,49 +3928,136 @@ void blink_css_resolve_document_styles(dom_node_t* root,
 }
 
 /* ------------------------------------------------------------------------- */
-/* 9. HTML Entity Unescaping & Full HTML5 Document Parser                    */
+/* 9. HTML Entity Unescaping & Full WHATWG HTML5 Document Parser (Pillar 1)  */
 /* ------------------------------------------------------------------------- */
+
+static size_t encode_utf8_scalar(int32_t cp, char* out) {
+    cp = blink_html_sanitize_char_ref(cp);
+    if (cp == 0x00A0) {
+        out[0] = ' ';
+        return 1;
+    }
+    if (cp < 0x80) {
+        out[0] = (char)cp;
+        return 1;
+    }
+    if (cp < 0x800) {
+        out[0] = (char)(0xC0 | ((cp >> 6) & 0x1F));
+        out[1] = (char)(0x80 | (cp & 0x3F));
+        return 2;
+    }
+    if (cp < 0x10000) {
+        out[0] = (char)(0xE0 | ((cp >> 12) & 0x0F));
+        out[1] = (char)(0x80 | ((cp >> 6) & 0x3F));
+        out[2] = (char)(0x80 | (cp & 0x3F));
+        return 3;
+    }
+    out[0] = (char)(0xF0 | ((cp >> 18) & 0x07));
+    out[1] = (char)(0x80 | ((cp >> 12) & 0x3F));
+    out[2] = (char)(0x80 | ((cp >> 6) & 0x3F));
+    out[3] = (char)(0x80 | (cp & 0x3F));
+    return 4;
+}
 
 char* blink_unescape_html(const char* src) {
     if (!src) return NULL;
     size_t len = strlen(src);
-    char* dst = (char*)malloc(len + 1);
+    /* Worst-case expansion (e.g. `&#0;` -> 3-byte UTF-8 U+FFFD) fits in 4 * len + 4 */
+    char* dst = (char*)malloc(len * 4 + 4);
     if (!dst) return NULL;
+
+    static const struct {
+        const char* ent;
+        size_t      elen;
+        int32_t     cp;
+    } named_ents[] = {
+        {"&amp;",    5, 0x0026},
+        {"&lt;",     4, 0x003C},
+        {"&gt;",     4, 0x003E},
+        {"&quot;",   6, 0x0022},
+        {"&apos;",   6, 0x0027},
+        {"&nbsp;",   6, 0x00A0},
+        {"&sect;",   6, 0x00A7},
+        {"&copy;",   6, 0x00A9},
+        {"&laquo;",  7, 0x00AB},
+        {"&reg;",    5, 0x00AE},
+        {"&deg;",    5, 0x00B0},
+        {"&plusmn;", 8, 0x00B1},
+        {"&raquo;",  7, 0x00BB},
+        {"&times;",  7, 0x00D7},
+        {"&divide;", 8, 0x00F7},
+        {"&ndash;",  7, 0x2013},
+        {"&mdash;",  7, 0x2014},
+        {"&bull;",   6, 0x2022},
+        {"&hellip;", 8, 0x2026},
+        {"&larr;",   6, 0x2190},
+        {"&rarr;",   6, 0x2192},
+        {"&ne;",     4, 0x2260},
+        {"&le;",     4, 0x2264},
+        {"&ge;",     4, 0x2265}
+    };
 
     size_t i = 0, j = 0;
     while (i < len) {
         if (src[i] == '&') {
-            if (strncmp(src + i, "&amp;", 5) == 0) { dst[j++] = '&'; i += 5; }
-            else if (strncmp(src + i, "&lt;", 4) == 0) { dst[j++] = '<'; i += 4; }
-            else if (strncmp(src + i, "&gt;", 4) == 0) { dst[j++] = '>'; i += 4; }
-            else if (strncmp(src + i, "&quot;", 6) == 0) { dst[j++] = '"'; i += 6; }
-            else if (strncmp(src + i, "&#39;", 5) == 0 || strncmp(src + i, "&apos;", 6) == 0) {
-                dst[j++] = '\''; i += (src[i + 1] == 'a') ? 6 : 5;
-            } else if (strncmp(src + i, "&nbsp;", 6) == 0 || strncmp(src + i, "&#160;", 6) == 0) {
-                dst[j++] = ' '; i += 6;
-            } else if (strncmp(src + i, "&mdash;", 7) == 0 || strncmp(src + i, "&ndash;", 7) == 0) {
-                dst[j++] = '-'; i += 7;
-            } else if (strncmp(src + i, "&rarr;", 6) == 0) {
-                dst[j++] = '-'; dst[j++] = '>'; i += 6;
-            } else {
-                dst[j++] = src[i++];
+            /* 1. Numeric Character Reference: `&#NNN;` or `&#xHHH;` / `&#XHHH;` */
+            if (src[i + 1] == '#') {
+                size_t k = i + 2;
+                bool is_hex = false;
+                if (src[k] == 'x' || src[k] == 'X') {
+                    is_hex = true;
+                    k++;
+                }
+                size_t dig_start = k;
+                int64_t acc = 0;
+                if (is_hex) {
+                    while (k < len && isxdigit((unsigned char)src[k])) {
+                        int d = isdigit((unsigned char)src[k])
+                                    ? (src[k] - '0')
+                                    : (tolower((unsigned char)src[k]) - 'a' + 10);
+                        if (acc <= 0x200000) acc = (acc << 4) + d;
+                        k++;
+                    }
+                } else {
+                    while (k < len && isdigit((unsigned char)src[k])) {
+                        if (acc <= 0x200000) acc = acc * 10 + (src[k] - '0');
+                        k++;
+                    }
+                }
+                if (k > dig_start) {
+                    if (k < len && src[k] == ';') k++;
+                    int32_t sanitized = blink_html_sanitize_char_ref((int32_t)acc);
+                    j += encode_utf8_scalar(sanitized, dst + j);
+                    i = k;
+                    continue;
+                }
             }
+
+            /* 2. Named HTML5 Character References */
+            bool matched_named = false;
+            for (size_t e = 0; e < sizeof(named_ents) / sizeof(named_ents[0]); e++) {
+                if (strncmp(src + i, named_ents[e].ent, named_ents[e].elen) == 0) {
+                    j += encode_utf8_scalar(named_ents[e].cp, dst + j);
+                    i += named_ents[e].elen;
+                    matched_named = true;
+                    break;
+                }
+            }
+            if (matched_named) continue;
+
+            dst[j++] = src[i++];
         } else if ((unsigned char)src[i] == 0xC2 && (unsigned char)src[i + 1] == 0xA0) {
             dst[j++] = ' ';
             i += 2;
         } else if ((unsigned char)src[i] == 0xE2 && (unsigned char)src[i + 1] == 0x80) {
             unsigned char b2 = (unsigned char)src[i + 2];
-            if (b2 == 0x93 || b2 == 0x94) dst[j++] = '-';
-            else if (b2 == 0x98 || b2 == 0x99) dst[j++] = '\'';
-            else if (b2 == 0x9C || b2 == 0x9D) dst[j++] = '"';
-            else if (b2 == 0xA2) dst[j++] = '*';
-            i += 3;
-        } else if ((unsigned char)src[i] >= 0x80) {
-            unsigned char c = (unsigned char)src[i];
-            if ((c & 0xE0) == 0xC0 && src[i + 1]) i += 2;
-            else if ((c & 0xF0) == 0xE0 && src[i + 1] && src[i + 2]) i += 3;
-            else if ((c & 0xF8) == 0xF0 && src[i + 1] && src[i + 2] && src[i + 3]) i += 4;
-            else i++;
+            if (b2 == 0x98 || b2 == 0x99) { dst[j++] = '\''; i += 3; }
+            else if (b2 == 0x9C || b2 == 0x9D) { dst[j++] = '"'; i += 3; }
+            else {
+                dst[j++] = src[i++];
+                dst[j++] = src[i++];
+                dst[j++] = src[i++];
+            }
         } else {
             dst[j++] = src[i++];
         }
@@ -3622,11 +4108,490 @@ static void apply_parsed_attribute(dom_node_t* node, const char* attr_k, const c
     }
 }
 
-static bool is_inside_pre_element(const dom_node_t* n) {
-    const dom_node_t* cur = n;
-    while (cur) {
-        if (strcmp(cur->tag, "pre") == 0) return true;
-        cur = cur->parent;
+/* ------------------------------------------------------------------------- */
+/* WHATWG Active Formatting Elements (AFE), Noah's Ark & Adoption Agency     */
+/* ------------------------------------------------------------------------- */
+
+static bool is_html5_formatting_tag(const char* tag) {
+    if (!tag) return false;
+    static const char* const fmts[] = {
+        "a", "b", "big", "code", "em", "font", "i", "nobr",
+        "s", "small", "strike", "strong", "tt", "u", "mark", "del", "ins", "sub", "sup"
+    };
+    for (size_t i = 0; i < sizeof(fmts) / sizeof(fmts[0]); i++) {
+        if (strcmp(tag, fmts[i]) == 0) return true;
+    }
+    return false;
+}
+
+static bool is_html5_special_block_tag(const char* tag) {
+    if (!tag || is_html5_formatting_tag(tag)) return false;
+    if (strcmp(tag, "span") == 0 || strcmp(tag, "abbr") == 0 || strcmp(tag, "cite") == 0 ||
+        strcmp(tag, "dfn") == 0 || strcmp(tag, "q") == 0 || strcmp(tag, "time") == 0 ||
+        strcmp(tag, "kbd") == 0 || strcmp(tag, "samp") == 0 || strcmp(tag, "var") == 0) {
+        return false;
+    }
+    return true;
+}
+
+static bool is_foster_table_context_tag(const char* tag) {
+    if (!tag) return false;
+    return (strcmp(tag, "table") == 0 || strcmp(tag, "thead") == 0 ||
+            strcmp(tag, "tbody") == 0 || strcmp(tag, "tfoot") == 0 ||
+            strcmp(tag, "tr") == 0);
+}
+
+static bool is_afe_marker_tag(const char* tag) {
+    if (!tag) return false;
+    return (strcmp(tag, "table") == 0 || strcmp(tag, "td") == 0 ||
+            strcmp(tag, "th") == 0 || strcmp(tag, "caption") == 0);
+}
+
+#define BLINK_MAX_AFE_ENTRIES 128
+#define BLINK_MAX_OPEN_STACK  256
+
+typedef struct {
+    bool             is_marker;
+    dom_node_t*      node;
+    char             tag[32];
+    char             id[64];
+    char             class_name[128];
+    char             href[256];
+    char             inline_style_raw[256];
+    blink_dom_attr_t attrs[BLINK_MAX_ATTRS];
+    int              num_attrs;
+} afe_entry_t;
+
+typedef struct {
+    afe_entry_t entries[BLINK_MAX_AFE_ENTRIES];
+    int         count;
+} afe_list_t;
+
+static void afe_snapshot_node(afe_entry_t* e, dom_node_t* n) {
+    memset(e, 0, sizeof(*e));
+    e->is_marker = false;
+    e->node = n;
+    strncpy(e->tag, n->tag, sizeof(e->tag) - 1);
+    if (n->id) strncpy(e->id, n->id, sizeof(e->id) - 1);
+    if (n->class_name) strncpy(e->class_name, n->class_name, sizeof(e->class_name) - 1);
+    if (n->href) strncpy(e->href, n->href, sizeof(e->href) - 1);
+    if (n->inline_style_raw) strncpy(e->inline_style_raw, n->inline_style_raw, sizeof(e->inline_style_raw) - 1);
+    e->num_attrs = n->num_attrs;
+    for (int i = 0; i < n->num_attrs && i < BLINK_MAX_ATTRS; i++) {
+        e->attrs[i] = n->attrs[i];
+    }
+}
+
+static dom_node_t* afe_clone_entry(const afe_entry_t* e) {
+    dom_node_t* c = dom_node_create(e->tag);
+    if (!c) return NULL;
+    if (e->id[0]) c->id = strdup(e->id);
+    if (e->class_name[0]) c->class_name = strdup(e->class_name);
+    if (e->href[0]) c->href = strdup(e->href);
+    if (e->inline_style_raw[0]) c->inline_style_raw = strdup(e->inline_style_raw);
+    c->num_attrs = e->num_attrs;
+    for (int i = 0; i < e->num_attrs && i < BLINK_MAX_ATTRS; i++) {
+        c->attrs[i] = e->attrs[i];
+    }
+    return c;
+}
+
+static bool afe_same_signature(const afe_entry_t* a, const afe_entry_t* b) {
+    if (a->is_marker || b->is_marker) return false;
+    if (strcmp(a->tag, b->tag) != 0) return false;
+    if (strcmp(a->class_name, b->class_name) != 0) return false;
+    if (strcmp(a->inline_style_raw, b->inline_style_raw) != 0) return false;
+    if (strcmp(a->href, b->href) != 0) return false;
+    if (a->num_attrs != b->num_attrs) return false;
+    return true;
+}
+
+static void afe_remove_at(afe_list_t* afe, int idx) {
+    if (idx < 0 || idx >= afe->count) return;
+    for (int i = idx; i + 1 < afe->count; i++) {
+        afe->entries[i] = afe->entries[i + 1];
+    }
+    afe->count--;
+}
+
+static void afe_push_marker(afe_list_t* afe) {
+    if (afe->count >= BLINK_MAX_AFE_ENTRIES) return;
+    memset(&afe->entries[afe->count], 0, sizeof(afe_entry_t));
+    afe->entries[afe->count].is_marker = true;
+    afe->count++;
+}
+
+static void afe_clear_to_last_marker(afe_list_t* afe) {
+    while (afe->count > 0) {
+        bool was_m = afe->entries[afe->count - 1].is_marker;
+        afe->count--;
+        if (was_m) break;
+    }
+}
+
+/* Noah's Ark Clause (`noahs_ark_preserves_cap_3`): at most 3 identical active formatting signatures */
+static void afe_push_formatting(afe_list_t* afe, dom_node_t* node) {
+    afe_entry_t cand;
+    afe_snapshot_node(&cand, node);
+
+    int matches = 0;
+    int oldest_idx = -1;
+    for (int i = afe->count - 1; i >= 0; i--) {
+        if (afe->entries[i].is_marker) break;
+        if (afe_same_signature(&afe->entries[i], &cand)) {
+            matches++;
+            oldest_idx = i;
+        }
+    }
+    if (matches >= 3 && oldest_idx >= 0) {
+        afe_remove_at(afe, oldest_idx);
+    }
+    if (afe->count < BLINK_MAX_AFE_ENTRIES) {
+        afe->entries[afe->count++] = cand;
+    }
+}
+
+static int open_stack_find_node(dom_node_t** stack, int stack_len, const dom_node_t* target) {
+    for (int i = stack_len - 1; i >= 0; i--) {
+        if (stack[i] == target) return i;
+    }
+    return -1;
+}
+
+static dom_node_t* open_stack_find_enclosing_table(dom_node_t** stack, int stack_len) {
+    for (int i = stack_len - 1; i >= 0; i--) {
+        if (strcmp(stack[i]->tag, "table") == 0) return stack[i];
+    }
+    return NULL;
+}
+
+static void open_stack_pop_to_len(dom_node_t** stack, int* io_len, int target_len, afe_list_t* afe) {
+    if (target_len < 1) target_len = 1;
+    while (*io_len > target_len) {
+        dom_node_t* popped = stack[--(*io_len)];
+        if (afe && is_afe_marker_tag(popped->tag)) {
+            afe_clear_to_last_marker(afe);
+        }
+    }
+}
+
+static void open_stack_push(dom_node_t** stack, int* io_len, dom_node_t* n) {
+    if (*io_len < BLINK_MAX_OPEN_STACK) {
+        stack[(*io_len)++] = n;
+    }
+}
+
+static void html5_insert_node_appropriate_place(dom_node_t** stack, int stack_len, dom_node_t* child) {
+    dom_node_t* cur = stack[stack_len - 1];
+    if (is_foster_table_context_tag(cur->tag)) {
+        dom_node_t* tbl = open_stack_find_enclosing_table(stack, stack_len);
+        if (tbl && tbl->parent) {
+            dom_node_insert_before(tbl->parent, tbl, child);
+            return;
+        }
+    }
+    dom_node_add_child(cur, child);
+}
+
+static void html5_reconstruct_active_formatting(afe_list_t* afe, dom_node_t** stack, int* io_stack_len) {
+    if (afe->count == 0) return;
+    dom_node_t* cur_top = stack[*io_stack_len - 1];
+    if (is_foster_table_context_tag(cur_top->tag)) return;
+
+    int entry_idx = afe->count - 1;
+    if (afe->entries[entry_idx].is_marker ||
+        open_stack_find_node(stack, *io_stack_len, afe->entries[entry_idx].node) >= 0) {
+        return;
+    }
+
+    while (entry_idx > 0) {
+        int prev = entry_idx - 1;
+        if (afe->entries[prev].is_marker ||
+            open_stack_find_node(stack, *io_stack_len, afe->entries[prev].node) >= 0) {
+            break;
+        }
+        entry_idx = prev;
+    }
+
+    while (entry_idx < afe->count) {
+        dom_node_t* cloned = afe_clone_entry(&afe->entries[entry_idx]);
+        if (!cloned) break;
+        html5_insert_node_appropriate_place(stack, *io_stack_len, cloned);
+        open_stack_push(stack, io_stack_len, cloned);
+        afe->entries[entry_idx].node = cloned;
+        entry_idx++;
+    }
+}
+
+static void html5_stack_pop_until_in_scope(dom_node_t** stack,
+                                           int* io_len,
+                                           const char* close_tag,
+                                           afe_list_t* afe) {
+    if (*io_len <= 1 || !close_tag || !close_tag[0]) return;
+    bool closing_table_struct =
+        (strcmp(close_tag, "td") == 0 || strcmp(close_tag, "th") == 0 ||
+         strcmp(close_tag, "tr") == 0 || strcmp(close_tag, "thead") == 0 ||
+         strcmp(close_tag, "tbody") == 0 || strcmp(close_tag, "tfoot") == 0 ||
+         strcmp(close_tag, "caption") == 0 || strcmp(close_tag, "table") == 0);
+
+    for (int i = *io_len - 1; i >= 1; i--) {
+        if (strcmp(stack[i]->tag, close_tag) == 0) {
+            open_stack_pop_to_len(stack, io_len, i, afe);
+            return;
+        }
+        if (!closing_table_struct && blink_html_is_scope_boundary(stack[i]->tag)) {
+            return;
+        }
+        if (closing_table_struct && strcmp(close_tag, "table") != 0 && strcmp(stack[i]->tag, "table") == 0) {
+            return;
+        }
+    }
+}
+
+/* WHATWG §13.2.6.4.7 Adoption Agency Algorithm (`outer < 8`, `inner < 3`) */
+static void html5_run_adoption_agency(const char* subject_tag,
+                                      dom_node_t** stack,
+                                      int* io_stack_len,
+                                      afe_list_t* afe) {
+    dom_node_t* cur = stack[*io_stack_len - 1];
+    if (strcmp(cur->tag, subject_tag) == 0) {
+        bool in_afe = false;
+        for (int i = afe->count - 1; i >= 0 && !afe->entries[i].is_marker; i--) {
+            if (afe->entries[i].node == cur) { in_afe = true; break; }
+        }
+        if (!in_afe) {
+            open_stack_pop_to_len(stack, io_stack_len, *io_stack_len - 1, afe);
+            return;
+        }
+    }
+
+    for (int outer = 0; outer < 8; outer++) {
+        int afe_fe_idx = -1;
+        for (int i = afe->count - 1; i >= 0; i--) {
+            if (afe->entries[i].is_marker) break;
+            if (strcmp(afe->entries[i].tag, subject_tag) == 0) {
+                afe_fe_idx = i;
+                break;
+            }
+        }
+        if (afe_fe_idx < 0) {
+            for (int i = *io_stack_len - 1; i >= 1; i--) {
+                if (strcmp(stack[i]->tag, subject_tag) == 0) {
+                    open_stack_pop_to_len(stack, io_stack_len, i, afe);
+                    return;
+                }
+                if (is_html5_special_block_tag(stack[i]->tag)) return;
+            }
+            return;
+        }
+
+        dom_node_t* fe = afe->entries[afe_fe_idx].node;
+        int stack_fe_idx = open_stack_find_node(stack, *io_stack_len, fe);
+        if (stack_fe_idx < 0) {
+            afe_remove_at(afe, afe_fe_idx);
+            return;
+        }
+
+        for (int i = *io_stack_len - 1; i > stack_fe_idx; i--) {
+            if (blink_html_is_scope_boundary(stack[i]->tag)) {
+                return;
+            }
+        }
+
+        int stack_fb_idx = -1;
+        for (int i = stack_fe_idx + 1; i < *io_stack_len; i++) {
+            if (is_html5_special_block_tag(stack[i]->tag)) {
+                stack_fb_idx = i;
+                break;
+            }
+        }
+
+        if (stack_fb_idx < 0) {
+            open_stack_pop_to_len(stack, io_stack_len, stack_fe_idx, afe);
+            afe_remove_at(afe, afe_fe_idx);
+            return;
+        }
+
+        dom_node_t* furthest_block = stack[stack_fb_idx];
+        dom_node_t* common_ancestor = (stack_fe_idx > 0) ? stack[stack_fe_idx - 1] : stack[0];
+
+        int inner_steps = 0;
+        for (int s = stack_fb_idx - 1; s > stack_fe_idx && inner_steps < 3; s--, inner_steps++) {
+            dom_node_t* mid = stack[s];
+            int mid_afe = -1;
+            for (int k = afe->count - 1; k >= 0 && !afe->entries[k].is_marker; k--) {
+                if (afe->entries[k].node == mid) { mid_afe = k; break; }
+            }
+            if (mid_afe >= 0) {
+                dom_node_t* mid_clone = afe_clone_entry(&afe->entries[mid_afe]);
+                if (mid_clone) {
+                    dom_node_detach_from_parent(furthest_block);
+                    while (furthest_block->num_children > 0) {
+                        dom_node_t* ch = furthest_block->children[0];
+                        dom_node_detach_from_parent(ch);
+                        dom_node_add_child(mid_clone, ch);
+                    }
+                    dom_node_add_child(furthest_block, mid_clone);
+                }
+            }
+        }
+
+        dom_node_detach_from_parent(furthest_block);
+        dom_node_t* fe_clone = afe_clone_entry(&afe->entries[afe_fe_idx]);
+        if (fe_clone) {
+            while (furthest_block->num_children > 0) {
+                dom_node_t* ch = furthest_block->children[0];
+                dom_node_detach_from_parent(ch);
+                dom_node_add_child(fe_clone, ch);
+            }
+            dom_node_add_child(furthest_block, fe_clone);
+        }
+
+        if (is_foster_table_context_tag(common_ancestor->tag)) {
+            dom_node_t* tbl = open_stack_find_enclosing_table(stack, stack_fe_idx);
+            if (tbl && tbl->parent) {
+                dom_node_insert_before(tbl->parent, tbl, furthest_block);
+            } else {
+                dom_node_add_child(common_ancestor, furthest_block);
+            }
+        } else {
+            dom_node_add_child(common_ancestor, furthest_block);
+        }
+
+        afe_remove_at(afe, afe_fe_idx);
+        stack[stack_fe_idx] = furthest_block;
+        *io_stack_len = stack_fe_idx + 1;
+        return;
+    }
+}
+
+static void html5_stack_close_implicit_before_start(dom_node_t** stack,
+                                                    int* io_len,
+                                                    const char* new_tag,
+                                                    afe_list_t* afe) {
+    if (*io_len <= 1 || !new_tag) return;
+
+    if (closes_open_p_tag(new_tag)) {
+        html5_stack_pop_until_in_scope(stack, io_len, "p", afe);
+    }
+
+    if (strcmp(new_tag, "li") == 0) {
+        for (int i = *io_len - 1; i >= 1; i--) {
+            if (strcmp(stack[i]->tag, "li") == 0) {
+                open_stack_pop_to_len(stack, io_len, i, afe);
+                break;
+            }
+            if (strcmp(stack[i]->tag, "ul") == 0 || strcmp(stack[i]->tag, "ol") == 0 ||
+                strcmp(stack[i]->tag, "menu") == 0 || blink_html_is_scope_boundary(stack[i]->tag)) {
+                break;
+            }
+        }
+    } else if (strcmp(new_tag, "dt") == 0 || strcmp(new_tag, "dd") == 0) {
+        for (int i = *io_len - 1; i >= 1; i--) {
+            if (strcmp(stack[i]->tag, "dt") == 0 || strcmp(stack[i]->tag, "dd") == 0) {
+                open_stack_pop_to_len(stack, io_len, i, afe);
+                break;
+            }
+            if (strcmp(stack[i]->tag, "dl") == 0 || blink_html_is_scope_boundary(stack[i]->tag)) {
+                break;
+            }
+        }
+    } else if (is_heading_tag(new_tag) && *io_len > 1 && is_heading_tag(stack[*io_len - 1]->tag)) {
+        open_stack_pop_to_len(stack, io_len, *io_len - 1, afe);
+    } else if (strcmp(new_tag, "td") == 0 || strcmp(new_tag, "th") == 0) {
+        for (int i = *io_len - 1; i >= 1; i--) {
+            if (strcmp(stack[i]->tag, "td") == 0 || strcmp(stack[i]->tag, "th") == 0) {
+                open_stack_pop_to_len(stack, io_len, i, afe);
+                break;
+            }
+            if (strcmp(stack[i]->tag, "tr") == 0 || strcmp(stack[i]->tag, "table") == 0) break;
+        }
+    } else if (strcmp(new_tag, "tr") == 0) {
+        for (int i = *io_len - 1; i >= 1; i--) {
+            if (strcmp(stack[i]->tag, "td") == 0 || strcmp(stack[i]->tag, "th") == 0) {
+                open_stack_pop_to_len(stack, io_len, i, afe);
+                break;
+            }
+            if (strcmp(stack[i]->tag, "tr") == 0 || strcmp(stack[i]->tag, "table") == 0) break;
+        }
+        for (int i = *io_len - 1; i >= 1; i--) {
+            if (strcmp(stack[i]->tag, "tr") == 0) {
+                open_stack_pop_to_len(stack, io_len, i, afe);
+                break;
+            }
+            if (strcmp(stack[i]->tag, "thead") == 0 || strcmp(stack[i]->tag, "tbody") == 0 ||
+                strcmp(stack[i]->tag, "tfoot") == 0 || strcmp(stack[i]->tag, "table") == 0) {
+                break;
+            }
+        }
+    } else if (strcmp(new_tag, "thead") == 0 || strcmp(new_tag, "tbody") == 0 || strcmp(new_tag, "tfoot") == 0 ||
+               strcmp(new_tag, "caption") == 0 || strcmp(new_tag, "colgroup") == 0) {
+        for (int i = *io_len - 1; i >= 1; i--) {
+            if (strcmp(stack[i]->tag, "td") == 0 || strcmp(stack[i]->tag, "th") == 0) {
+                open_stack_pop_to_len(stack, io_len, i, afe);
+                break;
+            }
+            if (strcmp(stack[i]->tag, "table") == 0) break;
+        }
+        for (int i = *io_len - 1; i >= 1; i--) {
+            if (strcmp(stack[i]->tag, "tr") == 0) {
+                open_stack_pop_to_len(stack, io_len, i, afe);
+                break;
+            }
+            if (strcmp(stack[i]->tag, "table") == 0) break;
+        }
+        for (int i = *io_len - 1; i >= 1; i--) {
+            if (strcmp(stack[i]->tag, "thead") == 0 || strcmp(stack[i]->tag, "tbody") == 0 ||
+                strcmp(stack[i]->tag, "tfoot") == 0 || strcmp(stack[i]->tag, "caption") == 0 ||
+                strcmp(stack[i]->tag, "colgroup") == 0) {
+                open_stack_pop_to_len(stack, io_len, i, afe);
+                break;
+            }
+            if (strcmp(stack[i]->tag, "table") == 0) break;
+        }
+    }
+}
+
+static void html5_recover_table_structure_before_start(dom_node_t** stack, int* io_len, const char* tag) {
+    dom_node_t* cur = stack[*io_len - 1];
+    if (strcmp(tag, "tr") == 0 && strcmp(cur->tag, "table") == 0) {
+        dom_node_t* tbody = dom_node_create("tbody");
+        dom_node_add_child(cur, tbody);
+        open_stack_push(stack, io_len, tbody);
+    } else if (strcmp(tag, "td") == 0 || strcmp(tag, "th") == 0) {
+        if (strcmp(cur->tag, "table") == 0) {
+            dom_node_t* tbody = dom_node_create("tbody");
+            dom_node_add_child(cur, tbody);
+            open_stack_push(stack, io_len, tbody);
+            cur = tbody;
+        }
+        if (strcmp(cur->tag, "tbody") == 0 || strcmp(cur->tag, "thead") == 0 || strcmp(cur->tag, "tfoot") == 0) {
+            dom_node_t* tr = dom_node_create("tr");
+            dom_node_add_child(cur, tr);
+            open_stack_push(stack, io_len, tr);
+        }
+    }
+}
+
+static bool is_valid_direct_table_child(const char* parent_tag, const char* child_tag) {
+    if (strcmp(parent_tag, "table") == 0) {
+        return (strcmp(child_tag, "caption") == 0 || strcmp(child_tag, "colgroup") == 0 ||
+                strcmp(child_tag, "col") == 0 || strcmp(child_tag, "thead") == 0 ||
+                strcmp(child_tag, "tbody") == 0 || strcmp(child_tag, "tfoot") == 0 ||
+                strcmp(child_tag, "tr") == 0);
+    }
+    if (strcmp(parent_tag, "thead") == 0 || strcmp(parent_tag, "tbody") == 0 || strcmp(parent_tag, "tfoot") == 0) {
+        return (strcmp(child_tag, "tr") == 0);
+    }
+    if (strcmp(parent_tag, "tr") == 0) {
+        return (strcmp(child_tag, "td") == 0 || strcmp(child_tag, "th") == 0);
+    }
+    return true;
+}
+
+static bool is_inside_pre_on_stack(dom_node_t** stack, int stack_len) {
+    for (int i = stack_len - 1; i >= 0; i--) {
+        if (strcmp(stack[i]->tag, "pre") == 0) return true;
     }
     return false;
 }
@@ -3638,8 +4603,16 @@ dom_node_t* blink_parse_html5_document_ex(const char* html,
     if (out_sheet) blink_css_stylesheet_init(out_sheet);
     const char* eff_base = (base_dir && base_dir[0]) ? base_dir : ".";
 
+    (void)html5_close_implicit_before_start;
+
     dom_node_t* root = dom_node_create("body");
-    dom_node_t* current = root;
+    dom_node_t* open_stack[BLINK_MAX_OPEN_STACK];
+    int open_len = 0;
+    open_stack[open_len++] = root;
+
+    afe_list_t afe;
+    memset(&afe, 0, sizeof(afe));
+
     bool in_head = false;
 
     /* Extract <title> for Parsoid documents lacking <h1> */
@@ -3664,6 +4637,7 @@ dom_node_t* blink_parse_html5_document_ex(const char* html,
 
     const char* p = html;
     while (*p) {
+        dom_node_t* current = open_stack[open_len - 1];
         if (*p == '<') {
             /* HTML Comment: <!-- ... --> */
             if (strncmp(p, "<!--", 4) == 0) {
@@ -3696,7 +4670,11 @@ dom_node_t* blink_parse_html5_document_ex(const char* html,
                 if (strcmp(close_tag, "html") == 0 || strcmp(close_tag, "body") == 0) {
                     continue;
                 }
-                current = html5_pop_until_in_scope(current, root, close_tag);
+                if (is_html5_formatting_tag(close_tag)) {
+                    html5_run_adoption_agency(close_tag, open_stack, &open_len, &afe);
+                } else {
+                    html5_stack_pop_until_in_scope(open_stack, &open_len, close_tag, &afe);
+                }
                 continue;
             }
 
@@ -3704,9 +4682,10 @@ dom_node_t* blink_parse_html5_document_ex(const char* html,
             p++;
             if (!isalpha((unsigned char)*p)) {
                 /* Stray '<' in text */
+                html5_reconstruct_active_formatting(&afe, open_stack, &open_len);
                 dom_node_t* tn = dom_node_create("#text");
                 tn->text = strdup("<");
-                dom_node_add_child(current, tn);
+                html5_insert_node_appropriate_place(open_stack, open_len, tn);
                 continue;
             }
 
@@ -3812,14 +4791,30 @@ dom_node_t* blink_parse_html5_document_ex(const char* html,
                 continue;
             }
 
-            /* Perform WHATWG HTML5 implicit end-tag closure BEFORE inserting element! */
+            /* Perform WHATWG HTML5 implicit end-tag closure, table recovery & AFE reconstruction! */
             if (!is_doc_wrapper) {
-                current = html5_close_implicit_before_start(current, root, tag);
+                html5_stack_close_implicit_before_start(open_stack, &open_len, tag, &afe);
+                html5_recover_table_structure_before_start(open_stack, &open_len, tag);
+                current = open_stack[open_len - 1];
+                if (is_html5_formatting_tag(tag) || !is_html5_special_block_tag(tag)) {
+                    html5_reconstruct_active_formatting(&afe, open_stack, &open_len);
+                    current = open_stack[open_len - 1];
+                }
             }
 
             dom_node_t* target_node = is_doc_wrapper ? root : dom_node_create(tag);
             if (!is_doc_wrapper) {
-                dom_node_add_child(current, target_node);
+                if (is_foster_table_context_tag(current->tag) &&
+                    !is_valid_direct_table_child(current->tag, tag)) {
+                    dom_node_t* tbl = open_stack_find_enclosing_table(open_stack, open_len);
+                    if (tbl && tbl->parent) {
+                        dom_node_insert_before(tbl->parent, tbl, target_node);
+                    } else {
+                        dom_node_add_child(current, target_node);
+                    }
+                } else {
+                    dom_node_add_child(current, target_node);
+                }
             }
 
             bool self_closing = false;
@@ -3856,7 +4851,9 @@ dom_node_t* blink_parse_html5_document_ex(const char* html,
                     attr_v[vi] = '\0';
                 }
                 if (attr_k[0]) {
-                    apply_parsed_attribute(target_node, attr_k, attr_v);
+                    char* clean_attr_v = blink_unescape_html(attr_v);
+                    apply_parsed_attribute(target_node, attr_k, clean_attr_v ? clean_attr_v : attr_v);
+                    free(clean_attr_v);
                 }
                 if (!attr_k[0] && *p && *p != '>') p++;
             }
@@ -3864,7 +4861,12 @@ dom_node_t* blink_parse_html5_document_ex(const char* html,
 
             /* Void elements never push onto the open-element stack (`html_void_tag_never_grows_stack`) */
             if (!is_doc_wrapper && !self_closing && !blink_html_is_void_tag(tag)) {
-                current = target_node;
+                open_stack_push(open_stack, &open_len, target_node);
+                if (is_afe_marker_tag(tag)) {
+                    afe_push_marker(&afe);
+                } else if (is_html5_formatting_tag(tag)) {
+                    afe_push_formatting(&afe, target_node);
+                }
             }
         } else {
             /* Character data run */
@@ -3882,19 +4884,36 @@ dom_node_t* blink_parse_html5_document_ex(const char* html,
                 for (size_t k = 0; clean_text[k]; k++) {
                     if (!isspace((unsigned char)clean_text[k])) { all_ws = false; break; }
                 }
-                /* Preserve pure-whitespace runs inside `<pre>` or between inline elements (e.g. `<b>a</b> <i>b</i>`) */
-                bool after_inline = (current->num_children > 0 &&
-                                     current->children[current->num_children - 1]->ua_style.display == DISPLAY_INLINE);
-                bool before_own_close = (p[0] == '<' && p[1] == '/' &&
-                                         strncasecmp(p + 2, current->tag, strlen(current->tag)) == 0);
-                bool keep_inline_space = (all_ws && clean_text[0] != '\0' &&
-                                          (is_inside_pre_element(current) || (after_inline && !before_own_close)));
-                if (!all_ws || keep_inline_space) {
-                    dom_node_t* tn = dom_node_create("#text");
-                    tn->text = clean_text;
-                    dom_node_add_child(current, tn);
+
+                if (is_foster_table_context_tag(current->tag)) {
+                    /* WHATWG §13.2.6.4.9: non-whitespace text directly inside table context is foster-parented! */
+                    if (!all_ws) {
+                        dom_node_t* tn = dom_node_create("#text");
+                        tn->text = clean_text;
+                        html5_insert_node_appropriate_place(open_stack, open_len, tn);
+                    } else {
+                        free(clean_text);
+                    }
                 } else {
-                    free(clean_text);
+                    /* Preserve pure-whitespace runs inside `<pre>` or between inline elements */
+                    bool has_pending_afe = (afe.count > 0 && !afe.entries[afe.count - 1].is_marker);
+                    bool after_inline = (current->num_children > 0 &&
+                                         current->children[current->num_children - 1]->ua_style.display == DISPLAY_INLINE) ||
+                                        has_pending_afe;
+                    bool before_own_close = (p[0] == '<' && p[1] == '/' &&
+                                             strncasecmp(p + 2, current->tag, strlen(current->tag)) == 0);
+                    bool keep_inline_space = (all_ws && clean_text[0] != '\0' &&
+                                              (is_inside_pre_on_stack(open_stack, open_len) ||
+                                               (after_inline && !before_own_close)));
+                    if (!all_ws || keep_inline_space) {
+                        html5_reconstruct_active_formatting(&afe, open_stack, &open_len);
+                        current = open_stack[open_len - 1];
+                        dom_node_t* tn = dom_node_create("#text");
+                        tn->text = clean_text;
+                        dom_node_add_child(current, tn);
+                    } else {
+                        free(clean_text);
+                    }
                 }
             }
         }

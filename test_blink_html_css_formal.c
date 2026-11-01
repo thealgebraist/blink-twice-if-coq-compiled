@@ -69,9 +69,12 @@ static void test_html5_treebuilder_implicit_closure_and_scope(void) {
           strcmp(list->children[2]->tag, "li") == 0,
           "All three <li> elements are direct children of <ul>");
 
-    /* `implicit_td_closes_prior_td_preserving_tr`: 2 <tr> rows, each with 2 <td> cells */
-    CHECK(tbl != NULL && tbl->num_children == 2, "Implicit <tr> closes prior <tr> inside <table>");
-    CHECK(tbl->children[0]->num_children == 2 && tbl->children[1]->num_children == 2,
+    /* `implicit_td_closes_prior_td_preserving_tr` (inside WHATWG implicit `<tbody>`): 2 <tr> rows, each with 2 <td> cells */
+    dom_node_t* tbody = (tbl && tbl->num_children == 1 && strcmp(tbl->children[0]->tag, "tbody") == 0)
+                            ? tbl->children[0]
+                            : NULL;
+    CHECK(tbody != NULL && tbody->num_children == 2, "Implicit <tbody> + <tr> closes prior <tr> inside <table>");
+    CHECK(tbody != NULL && tbody->children[0]->num_children == 2 && tbody->children[1]->num_children == 2,
           "Implicit <td> closes prior <td> preserving <tr>");
 
     dom_node_free(root);

@@ -112,6 +112,289 @@ void blink_fb_draw_bullet(blink_framebuffer_t* fb, int cx, int cy, int radius, u
 }
 
 /* ------------------------------------------------------------------------- */
+/* 1b. Pillar 5: Skia SkRRect SDF, Drop Shadow & Linear Gradient Rasterizers */
+/* ------------------------------------------------------------------------- */
+
+int32_t blink_clamp_corner_radius(int32_t w, int32_t h, int32_t r) {
+    int32_t r_pos = (r > 0) ? r : 0;
+    int32_t min_dim = (w < h) ? w : h;
+    int32_t max_r = (min_dim > 0) ? (min_dim / 2) : 0;
+    return (r_pos < max_r) ? r_pos : max_r;
+}
+
+int32_t blink_sdf_alpha_255(int32_t sd_q8) {
+    if (sd_q8 <= -128) return 255;
+    if (sd_q8 >= 128) return 0;
+    return ((128 - sd_q8) * 255) / 256;
+}
+
+void blink_intersect_scissor(int px0, int py0, int px1, int py1,
+                             int cx0, int cy0, int cx1, int cy1,
+                             int* ox0, int* oy0, int* ox1, int* oy1) {
+    int x0 = (px0 > cx0) ? px0 : cx0;
+    int y0 = (py0 > cy0) ? py0 : cy0;
+    int x1_raw = (px1 < cx1) ? px1 : cx1;
+    int y1_raw = (py1 < cy1) ? py1 : cy1;
+    if (ox0) *ox0 = x0;
+    if (oy0) *oy0 = y0;
+    if (ox1) *ox1 = (x1_raw > x0) ? x1_raw : x0;
+    if (oy1) *oy1 = (y1_raw > y0) ? y1_raw : y0;
+}
+
+static inline float rrect_signed_dist_f(float px, float py,
+                                        float x, float y, float w, float h, float r) {
+    float cx = x + 0.5f * w;
+    float cy = y + 0.5f * h;
+    float hx = 0.5f * w - r;
+    float hy = 0.5f * h - r;
+    float qx = fabsf(px - cx) - hx;
+    float qy = fabsf(py - cy) - hy;
+    float ox = (qx > 0.0f) ? qx : 0.0f;
+    float oy = (qy > 0.0f) ? qy : 0.0f;
+    float outside = hypotf(ox, oy);
+    float inside = fminf(fmaxf(qx, qy), 0.0f);
+    return outside + inside - r;
+}
+
+static inline uint32_t rrect_coverage_u8(float sd) {
+    if (sd <= -0.5f) return 255u;
+    if (sd >= 0.5f) return 0u;
+    int cov = (int)lroundf((0.5f - sd) * 255.0f);
+    if (cov < 0) cov = 0;
+    if (cov > 255) cov = 255;
+    return (uint32_t)cov;
+}
+
+static inline void blend_argb_coverage(uint32_t* dst_px, uint32_t src_color, uint32_t cov_u8) {
+    if (cov_u8 == 0u) return;
+    uint32_t sa = (((src_color >> 24) & 0xFFu) * cov_u8 + 127u) / 255u;
+    if (sa == 0u) return;
+    if (sa >= 255u) {
+        *dst_px = 0xFF000000u | (src_color & 0x00FFFFFFu);
+        return;
+    }
+    uint32_t sr = (src_color >> 16) & 0xFFu;
+    uint32_t sg = (src_color >> 8) & 0xFFu;
+    uint32_t sb = src_color & 0xFFu;
+
+    uint32_t dst = *dst_px;
+    uint32_t dr = (dst >> 16) & 0xFFu;
+    uint32_t dg = (dst >> 8) & 0xFFu;
+    uint32_t db = dst & 0xFFu;
+    uint32_t inv_a = 255u - sa;
+
+    uint32_t or_c = (sr * sa + dr * inv_a + 127u) / 255u;
+    uint32_t og_c = (sg * sa + dg * inv_a + 127u) / 255u;
+    uint32_t ob_c = (sb * sa + db * inv_a + 127u) / 255u;
+    *dst_px = 0xFF000000u | (or_c << 16) | (og_c << 8) | ob_c;
+}
+
+void blink_fb_fill_rrect(blink_framebuffer_t* fb, int x, int y, int w, int h, int radius, uint32_t color) {
+    if (!fb || !fb->pixels || w <= 0 || h <= 0) return;
+    if (((color >> 24) & 0xFFu) == 0u) return;
+
+    int32_t r_eff = blink_clamp_corner_radius(w, h, radius);
+    if (r_eff <= 0) {
+        blink_fb_fill_rect(fb, x, y, w, h, color);
+        return;
+    }
+
+    int x0, y0, x1, y1;
+    blink_intersect_scissor(0, 0, fb->width, fb->height, x, y, x + w, y + h, &x0, &y0, &x1, &y1);
+    if (x0 >= x1 || y0 >= y1) return;
+
+    float fx = (float)x, fy = (float)y, fw = (float)w, fh = (float)h, fr = (float)r_eff;
+    int mid_x0 = x + r_eff;
+    int mid_x1 = x + w - r_eff;
+    int mid_y0 = y + r_eff;
+    int mid_y1 = y + h - r_eff;
+
+    for (int row = y0; row < y1; row++) {
+        uint32_t* dst_row = fb->pixels + (size_t)row * (size_t)fb->width;
+        bool in_mid_y = (row >= mid_y0 && row < mid_y1);
+        for (int c = x0; c < x1; c++) {
+            uint32_t cov = 255u;
+            if (!in_mid_y && (c < mid_x0 || c >= mid_x1)) {
+                float sd = rrect_signed_dist_f((float)c + 0.5f, (float)row + 0.5f, fx, fy, fw, fh, fr);
+                cov = rrect_coverage_u8(sd);
+            }
+            blend_argb_coverage(&dst_row[c], color, cov);
+        }
+    }
+}
+
+void blink_fb_stroke_rrect(blink_framebuffer_t* fb, int x, int y, int w, int h, int radius, int bw, uint32_t color) {
+    if (!fb || !fb->pixels || w <= 0 || h <= 0 || bw <= 0) return;
+    if (((color >> 24) & 0xFFu) == 0u) return;
+
+    int32_t r_eff = blink_clamp_corner_radius(w, h, radius);
+    if (r_eff <= 0) {
+        blink_fb_stroke_rect(fb, x, y, w, h, bw, color);
+        return;
+    }
+    if (bw * 2 >= w || bw * 2 >= h) {
+        blink_fb_fill_rrect(fb, x, y, w, h, r_eff, color);
+        return;
+    }
+
+    int x0, y0, x1, y1;
+    blink_intersect_scissor(0, 0, fb->width, fb->height, x, y, x + w, y + h, &x0, &y0, &x1, &y1);
+    if (x0 >= x1 || y0 >= y1) return;
+
+    float fx = (float)x, fy = (float)y, fw = (float)w, fh = (float)h, fr = (float)r_eff;
+    int ix = x + bw, iy = y + bw, iw = w - 2 * bw, ih = h - 2 * bw;
+    int ir = (r_eff > bw) ? (r_eff - bw) : 0;
+    float fix = (float)ix, fiy = (float)iy, fiw = (float)iw, fih = (float)ih, fir = (float)ir;
+
+    int skip_x0 = ix + ir + 1;
+    int skip_x1 = ix + iw - ir - 1;
+    int skip_y0 = iy + ir + 1;
+    int skip_y1 = iy + ih - ir - 1;
+
+    for (int row = y0; row < y1; row++) {
+        uint32_t* dst_row = fb->pixels + (size_t)row * (size_t)fb->width;
+        bool in_skip_y = (row >= skip_y0 && row < skip_y1);
+        for (int c = x0; c < x1; c++) {
+            if (in_skip_y && c >= skip_x0 && c < skip_x1) continue;
+            float px = (float)c + 0.5f;
+            float py = (float)row + 0.5f;
+            uint32_t cov_out = rrect_coverage_u8(rrect_signed_dist_f(px, py, fx, fy, fw, fh, fr));
+            if (cov_out == 0u) continue;
+            uint32_t cov_in = rrect_coverage_u8(rrect_signed_dist_f(px, py, fix, fiy, fiw, fih, fir));
+            uint32_t cov_ring = (cov_out > cov_in) ? (cov_out - cov_in) : 0u;
+            blend_argb_coverage(&dst_row[c], color, cov_ring);
+        }
+    }
+}
+
+void blink_fb_fill_rrect_gradient(blink_framebuffer_t* fb,
+                                  int x, int y, int w, int h, int radius,
+                                  float angle_deg,
+                                  const uint32_t* colors,
+                                  const int* pos_pct,
+                                  int num_stops) {
+    if (!fb || !fb->pixels || w <= 0 || h <= 0 || !colors || !pos_pct || num_stops < 2) return;
+
+    int x0, y0, x1, y1;
+    blink_intersect_scissor(0, 0, fb->width, fb->height, x, y, x + w, y + h, &x0, &y0, &x1, &y1);
+    if (x0 >= x1 || y0 >= y1) return;
+
+    int32_t r_eff = blink_clamp_corner_radius(w, h, radius);
+    float fx = (float)x, fy = (float)y, fw = (float)w, fh = (float)h, fr = (float)r_eff;
+    float cx = fx + 0.5f * fw;
+    float cy = fy + 0.5f * fh;
+
+    /* W3C CSS Images Module Level 3 §4.1.1 gradient line geometry */
+    float rad = angle_deg * (3.14159265358979323846f / 180.0f);
+    float dx = sinf(rad);
+    float dy = -cosf(rad);
+    float grad_len = fabsf(fw * dx) + fabsf(fh * dy);
+    if (grad_len < 1.0f) grad_len = 1.0f;
+
+    int mid_x0 = x + r_eff;
+    int mid_x1 = x + w - r_eff;
+    int mid_y0 = y + r_eff;
+    int mid_y1 = y + h - r_eff;
+
+    for (int row = y0; row < y1; row++) {
+        uint32_t* dst_row = fb->pixels + (size_t)row * (size_t)fb->width;
+        bool in_mid_y = (r_eff <= 0) || (row >= mid_y0 && row < mid_y1);
+        float py = (float)row + 0.5f;
+        for (int c = x0; c < x1; c++) {
+            float px = (float)c + 0.5f;
+            uint32_t cov = 255u;
+            if (!in_mid_y && (c < mid_x0 || c >= mid_x1)) {
+                cov = rrect_coverage_u8(rrect_signed_dist_f(px, py, fx, fy, fw, fh, fr));
+                if (cov == 0u) continue;
+            }
+
+            float proj = (px - cx) * dx + (py - cy) * dy;
+            float t_pct = ((proj / grad_len) + 0.5f) * 100.0f;
+            if (t_pct <= (float)pos_pct[0]) {
+                blend_argb_coverage(&dst_row[c], colors[0], cov);
+                continue;
+            }
+            if (t_pct >= (float)pos_pct[num_stops - 1]) {
+                blend_argb_coverage(&dst_row[c], colors[num_stops - 1], cov);
+                continue;
+            }
+
+            int seg = 0;
+            for (int s = 0; s + 1 < num_stops; s++) {
+                if (t_pct >= (float)pos_pct[s] && t_pct <= (float)pos_pct[s + 1]) {
+                    seg = s;
+                    break;
+                }
+            }
+            float span = (float)(pos_pct[seg + 1] - pos_pct[seg]);
+            float u = (span > 0.001f) ? ((t_pct - (float)pos_pct[seg]) / span) : 0.0f;
+            if (u < 0.0f) u = 0.0f;
+            if (u > 1.0f) u = 1.0f;
+
+            uint32_t c0 = colors[seg];
+            uint32_t c1 = colors[seg + 1];
+            uint32_t a = (uint32_t)lroundf((1.0f - u) * (float)((c0 >> 24) & 0xFFu) + u * (float)((c1 >> 24) & 0xFFu));
+            uint32_t r = (uint32_t)lroundf((1.0f - u) * (float)((c0 >> 16) & 0xFFu) + u * (float)((c1 >> 16) & 0xFFu));
+            uint32_t g = (uint32_t)lroundf((1.0f - u) * (float)((c0 >> 8) & 0xFFu)  + u * (float)((c1 >> 8) & 0xFFu));
+            uint32_t b = (uint32_t)lroundf((1.0f - u) * (float)(c0 & 0xFFu)          + u * (float)(c1 & 0xFFu));
+            uint32_t sample = (a << 24) | (r << 16) | (g << 8) | b;
+            blend_argb_coverage(&dst_row[c], sample, cov);
+        }
+    }
+}
+
+void blink_fb_draw_box_shadow(blink_framebuffer_t* fb,
+                              int x, int y, int w, int h, int radius,
+                              int dx, int dy, int blur, int spread,
+                              uint32_t color) {
+    if (!fb || !fb->pixels || w <= 0 || h <= 0) return;
+    if (((color >> 24) & 0xFFu) == 0u) return;
+
+    int sx = x + dx - spread;
+    int sy = y + dy - spread;
+    int sw = w + 2 * spread;
+    int sh = h + 2 * spread;
+    if (sw <= 0 || sh <= 0) return;
+
+    int32_t r_base = blink_clamp_corner_radius(w, h, radius);
+    int32_t r_sh = blink_clamp_corner_radius(sw, sh, r_base + spread);
+    int eff_blur = (blur > 0) ? blur : 0;
+    int pad = eff_blur + 2;
+
+    int x0, y0, x1, y1;
+    blink_intersect_scissor(0, 0, fb->width, fb->height,
+                            sx - pad, sy - pad, sx + sw + pad, sy + sh + pad,
+                            &x0, &y0, &x1, &y1);
+    if (x0 >= x1 || y0 >= y1) return;
+
+    float fsx = (float)sx, fsy = (float)sy, fsw = (float)sw, fsh = (float)sh, fr = (float)r_sh;
+    float blur_f = (float)eff_blur;
+
+    for (int row = y0; row < y1; row++) {
+        uint32_t* dst_row = fb->pixels + (size_t)row * (size_t)fb->width;
+        float py = (float)row + 0.5f;
+        for (int c = x0; c < x1; c++) {
+            float px = (float)c + 0.5f;
+            float sd = rrect_signed_dist_f(px, py, fsx, fsy, fsw, fsh, fr);
+            uint32_t cov = 0u;
+            if (eff_blur <= 0) {
+                cov = rrect_coverage_u8(sd);
+            } else {
+                if (sd >= blur_f) continue;
+                float u = (blur_f - sd) / (1.5f * blur_f);
+                if (u < 0.0f) u = 0.0f;
+                if (u > 1.0f) u = 1.0f;
+                float smooth = u * u * (3.0f - 2.0f * u);
+                cov = (uint32_t)lroundf(smooth * 255.0f);
+            }
+            if (cov > 0u) {
+                blend_argb_coverage(&dst_row[c], color, cov);
+            }
+        }
+    }
+}
+
+/* ------------------------------------------------------------------------- */
 /* 2. Pure Formal Layout Helpers                                             */
 /* ------------------------------------------------------------------------- */
 
@@ -912,14 +1195,17 @@ static void layout_oof_for_containing_block(dom_node_t* scan,
         dom_node_t* ch = scan->children[i];
         if (!ch || ch->style.display == DISPLAY_NONE) continue;
 
+        bool cb_captures_fixed = is_root_cb || (cb_node && cb_node->style.has_transform);
         bool target_abs = (ch->style.position == POS_ABSOLUTE);
-        bool target_fix = (ch->style.position == POS_FIXED && is_root_cb);
+        bool target_fix = (ch->style.position == POS_FIXED && cb_captures_fixed);
 
         if (target_abs || target_fix) {
-            int rx = target_fix ? 0 : cb_x;
-            int ry = target_fix ? 0 : cb_y;
-            int rw = target_fix ? env->viewport_w : cb_w;
-            int rh = target_fix ? env->viewport_h : cb_h;
+            bool fixed_to_viewport = (ch->style.position == POS_FIXED && is_root_cb &&
+                                      (!cb_node || !cb_node->style.has_transform));
+            int rx = fixed_to_viewport ? 0 : cb_x;
+            int ry = fixed_to_viewport ? 0 : cb_y;
+            int rw = fixed_to_viewport ? env->viewport_w : cb_w;
+            int rh = fixed_to_viewport ? env->viewport_h : cb_h;
 
             int bdr_left = (ch->style.border_width > 0) ? ch->style.border_width : ch->style.border_left_width;
             int bdr_h = bdr_left + ch->style.border_width;
@@ -974,8 +1260,10 @@ static void layout_oof_for_containing_block(dom_node_t* scan,
                                    : (ch->style.height + pad_v + bdr_v);
             }
             int32_t rel_y = 0, resolved_h = 0;
-            int32_t eff_top = ch->style.top + ch->style.margin_top;
-            int32_t eff_bot = ch->style.bottom + ch->style.margin_bottom;
+            int32_t res_top = ch->style.top_is_pct ? (int32_t)lroundf(ch->style.top_pct * (float)rh / 100.0f) : ch->style.top;
+            int32_t res_bot = ch->style.bottom_is_pct ? (int32_t)lroundf(ch->style.bottom_pct * (float)rh / 100.0f) : ch->style.bottom;
+            int32_t eff_top = res_top + ch->style.margin_top;
+            int32_t eff_bot = res_bot + ch->style.margin_bottom;
             blink_resolve_abs_axis(rh, eff_top, ch->style.has_top, eff_bot, ch->style.has_bottom,
                                    expl_outer_h, has_expl_h, intr_h, static_rel_y,
                                    &rel_y, &resolved_h);
@@ -994,10 +1282,10 @@ static void layout_oof_for_containing_block(dom_node_t* scan,
             continue;
         }
 
-        /* Do not cross into nested positioned containing blocks for `POS_ABSOLUTE`! */
-        if (ch->style.position == POS_STATIC) {
+        /* Do not cross into nested positioned or transformed containing blocks for `POS_ABSOLUTE`! */
+        if (ch->style.position == POS_STATIC && !ch->style.has_transform) {
             layout_oof_for_containing_block(ch, cb_node, cb_x, cb_y, cb_w, cb_h, is_root_cb, env, out_max_y);
-        } else if (is_root_cb) {
+        } else if (is_root_cb && !ch->style.has_transform) {
             /* Still scan inside positioned descendants solely for `POS_FIXED` */
             for (int k = 0; k < ch->num_children; k++) {
                 dom_node_t* sub = ch->children[k];
@@ -1858,7 +2146,8 @@ static int layout_node_internal(dom_node_t* node,
             bool child_bfc = (ch->style.display == DISPLAY_FLEX ||
                               ch->style.display == DISPLAY_GRID ||
                               ch->style.display == DISPLAY_TABLE ||
-                              ch->style.display == DISPLAY_INLINE_BLOCK);
+                              ch->style.display == DISPLAY_INLINE_BLOCK ||
+                              ch->style.overflow_hidden);
             int child_end_y = layout_node_internal(ch, child_x, child_y, content_w,
                                                    child_bfc, active_fspace, env, out_max_y);
             active_cursor_y = child_end_y;
@@ -1888,12 +2177,12 @@ static int layout_node_internal(dom_node_t* node,
 
 finish_positioned_and_relative:
     {
-        /* Normal-flow bottom before any `position: relative` visual shift */
+        /* Normal-flow bottom before any `position: relative` or `transform` visual shift */
         int normal_flow_next_y = node->y + node->h;
 
-        /* If `node` establishes a positioned containing block (or is the root), lay out its OOF children! */
+        /* If `node` establishes a positioned or transformed containing block (or is the root), lay out its OOF children! */
         bool is_root = (node->parent == NULL);
-        if (is_root || node->style.position != POS_STATIC) {
+        if (is_root || node->style.position != POS_STATIC || node->style.has_transform) {
             int cb_x = node->x + bdr_left;
             int cb_y = node->y + node->style.border_width;
             int cb_w = (node->w > bdr_h) ? (node->w - bdr_h) : 0;
@@ -1916,6 +2205,23 @@ finish_positioned_and_relative:
     }
 }
 
+static void apply_transforms_post_layout(dom_node_t* node, int* out_max_y) {
+    if (!node || node->style.display == DISPLAY_NONE) return;
+    if (node->style.has_transform) {
+        int tx = node->style.translate_x_px +
+                 (int)lroundf(node->style.translate_x_pct * (float)node->w / 100.0f);
+        int ty = node->style.translate_y_px +
+                 (int)lroundf(node->style.translate_y_pct * (float)node->h / 100.0f);
+        if (tx != 0 || ty != 0) {
+            shift_subtree_xy(node, tx, ty);
+        }
+    }
+    if (node->y + node->h > *out_max_y) *out_max_y = node->y + node->h;
+    for (int i = 0; i < node->num_children; i++) {
+        apply_transforms_post_layout(node->children[i], out_max_y);
+    }
+}
+
 int blink_layout_dom_tree(dom_node_t* root,
                           int viewport_x,
                           int viewport_y,
@@ -1929,19 +2235,40 @@ int blink_layout_dom_tree(dom_node_t* root,
     env.viewport_w = viewport_w + viewport_x * 2;
     env.viewport_h = viewport_h;
     env.mode = mode;
-    return layout_node_internal(root, viewport_x, viewport_y, viewport_w, true, NULL, &env, target_max);
+    int end_y = layout_node_internal(root, viewport_x, viewport_y, viewport_w, true, NULL, &env, target_max);
+    apply_transforms_post_layout(root, target_max);
+    return end_y;
 }
 
 /* ------------------------------------------------------------------------- */
-/* 8. Pillar 4: CSS 2.2 Appendix E 7-Phase Stacking Context Paint Pipeline   */
+/* 8. Pillars 4 & 5: Appendix E 7-Phase Stacking Context & Skia Paint Engine */
 /* ------------------------------------------------------------------------- */
 
 static void paint_box_decoration(dom_node_t* node, blink_framebuffer_t* fb, bool suppress_cell_borders) {
     if (!node || node->style.display == DISPLAY_NONE) return;
 
-    /* 1. Box Background */
+    int r_eff = blink_clamp_corner_radius(node->w, node->h, node->style.border_radius);
+
+    /* 0. Outer Drop Shadow (`box-shadow`, CSS Backgrounds 3 §7.1) */
+    if (node->style.has_box_shadow) {
+        blink_fb_draw_box_shadow(fb, node->x, node->y, node->w, node->h,
+                                 r_eff,
+                                 node->style.shadow_dx, node->style.shadow_dy,
+                                 node->style.shadow_blur, node->style.shadow_spread,
+                                 node->style.shadow_color);
+    }
+
+    /* 1. Box Background Color & CSS Linear Gradient (`SkRRect` anti-aliased) */
     if (node->style.has_bg && (node->style.bg_color >> 24) > 0) {
-        blink_fb_fill_rect(fb, node->x, node->y, node->w, node->h, node->style.bg_color);
+        blink_fb_fill_rrect(fb, node->x, node->y, node->w, node->h, r_eff, node->style.bg_color);
+    }
+    if (node->style.has_gradient && node->style.num_grad_stops >= 2) {
+        blink_fb_fill_rrect_gradient(fb, node->x, node->y, node->w, node->h,
+                                     r_eff,
+                                     node->style.grad_angle_deg,
+                                     node->style.grad_colors,
+                                     node->style.grad_pos_pct,
+                                     node->style.num_grad_stops);
     }
 
     /* 2. Box Borders (suppressed on table/cells when `border-collapse: collapse` draws shared grid!) */
@@ -1950,12 +2277,28 @@ static void paint_box_decoration(dom_node_t* node, blink_framebuffer_t* fb, bool
         if (node->style.border_width > 0 &&
             node->style.border_style != BDR_STYLE_NONE &&
             node->style.border_style != BDR_STYLE_HIDDEN) {
-            blink_fb_stroke_rect(fb, node->x, node->y, node->w, node->h,
-                                 node->style.border_width, node->style.border_color);
+            blink_fb_stroke_rrect(fb, node->x, node->y, node->w, node->h,
+                                  r_eff, node->style.border_width, node->style.border_color);
         }
         if (node->style.border_left_width > 0) {
-            blink_fb_fill_rect(fb, node->x, node->y, node->style.border_left_width, node->h,
-                               node->style.border_left_color);
+            if (r_eff <= 0) {
+                blink_fb_fill_rect(fb, node->x, node->y, node->style.border_left_width, node->h,
+                                   node->style.border_left_color);
+            } else {
+                int x0, y0, x1, y1;
+                blink_intersect_scissor(0, 0, fb->width, fb->height,
+                                        node->x, node->y, node->x + node->style.border_left_width, node->y + node->h,
+                                        &x0, &y0, &x1, &y1);
+                for (int row = y0; row < y1; row++) {
+                    uint32_t* dst_row = fb->pixels + (size_t)row * (size_t)fb->width;
+                    for (int c = x0; c < x1; c++) {
+                        uint32_t cov = rrect_coverage_u8(rrect_signed_dist_f(
+                            (float)c + 0.5f, (float)row + 0.5f,
+                            (float)node->x, (float)node->y, (float)node->w, (float)node->h, (float)r_eff));
+                        blend_argb_coverage(&dst_row[c], node->style.border_left_color, cov);
+                    }
+                }
+            }
         }
         if (node->style.border_bottom_width > 0 && node->style.border_width == 0) {
             blink_fb_fill_rect(fb, node->x, node->y + node->h - node->style.border_bottom_width,
@@ -2081,7 +2424,7 @@ static void paint_collapsed_table_borders(dom_node_t* table, blink_framebuffer_t
 static void paint_inline_fragments_of(dom_node_t* node, blink_framebuffer_t* fb) {
     if (!node || node->num_inline_frags <= 0 || !node->inline_frags) return;
 
-    /* Pass 1: Inline pill backgrounds & borders (`<code>`, `<mark>`, `.badge`) */
+    /* Pass 1: Inline pill backgrounds & borders (`<code>`, `<mark>`, `.badge`) with `SkRRect` SDF! */
     for (int i = 0; i < node->num_inline_frags; i++) {
         const blink_inline_frag_t* fg = &node->inline_frags[i];
         int px = (int)floorf(fg->x);
@@ -2089,10 +2432,10 @@ static void paint_inline_fragments_of(dom_node_t* node, blink_framebuffer_t* fb)
         int pill_h = (int)ceilf(fg->font_size * 1.22f) + fg->pad_top + fg->pad_bottom;
         int py = (int)lroundf(fg->baseline_y - fg->font_size * 0.85f) - fg->pad_top;
         if (fg->has_bg && (fg->bg_color >> 24) > 0) {
-            blink_fb_fill_rect(fb, px, py, pw, pill_h, fg->bg_color);
+            blink_fb_fill_rrect(fb, px, py, pw, pill_h, fg->border_radius, fg->bg_color);
         }
         if (fg->border_width > 0) {
-            blink_fb_stroke_rect(fb, px, py, pw, pill_h, fg->border_width, fg->border_color);
+            blink_fb_stroke_rrect(fb, px, py, pw, pill_h, fg->border_radius, fg->border_width, fg->border_color);
         }
     }
 
@@ -2123,6 +2466,133 @@ static void paint_inline_fragments_of(dom_node_t* node, blink_framebuffer_t* fb)
 
 static void paint_stacking_context(dom_node_t* sc_root, blink_framebuffer_t* fb);
 
+static inline bool establishes_paint_layer(const dom_node_t* n) {
+    if (!n) return false;
+    return (n->style.position != POS_STATIC ||
+            n->style.opacity_u8 < 255 ||
+            n->style.has_transform ||
+            n->style.overflow_hidden);
+}
+
+static inline int effective_z_index(const dom_node_t* n) {
+    if (!n) return 0;
+    return (n->style.position != POS_STATIC && n->style.has_z_index) ? n->style.z_index : 0;
+}
+
+static void paint_shift_subtree_all(dom_node_t* n, int dx, int dy) {
+    if (!n || (dx == 0 && dy == 0)) return;
+    n->x += dx;
+    n->y += dy;
+    for (int k = 0; k < n->num_inline_frags; k++) {
+        n->inline_frags[k].x += (float)dx;
+        n->inline_frags[k].y += (float)dy;
+        n->inline_frags[k].baseline_y += (float)dy;
+    }
+    for (int i = 0; i < n->num_children; i++) {
+        paint_shift_subtree_all(n->children[i], dx, dy);
+    }
+}
+
+static void compute_subtree_visual_bounds(const dom_node_t* n,
+                                          int* io_x0, int* io_y0, int* io_x1, int* io_y1) {
+    if (!n || n->style.display == DISPLAY_NONE) return;
+    int pad = 2;
+    if (n->style.has_box_shadow) {
+        int blur = (n->style.shadow_blur > 0) ? n->style.shadow_blur : 0;
+        int sp = (n->style.shadow_spread > 0) ? n->style.shadow_spread : 0;
+        int sh_pad = abs(n->style.shadow_dx) + abs(n->style.shadow_dy) + blur + sp + 4;
+        if (sh_pad > pad) pad = sh_pad;
+    }
+    if (n->w > 0 || n->h > 0) {
+        if (n->x - pad < *io_x0) *io_x0 = n->x - pad;
+        if (n->y - pad < *io_y0) *io_y0 = n->y - pad;
+        if (n->x + n->w + pad > *io_x1) *io_x1 = n->x + n->w + pad;
+        if (n->y + n->h + pad > *io_y1) *io_y1 = n->y + n->h + pad;
+    }
+    for (int k = 0; k < n->num_inline_frags; k++) {
+        const blink_inline_frag_t* fg = &n->inline_frags[k];
+        int fx0 = (int)floorf(fg->x) - 4;
+        int fy0 = (int)floorf(fg->baseline_y - fg->font_size * 1.2f) - fg->pad_top - 4;
+        int fx1 = (int)ceilf(fg->x + fg->w) + 4;
+        int fy1 = (int)ceilf(fg->baseline_y + fg->font_size * 0.5f) + fg->pad_bottom + 4;
+        if (fx0 < *io_x0) *io_x0 = fx0;
+        if (fy0 < *io_y0) *io_y0 = fy0;
+        if (fx1 > *io_x1) *io_x1 = fx1;
+        if (fy1 > *io_y1) *io_y1 = fy1;
+    }
+    if (!n->style.overflow_hidden) {
+        for (int i = 0; i < n->num_children; i++) {
+            compute_subtree_visual_bounds(n->children[i], io_x0, io_y0, io_x1, io_y1);
+        }
+    }
+}
+
+static blink_framebuffer_t* create_backdrop_sub_fb(const blink_framebuffer_t* fb,
+                                                   int bx0, int by0, int bw, int bh) {
+    if (!fb || !fb->pixels || bw <= 0 || bh <= 0) return NULL;
+    blink_framebuffer_t* sub = (blink_framebuffer_t*)malloc(sizeof(blink_framebuffer_t));
+    if (!sub) return NULL;
+    sub->width = bw;
+    sub->height = bh;
+    sub->pixels = (uint32_t*)malloc((size_t)bw * (size_t)bh * sizeof(uint32_t));
+    if (!sub->pixels) {
+        free(sub);
+        return NULL;
+    }
+    for (int r = 0; r < bh; r++) {
+        memcpy(sub->pixels + (size_t)r * (size_t)bw,
+               fb->pixels + (size_t)(by0 + r) * (size_t)fb->width + (size_t)bx0,
+               (size_t)bw * sizeof(uint32_t));
+    }
+    return sub;
+}
+
+static void composite_sub_fb_masked(blink_framebuffer_t* dst,
+                                    const blink_framebuffer_t* sub,
+                                    int bx0, int by0,
+                                    uint32_t opacity_u8,
+                                    bool clip_rrect,
+                                    int rx, int ry, int rw, int rh, int r_rad) {
+    if (!dst || !sub || opacity_u8 == 0u) return;
+    float frx = (float)rx, fry = (float)ry, frw = (float)rw, frh = (float)rh, fr = (float)r_rad;
+    int mid_x0 = rx + r_rad;
+    int mid_x1 = rx + rw - r_rad;
+    int mid_y0 = ry + r_rad;
+    int mid_y1 = ry + rh - r_rad;
+
+    for (int r = 0; r < sub->height; r++) {
+        int py = by0 + r;
+        uint32_t* dst_row = dst->pixels + (size_t)py * (size_t)dst->width;
+        const uint32_t* src_row = sub->pixels + (size_t)r * (size_t)sub->width;
+        bool in_mid_y = (!clip_rrect || r_rad <= 0) || (py >= mid_y0 && py < mid_y1);
+
+        for (int c = 0; c < sub->width; c++) {
+            int px = bx0 + c;
+            uint32_t w_u8 = opacity_u8;
+            if (clip_rrect && r_rad > 0 && !in_mid_y && (px < mid_x0 || px >= mid_x1)) {
+                uint32_t cov = rrect_coverage_u8(
+                    rrect_signed_dist_f((float)px + 0.5f, (float)py + 0.5f, frx, fry, frw, frh, fr));
+                w_u8 = (w_u8 * cov + 127u) / 255u;
+            }
+            if (w_u8 == 0u) continue;
+            uint32_t s = src_row[c];
+            if (w_u8 >= 255u) {
+                dst_row[px] = s;
+            } else {
+                uint32_t d = dst_row[px];
+                if (s == d) continue;
+                uint32_t inv_w = 255u - w_u8;
+                uint32_t sr = (s >> 16) & 0xFFu, sg = (s >> 8) & 0xFFu, sb = s & 0xFFu;
+                uint32_t dr = (d >> 16) & 0xFFu, dg = (d >> 8) & 0xFFu, db = d & 0xFFu;
+                uint32_t or_c = (sr * w_u8 + dr * inv_w + 127u) / 255u;
+                uint32_t og_c = (sg * w_u8 + dg * inv_w + 127u) / 255u;
+                uint32_t ob_c = (sb * w_u8 + db * inv_w + 127u) / 255u;
+                dst_row[px] = 0xFF000000u | (or_c << 16) | (og_c << 8) | ob_c;
+            }
+        }
+    }
+}
+
 typedef struct {
     dom_node_t** items;
     int          count;
@@ -2143,8 +2613,8 @@ static void node_list_push(node_list_t* nl, dom_node_t* n) {
 static int cmp_stack_item(const void* pa, const void* pb) {
     const dom_node_t* a = *(const dom_node_t* const*)pa;
     const dom_node_t* b = *(const dom_node_t* const*)pb;
-    int za = a->style.has_z_index ? a->style.z_index : 0;
-    int zb = b->style.has_z_index ? b->style.z_index : 0;
+    int za = effective_z_index(a);
+    int zb = effective_z_index(b);
     if (za != zb) return (za < zb) ? -1 : 1;
     if (a->dom_order != b->dom_order) return (a->dom_order < b->dom_order) ? -1 : 1;
     return 0;
@@ -2160,21 +2630,22 @@ static void collect_positioned_and_floats(dom_node_t* scan,
         dom_node_t* ch = scan->children[i];
         if (!ch || ch->style.display == DISPLAY_NONE) continue;
 
-        if (ch->style.position != POS_STATIC) {
-            if (ch->style.has_z_index && ch->style.z_index < 0) {
+        if (establishes_paint_layer(ch)) {
+            int z = effective_z_index(ch);
+            if (z < 0) {
                 node_list_push(neg_z, ch);
-            } else if (ch->style.has_z_index && ch->style.z_index > 0) {
+            } else if (z > 0) {
                 node_list_push(pos_z, ch);
             } else {
                 node_list_push(auto_z, ch);
             }
-            /* Positioned element paints its own subtree in Phase 2, 6, or 7! */
+            /* Stacking context / paint layer paints its own subtree in Phase 2, 6, or 7! */
             continue;
         }
 
         if (ch->style.css_float != FLOAT_NONE) {
             node_list_push(floats, ch);
-            /* Float subtree's positioned children still participate in enclosing stacking context! */
+            /* Float subtree's positioned/layer children still participate in enclosing stacking context! */
             collect_positioned_and_floats(ch, neg_z, floats, auto_z, pos_z);
             continue;
         }
@@ -2188,7 +2659,7 @@ static void collect_positioned_and_floats(dom_node_t* scan,
     }
 }
 
-/* Phase 3: In-flow non-positioned non-float block backgrounds & borders */
+/* Phase 3: In-flow non-layer non-float block backgrounds & borders */
 static void paint_inflow_blocks(dom_node_t* scan, blink_framebuffer_t* fb, bool in_collapsed_table) {
     if (!scan) return;
     bool cur_collapsed = in_collapsed_table ||
@@ -2197,7 +2668,7 @@ static void paint_inflow_blocks(dom_node_t* scan, blink_framebuffer_t* fb, bool 
     for (int i = 0; i < scan->num_children; i++) {
         dom_node_t* ch = scan->children[i];
         if (!ch || ch->style.display == DISPLAY_NONE) continue;
-        if (ch->style.position != POS_STATIC || ch->style.css_float != FLOAT_NONE) continue;
+        if (establishes_paint_layer(ch) || ch->style.css_float != FLOAT_NONE) continue;
         if (scan->num_inline_frags > 0 && subtree_is_pure_inline(ch)) continue;
 
         bool is_cell_in_collapsed = in_collapsed_table &&
@@ -2211,14 +2682,14 @@ static void paint_inflow_blocks(dom_node_t* scan, blink_framebuffer_t* fb, bool 
     }
 }
 
-/* Phase 5: In-flow non-positioned non-float inline fragments */
+/* Phase 5: In-flow non-layer non-float inline fragments */
 static void paint_inflow_inlines(dom_node_t* scan, blink_framebuffer_t* fb) {
     if (!scan) return;
     paint_inline_fragments_of(scan, fb);
     for (int i = 0; i < scan->num_children; i++) {
         dom_node_t* ch = scan->children[i];
         if (!ch || ch->style.display == DISPLAY_NONE) continue;
-        if (ch->style.position != POS_STATIC || ch->style.css_float != FLOAT_NONE) continue;
+        if (establishes_paint_layer(ch) || ch->style.css_float != FLOAT_NONE) continue;
         if (scan->num_inline_frags > 0 && subtree_is_pure_inline(ch)) continue;
         paint_inflow_inlines(ch, fb);
     }
@@ -2234,9 +2705,43 @@ static void paint_float_subtree(dom_node_t* fl, blink_framebuffer_t* fb) {
     paint_inflow_inlines(fl, fb);
 }
 
-static void paint_stacking_context(dom_node_t* sc_root, blink_framebuffer_t* fb) {
-    if (!sc_root || sc_root->style.display == DISPLAY_NONE || !fb) return;
+static void paint_stacking_context_phases_2_to_7(dom_node_t* sc_root,
+                                                 blink_framebuffer_t* fb,
+                                                 const node_list_t* neg_z,
+                                                 const node_list_t* floats,
+                                                 const node_list_t* auto_z,
+                                                 const node_list_t* pos_z) {
+    /* Phase 2: Positioned descendants with negative `z-index < 0` */
+    for (int i = 0; i < neg_z->count; i++) {
+        paint_stacking_context(neg_z->items[i], fb);
+    }
 
+    /* Phase 3: In-flow non-positioned block-level descendants */
+    paint_inflow_blocks(sc_root, fb, sc_root->style.display == DISPLAY_TABLE && sc_root->style.border_collapse);
+    if (sc_root->style.display == DISPLAY_TABLE && sc_root->style.border_collapse) {
+        paint_collapsed_table_borders(sc_root, fb);
+    }
+
+    /* Phase 4: Non-positioned floats */
+    for (int i = 0; i < floats->count; i++) {
+        paint_float_subtree(floats->items[i], fb);
+    }
+
+    /* Phase 5: In-flow inline-level fragments (`<b>`, `<i>`, `<a>`, `<code>`, text) */
+    paint_inflow_inlines(sc_root, fb);
+
+    /* Phase 6: Positioned/layer descendants with `z-index: auto` or `z-index: 0` */
+    for (int i = 0; i < auto_z->count; i++) {
+        paint_stacking_context(auto_z->items[i], fb);
+    }
+
+    /* Phase 7: Positioned descendants with positive `z-index > 0` */
+    for (int i = 0; i < pos_z->count; i++) {
+        paint_stacking_context(pos_z->items[i], fb);
+    }
+}
+
+static void paint_stacking_context_core(dom_node_t* sc_root, blink_framebuffer_t* fb) {
     node_list_t neg_z = { NULL, 0, 0 };
     node_list_t floats = { NULL, 0, 0 };
     node_list_t auto_z = { NULL, 0, 0 };
@@ -2247,42 +2752,82 @@ static void paint_stacking_context(dom_node_t* sc_root, blink_framebuffer_t* fb)
     if (auto_z.count > 1) qsort(auto_z.items, (size_t)auto_z.count, sizeof(dom_node_t*), cmp_stack_item);
     if (pos_z.count > 1) qsort(pos_z.items, (size_t)pos_z.count, sizeof(dom_node_t*), cmp_stack_item);
 
-    /* Phase 1: Stacking context root background & border */
+    /* Phase 1: Stacking context root shadow, background, gradient & border */
     paint_box_decoration(sc_root, fb, false);
 
-    /* Phase 2: Positioned descendants with negative `z-index < 0` */
-    for (int i = 0; i < neg_z.count; i++) {
-        paint_stacking_context(neg_z.items[i], fb);
-    }
+    /* W3C CSS Overflow Module Level 3 §3.2: `overflow: hidden` clips Phases 2..7
+       strictly to the element's inner padding box and inner `SkRRect` curve! */
+    if (sc_root->style.overflow_hidden) {
+        int bw = (sc_root->style.border_style != BDR_STYLE_NONE &&
+                  sc_root->style.border_style != BDR_STYLE_HIDDEN)
+                     ? sc_root->style.border_width
+                     : 0;
+        int bl = (bw > 0) ? bw : sc_root->style.border_left_width;
+        int br = bw;
+        int bt = bw;
+        int bb = (bw > 0) ? bw : sc_root->style.border_bottom_width;
 
-    /* Phase 3: In-flow non-positioned block-level descendants */
-    paint_inflow_blocks(sc_root, fb, sc_root->style.display == DISPLAY_TABLE && sc_root->style.border_collapse);
-    if (sc_root->style.display == DISPLAY_TABLE && sc_root->style.border_collapse) {
-        paint_collapsed_table_borders(sc_root, fb);
-    }
+        int pad_x = sc_root->x + bl;
+        int pad_y = sc_root->y + bt;
+        int pad_w = sc_root->w - bl - br;
+        int pad_h = sc_root->h - bt - bb;
 
-    /* Phase 4: Non-positioned floats */
-    for (int i = 0; i < floats.count; i++) {
-        paint_float_subtree(floats.items[i], fb);
-    }
+        int cx0, cy0, cx1, cy1;
+        blink_intersect_scissor(0, 0, fb->width, fb->height,
+                                pad_x, pad_y, pad_x + pad_w, pad_y + pad_h,
+                                &cx0, &cy0, &cx1, &cy1);
+        if (cx1 > cx0 && cy1 > cy0) {
+            blink_framebuffer_t* clip_fb = create_backdrop_sub_fb(fb, cx0, cy0, cx1 - cx0, cy1 - cy0);
+            if (clip_fb) {
+                paint_shift_subtree_all(sc_root, -cx0, -cy0);
+                paint_stacking_context_phases_2_to_7(sc_root, clip_fb, &neg_z, &floats, &auto_z, &pos_z);
+                paint_shift_subtree_all(sc_root, cx0, cy0);
 
-    /* Phase 5: In-flow inline-level fragments (`<b>`, `<i>`, `<a>`, `<code>`, text) */
-    paint_inflow_inlines(sc_root, fb);
-
-    /* Phase 6: Positioned descendants with `z-index: auto` or `z-index: 0` */
-    for (int i = 0; i < auto_z.count; i++) {
-        paint_stacking_context(auto_z.items[i], fb);
-    }
-
-    /* Phase 7: Positioned descendants with positive `z-index > 0` */
-    for (int i = 0; i < pos_z.count; i++) {
-        paint_stacking_context(pos_z.items[i], fb);
+                int r_outer = blink_clamp_corner_radius(sc_root->w, sc_root->h, sc_root->style.border_radius);
+                int r_pad = (r_outer > bw) ? (r_outer - bw) : 0;
+                r_pad = blink_clamp_corner_radius(pad_w, pad_h, r_pad);
+                composite_sub_fb_masked(fb, clip_fb, cx0, cy0, 255u,
+                                        r_pad > 0, pad_x, pad_y, pad_w, pad_h, r_pad);
+                blink_fb_destroy(clip_fb);
+            }
+        }
+    } else {
+        paint_stacking_context_phases_2_to_7(sc_root, fb, &neg_z, &floats, &auto_z, &pos_z);
     }
 
     free(neg_z.items);
     free(floats.items);
     free(auto_z.items);
     free(pos_z.items);
+}
+
+static void paint_stacking_context(dom_node_t* sc_root, blink_framebuffer_t* fb) {
+    if (!sc_root || sc_root->style.display == DISPLAY_NONE || !fb) return;
+    if (sc_root->style.opacity_u8 <= 0) return;
+
+    /* W3C CSS Color Module Level 4 §12.2: `opacity < 1.0` composites the entire
+       stacking context atomically offscreen before blending onto the backdrop! */
+    if (sc_root->style.opacity_u8 < 255) {
+        int ux0 = fb->width, uy0 = fb->height, ux1 = 0, uy1 = 0;
+        compute_subtree_visual_bounds(sc_root, &ux0, &uy0, &ux1, &uy1);
+        int bx0, by0, bx1, by1;
+        blink_intersect_scissor(0, 0, fb->width, fb->height, ux0, uy0, ux1, uy1, &bx0, &by0, &bx1, &by1);
+        if (bx1 <= bx0 || by1 <= by0) return;
+
+        blink_framebuffer_t* grp_fb = create_backdrop_sub_fb(fb, bx0, by0, bx1 - bx0, by1 - by0);
+        if (!grp_fb) return;
+
+        paint_shift_subtree_all(sc_root, -bx0, -by0);
+        paint_stacking_context_core(sc_root, grp_fb);
+        paint_shift_subtree_all(sc_root, bx0, by0);
+
+        composite_sub_fb_masked(fb, grp_fb, bx0, by0, (uint32_t)sc_root->style.opacity_u8,
+                                false, 0, 0, 0, 0, 0);
+        blink_fb_destroy(grp_fb);
+        return;
+    }
+
+    paint_stacking_context_core(sc_root, fb);
 }
 
 void blink_paint_dom_stacking_context(dom_node_t* root, blink_framebuffer_t* fb) {

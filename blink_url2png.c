@@ -395,10 +395,10 @@ int main(int argc, char* argv[]) {
     // 3. Formal Layout Execution (Multi-Span Inline + Floats + Positioned + Flex/Grid/2D-Table + Dual-Mode Z)
     double t_layout_0 = get_time_ms();
     int max_y = 0;
-    blink_layout_dom_tree(dom, 16, 16, viewport_w - 32, page_h, layout_mode, &max_y);
+    blink_layout_dom_tree(dom, 0, 0, viewport_w, page_h, layout_mode, &max_y);
     double t_layout_1 = get_time_ms();
 
-    int total_canvas_h = max_y + 32;
+    int total_canvas_h = max_y;
     if (total_canvas_h < page_h) total_canvas_h = page_h;
     int num_pages = (total_canvas_h + page_h - 1) / page_h;
 

@@ -47,7 +47,9 @@ paper_page*.png
 .admits_verified
 .engine_tested
 .html_css_tested
+.pillars_2_3_4_tested
 test_blink_html_css_formal
+test_blink_pillars_2_3_4
 
 # OS artifacts
 .DS_Store

@@ -5,8 +5,9 @@
 /* Chromium Blink Formal HTML5 TreeBuilder & CSS Cascade Engine (C99)        */
 /* Verified in Rocq/Coq 9.3.0:                                               */
 /*   - BlinkHTML5TreeBuilderAndCSSCascadeEngine.v                            */
+/*   - BlinkCSS4InlineAndPositionedLayoutEngine.v                            */
 /*   - BlinkDualModeZSemantics.v                                             */
-/*   - BlinkHMHybrid_17_HTMLToken.v .. BlinkHMHybrid_32_TableColumnAutoTrack */
+/*   - BlinkHMHybrid_17_HTMLToken.v .. BlinkHMHybrid_44_TableCollapsedBorder */
 /* ========================================================================= */
 
 #include <stdbool.h>
@@ -20,7 +21,7 @@ extern "C" {
 #endif
 
 /* ------------------------------------------------------------------------- */
-/* 1. Computed Style & DOM Node Representation                               */
+/* 1. Computed Style, Multi-Span Inline Fragments & DOM Node Representation  */
 /* ------------------------------------------------------------------------- */
 
 #define BLINK_COLOR_WHITE        0xFFFFFFFFu
@@ -62,6 +63,58 @@ typedef enum {
     JUSTIFY_SPACE_BETWEEN
 } css_justify_t;
 
+typedef enum {
+    POS_STATIC = 0,
+    POS_RELATIVE,
+    POS_ABSOLUTE,
+    POS_FIXED,
+    POS_STICKY
+} css_position_t;
+
+typedef enum {
+    FLOAT_NONE = 0,
+    FLOAT_LEFT,
+    FLOAT_RIGHT
+} css_float_t;
+
+typedef enum {
+    CLEAR_NONE = 0,
+    CLEAR_LEFT,
+    CLEAR_RIGHT,
+    CLEAR_BOTH
+} css_clear_t;
+
+typedef enum {
+    FLEX_DIR_ROW = 0,
+    FLEX_DIR_COLUMN
+} css_flex_dir_t;
+
+typedef enum {
+    VALIGN_BASELINE = 0,
+    VALIGN_SUB,
+    VALIGN_SUPER,
+    VALIGN_MIDDLE
+} css_valign_t;
+
+typedef enum {
+    WS_NORMAL = 0,
+    WS_NOWRAP,
+    WS_PRE
+} css_whitespace_t;
+
+typedef enum {
+    BDR_STYLE_NONE = 0,
+    BDR_STYLE_INSET = 1,
+    BDR_STYLE_GROOVE = 2,
+    BDR_STYLE_OUTSET = 3,
+    BDR_STYLE_RIDGE = 4,
+    BDR_STYLE_DOTTED = 5,
+    BDR_STYLE_DASHED = 6,
+    BDR_STYLE_SOLID = 7,
+    BDR_STYLE_DOUBLE = 8,
+    BDR_STYLE_HIDDEN = 9
+} css_border_style_t;
+
 #define BLINK_MAX_CUSTOM_PROPS 32
 #define BLINK_MAX_ATTRS        12
 
@@ -76,45 +129,107 @@ typedef struct {
 } blink_dom_attr_t;
 
 typedef struct {
-    css_display_t    display;
-    css_box_sizing_t box_sizing;
-    css_justify_t    justify_content;
-    uint32_t         color;
-    uint32_t         bg_color;
-    bool             has_bg;
-    uint32_t         border_color;
-    uint32_t         border_left_color;
-    int              border_width;
-    int              border_left_width;
-    int              border_bottom_width;
-    int              border_radius;
-    float            font_size;
-    int              font_weight; /* 400 normal, 700 bold */
-    int              font_style;  /* 0 normal, 1 italic */
-    char             font_family[64];
-    int              margin_top;
-    int              margin_bottom;
-    int              margin_left;
-    int              margin_right;
-    int              padding_top;
-    int              padding_bottom;
-    int              padding_left;
-    int              padding_right;
-    int              width;       /* -1 = auto */
-    int              height;      /* -1 = auto */
-    int              gap;         /* flex/grid column gap in px */
-    int              row_gap;     /* grid row gap in px */
-    int              flex_grow;   /* flex-grow factor >= 0 */
-    bool             align_items_center;
-    int              grid_col_widths[16]; /* >0 = px, <=0 = -fr weight */
-    int              num_grid_cols;
-    float            line_height;
-    css_align_t      text_align;
+    css_display_t      display;
+    css_box_sizing_t   box_sizing;
+    css_justify_t      justify_content;
+    uint32_t           color;
+    uint32_t           bg_color;
+    bool               has_bg;
+    uint32_t           border_color;
+    uint32_t           border_left_color;
+    int                border_width;
+    int                border_left_width;
+    int                border_bottom_width;
+    int                border_radius;
+    css_border_style_t border_style;
+    bool               border_collapse;
+    float              font_size;
+    int                font_weight; /* 400 normal, 700 bold */
+    int                font_style;  /* 0 normal, 1 italic */
+    char               font_family[64];
+    int                margin_top;
+    int                margin_bottom;
+    int                margin_left;
+    int                margin_right;
+    int                padding_top;
+    int                padding_bottom;
+    int                padding_left;
+    int                padding_right;
+    int                width;       /* -1 = auto */
+    int                height;      /* -1 = auto */
+    int                min_width;   /* 0 = default */
+    int                max_width;   /* -1 = none */
+    int                gap;         /* flex/grid column gap in px */
+    int                row_gap;     /* grid/flex row gap in px */
+    int                flex_grow;   /* flex-grow factor >= 0 */
+    int                flex_shrink; /* flex-shrink factor >= 0 (default 1) */
+    css_flex_dir_t     flex_direction;
+    bool               flex_wrap;
+    bool               align_items_center;
+    int                grid_col_widths[16]; /* >0 = px, <=0 = -fr weight */
+    int                grid_col_min[16];    /* >=0 min track px for minmax() */
+    int                num_grid_cols;
+    int                grid_col_span;       /* >=1 from grid-column: span K */
+    float              line_height;
+    css_align_t        text_align;
+
+    /* Pillar 2: @container inline-size containment */
+    bool               is_inline_size_container;
+
+    /* Pillar 3: Inline typography, decoration, alignment & white-space */
+    bool               text_underline;
+    bool               text_line_through;
+    css_valign_t       vertical_align;
+    css_whitespace_t   white_space;
+
+    /* Pillar 4: Positioning, Insets, z-index Stacking & Floats */
+    css_position_t     position;
+    int                top;
+    int                right;
+    int                bottom;
+    int                left;
+    bool               has_top;
+    bool               has_right;
+    bool               has_bottom;
+    bool               has_left;
+    int                z_index;
+    bool               has_z_index;
+    css_float_t        css_float;
+    css_clear_t        css_clear;
 
     /* Active custom property environment on this element */
     blink_custom_prop_t custom_props[BLINK_MAX_CUSTOM_PROPS];
     int                 num_custom_props;
 } dom_style_t;
+
+/* Multi-Span Positioned Inline Fragment (`NGInlineLayoutAlgorithm`) */
+typedef struct {
+    char             text[256];
+    float            x;
+    float            y;
+    float            w;            /* outer advance width including inline padding/border */
+    float            glyph_w;      /* measured glyph run width */
+    float            h;
+    float            baseline_y;
+    int              line_index;
+    float            font_size;
+    int              font_weight;
+    int              font_style;
+    char             font_family[64];
+    uint32_t         color;
+    bool             has_bg;
+    uint32_t         bg_color;
+    int              pad_left;
+    int              pad_right;
+    int              pad_top;
+    int              pad_bottom;
+    int              border_width;
+    uint32_t         border_color;
+    int              border_radius;
+    bool             underline;
+    bool             line_through;
+    css_valign_t     vertical_align;
+} blink_inline_frag_t;
 
 typedef struct dom_node {
     char              tag[32];
@@ -128,6 +243,7 @@ typedef struct dom_node {
     int               rowspan;
     blink_dom_attr_t  attrs[BLINK_MAX_ATTRS];
     int               num_attrs;
+    bool              is_generated_pseudo; /* true for synthetic ::before / ::after spans */
 
     dom_style_t       ua_style;  /* Initial UA style prior to author cascade */
     dom_style_t       style;     /* Computed style after Cascade + Inheritance */
@@ -138,6 +254,11 @@ typedef struct dom_node {
     int               w;
     int               h;
     int               content_h;
+    int               dom_order; /* Pre-order index for CSS 2.2 Appendix E stacking */
+
+    /* Multi-span inline fragments laid out inside this formatting container */
+    blink_inline_frag_t* inline_frags;
+    int                  num_inline_frags;
 
     struct dom_node*  parent;
     struct dom_node** children;
@@ -146,7 +267,7 @@ typedef struct dom_node {
 } dom_node_t;
 
 /* ------------------------------------------------------------------------- */
-/* 2. CSS Selector, Specificity & Cascade Level 5 Structures                 */
+/* 2. CSS Selector Level 4, Specificity & Cascade Level 5/6 Structures       */
 /* ------------------------------------------------------------------------- */
 
 typedef struct {
@@ -173,18 +294,39 @@ typedef struct {
 #define BLINK_UNLAYERED_ORDER 65535
 
 typedef enum {
-    COMB_NONE = 0,        /* Subject compound selector */
-    COMB_DESCENDANT = 1,  /* ' ' */
-    COMB_CHILD = 2,       /* '>' */
-    COMB_NEXT_SIBLING = 3 /* '+' */
+    COMB_NONE = 0,               /* Subject compound selector */
+    COMB_DESCENDANT = 1,         /* ' ' */
+    COMB_CHILD = 2,              /* '>' */
+    COMB_NEXT_SIBLING = 3,       /* '+' */
+    COMB_SUBSEQUENT_SIBLING = 4  /* '~' */
 } blink_combinator_t;
 
 typedef enum {
     PSEUDO_NONE = 0,
     PSEUDO_FIRST_CHILD,
     PSEUDO_LAST_CHILD,
-    PSEUDO_NTH_CHILD
+    PSEUDO_NTH_CHILD,
+    PSEUDO_FIRST_OF_TYPE,
+    PSEUDO_LAST_OF_TYPE,
+    PSEUDO_NTH_OF_TYPE,
+    PSEUDO_SCOPE
 } blink_pseudo_kind_t;
+
+typedef enum {
+    ATTR_OP_EXISTS = 0,
+    ATTR_OP_EXACT,       /* =  */
+    ATTR_OP_SPACE_LIST,  /* ~= */
+    ATTR_OP_DASH_PREFIX, /* |= */
+    ATTR_OP_PREFIX,      /* ^= */
+    ATTR_OP_SUFFIX,      /* $= */
+    ATTR_OP_SUBSTR       /* *= */
+} blink_attr_op_t;
+
+typedef enum {
+    PSEUDO_ELEM_NONE = 0,
+    PSEUDO_ELEM_BEFORE = 1,
+    PSEUDO_ELEM_AFTER = 2
+} blink_pseudo_elem_t;
 
 #define BLINK_MAX_CLASSES_PER_COMPOUND 4
 #define BLINK_MAX_COMPOUNDS_PER_SEL    6
@@ -199,11 +341,20 @@ typedef struct {
     char                attr_val[64];
     bool                has_attr;
     bool                has_attr_val;
+    blink_attr_op_t     attr_op;
     blink_pseudo_kind_t pseudo;
     int                 nth_a;
     int                 nth_b;
-    /* `:where(...)` zero-specificity wrapper support */
+    /* `:where(...)`, `:is(...)`, `:not(...)`, `:has(...)` Selectors Level 4 */
     bool                zero_specificity;
+    bool                has_is;
+    char                is_args[160];
+    bool                has_where;
+    char                where_args[160];
+    bool                has_not;
+    char                not_args[160];
+    bool                has_has;
+    char                has_args[160];
 } blink_compound_sel_t;
 
 typedef struct {
@@ -214,6 +365,7 @@ typedef struct {
     blink_combinator_t   combinators[BLINK_MAX_COMPOUNDS_PER_SEL];
     int                  num_compounds;
     blink_specificity_t  specificity;
+    blink_pseudo_elem_t  pseudo_elem;
 } blink_complex_sel_t;
 
 typedef struct {
@@ -232,8 +384,14 @@ typedef struct {
     int                 num_decls;
     int32_t             layer_order;
     int32_t             source_order;
-    int32_t             media_min_w; /* -1 if unconstrained */
-    int32_t             media_max_w; /* -1 if unconstrained */
+    int32_t             media_min_w;     /* -1 if unconstrained */
+    int32_t             media_max_w;     /* -1 if unconstrained */
+    int32_t             container_min_w; /* -1 if unconstrained */
+    int32_t             container_max_w; /* -1 if unconstrained */
+    bool                has_scope;
+    blink_complex_sel_t scope_root;
+    bool                has_scope_limit;
+    blink_complex_sel_t scope_limit;
 } blink_css_rule_t;
 
 typedef struct {
@@ -262,14 +420,19 @@ int32_t blink_html_sanitize_span(int32_t raw_span, int32_t max_cap);
 
 /* Specificity & Cascade Priority Algebra */
 blink_specificity_t blink_specificity_add(blink_specificity_t a, blink_specificity_t b);
+blink_specificity_t blink_specificity_max(blink_specificity_t a, blink_specificity_t b);
 bool blink_specificity_lt(blink_specificity_t a, blink_specificity_t b);
 int32_t blink_origin_importance_rank(blink_css_origin_t origin, bool important);
 bool blink_cascade_meta_lt(blink_cascade_meta_t a, blink_cascade_meta_t b);
 
-/* Selector Parsing & Right-to-Left DOM Matching */
+/* Selector Parsing, Right-to-Left DOM Matching & `@scope` Donut Containment */
 bool blink_css_parse_selector(const char* sel_text, blink_complex_sel_t* out_sel);
 bool blink_css_match_selector(const dom_node_t* el, const blink_complex_sel_t* sel);
 bool blink_css_match_nth_child(int index_1based, int a, int b);
+bool blink_css_in_donut_scope(const dom_node_t* el,
+                              const blink_complex_sel_t* root_sel,
+                              const blink_complex_sel_t* limit_sel_or_null,
+                              const dom_node_t** out_scope_root);
 
 /* Cycle-Safe Custom Property `var(--x, fallback)` Resolution */
 bool blink_css_resolve_var_value(const blink_custom_prop_t* props,
@@ -278,7 +441,7 @@ bool blink_css_resolve_var_value(const blink_custom_prop_t* props,
                                  char* out_resolved,
                                  size_t out_cap);
 
-/* Shorthands, Units, `calc()`, `box-sizing`, Flexbox & Table Partitioning */
+/* Shorthands, Units, `calc()`, `min()`, `max()`, `clamp()`, `box-sizing`, Flex & Table */
 blink_box_edges_t blink_css_expand_shorthand_ints(const int32_t* vals, int count);
 void blink_css_parse_box_shorthand(const char* raw_val,
                                    int32_t parent_px,
@@ -330,14 +493,19 @@ int32_t blink_table_col_width_formal(int32_t avail_w,
 
 dom_node_t* dom_node_create(const char* tag);
 void dom_node_add_child(dom_node_t* parent, dom_node_t* child);
+void dom_node_insert_child_first(dom_node_t* parent, dom_node_t* child);
 void dom_node_free(dom_node_t* n);
 char* blink_unescape_html(const char* src);
+
 uint32_t blink_parse_css_color(const char* s, bool* out_ok);
+uint32_t blink_parse_css_color_with_current(const char* s, uint32_t current_color, bool* out_ok);
 
 void blink_css_stylesheet_init(blink_css_stylesheet_t* sheet);
 void blink_css_parse_stylesheet(blink_css_stylesheet_t* sheet, const char* css_text);
+void blink_css_parse_stylesheet_ex(blink_css_stylesheet_t* sheet, const char* css_text, const char* base_dir);
 
 dom_node_t* blink_parse_html5_document(const char* html, blink_css_stylesheet_t* out_sheet);
+dom_node_t* blink_parse_html5_document_ex(const char* html, const char* base_dir, blink_css_stylesheet_t* out_sheet);
 
 void blink_css_resolve_document_styles(dom_node_t* root,
                                        const blink_css_stylesheet_t* sheet,

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Blink Formal Engine — Pillars 2, 3 &amp; 4 Showcase</title>
+  <link rel="stylesheet" href="blink_pillars_theme.css">
+  <style>
+    .sec-title {
+      font-size: clamp(16px, 2.2vw, 19px);
+      font-weight: bold;
+      color: #0f172a;
+      margin: 14px 0 8px 0;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #cbd5e1;
+      &::before {
+        content: "§ ";
+        color: #1a73e8;
+        font-weight: bold;
+      }
+    }
+
+    .card {
+      background-color: #ffffff;
+      border: 1px solid #d1d5db;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      &:has(> .verified-tag) {
+        border-left: 4px solid #15803d;
+      }
+    }
+
+    .verified-tag {
+      color: hsl(142, 72%, 26%);
+      font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 6px;
+      &::after {
+        content: " [0 ADMITS]";
+        color: #1a73e8;
+      }
+    }
+
+    code.pill {
+      background-color: #e8f0fe;
+      color: #174ea6;
+      padding: 1px 6px;
+      border: 1px solid #aecbfa;
+      font-size: 12.5px;
+    }
+
+    code.warn-pill {
+      background-color: #fef3c7;
+      color: #92400e;
+      padding: 1px 6px;
+      border: 1px solid #fcd34d;
+      font-size: 12.5px;
+    }
+
+    /* Container Queries & Donut @scope row */
+    .cq-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .cq-host-wide {
+      container-type: inline-size;
+      width: 440px;
+      box-sizing: border-box;
+    }
+    .cq-host-narrow {
+      container-type: inline-size;
+      width: 290px;
+      flex: 1 1 290px;
+      box-sizing: border-box;
+    }
+    .cq-box {
+      background-color: #fff7ed;
+      border: 1px solid #fdba74;
+      color: #9a3412;
+      padding: 10px 12px;
+    }
+    @container (min-width: 360px) {
+      .cq-box {
+        background-color: #ecfdf5;
+        border: 1px solid #6ee7b7;
+        color: #065f46;
+      }
+    }
+
+    @scope (.donut-root) to (.donut-limit) {
+      .scope-line {
+        color: #1d4ed8;
+        font-weight: bold;
+      }
+    }
+    .donut-root {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+    }
+    .donut-limit {
+      background-color: #f8fafc;
+      border: 1px dashed #94a3b8;
+      padding: 6px 10px;
+      margin-top: 6px;
+    }
+
+    /* Preformatted Gallina snippet */
+    pre.coq-box {
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #475569;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #0f172a;
+      margin: 8px 0;
+    }
+
+    /* Float + ExclusionSpace demo */
+    .float-aside {
+      float: right;
+      width: 230px;
+      background-color: #eff6ff;
+      border: 1px solid #93c5fd;
+      padding: 10px 12px;
+      margin: 0 0 8px 14px;
+      box-sizing: border-box;
+    }
+    .clear-banner {
+      clear: both;
+      background-color: #f0fdf4;
+      border: 1px solid #86efac;
+      color: #166534;
+      padding: 6px 10px;
+      font-size: 12.5px;
+      margin-top: 6px;
+    }
+
+    /* Appendix E Stacking Context & Positioned stage */
+    .stack-stage {
+      position: relative;
+      z-index: 0;
+      height: 162px;
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+    .z-top-card {
+      position: absolute;
+      left: 330px;
+      top: 14px;
+      width: 270px;
+      z-index: 10;
+      background-color: #1e40af;
+      color: #ffffff;
+      border: 2px solid #93c5fd;
+      padding: 8px 12px;
+      box-sizing: border-box;
+    }
+    .z-mid-card {
+      position: absolute;
+      left: 175px;
+      top: 32px;
+      width: 245px;
+      z-index: 2;
+      background-color: #dbeafe;
+      color: #1e3a8a;
+      border: 1px solid #60a5fa;
+      padding: 8px 12px;
+      box-sizing: border-box;
+    }
+    .z-neg-backdrop {
+      position: absolute;
+      left: 14px;
+      top: 10px;
+      width: 215px;
+      height: 86px;
+      z-index: -1;
+      background-color: #fef3c7;
+      border: 1px solid #f59e0b;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #92400e;
+      box-sizing: border-box;
+    }
+    .inflow-stage-box {
+      margin-left: 56px;
+      margin-top: 26px;
+      width: 205px;
+      background-color: #dcfce7;
+      border: 1px solid #22c55e;
+      color: #14532d;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      box-sizing: border-box;
+    }
+    .abs-stretch-bar {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 10px;
+      background-color: #f1f5f9;
+      border: 1px solid #94a3b8;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: #334155;
+      text-align: center;
+    }
+
+    /* Flex-wrap + Grid minmax/span */
+    .wrap-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      row-gap: 8px;
+      margin-bottom: 10px;
+    }
+    .wrap-chip {
+      width: 235px;
+      box-sizing: border-box;
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 7px 10px;
+      font-size: 12.5px;
+    }
+    .grid-demo {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 1fr 1fr;
+      gap: 10px;
+      row-gap: 8px;
+      margin-bottom: 12px;
+    }
+    .grid-cell {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      font-size: 12.5px;
+    }
+    .grid-wide {
+      grid-column: span 2;
+      background-color: #eff6ff;
+      border: 1px solid #93c5fd;
+      padding: 8px 10px;
+      font-size: 12.5px;
+    }
+
+    /* Collapsed-border 2D rowspan + colspan table */
+    table.formal-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      border: 2px solid #1e293b;
+      background-color: #ffffff;
+    }
+    table.formal-tbl th {
+      background-color: #e2e8f0;
+      border: 1px solid #475569;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      text-align: left;
+    }
+    table.formal-tbl td {
+      border: 1px solid #94a3b8;
+      padding: 7px 10px;
+      font-size: 12.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero-banner">
+    <h1 style="margin: 0; border-bottom-width: 0; font-size: 21px; font-weight: bold; color: #0f172a;">Blink Formal HTML5 &amp; CSS4 Layout Engine — Pillars 2, 3 &amp; 4</h1>
+    <div style="margin-top: 4px; font-size: 13px; color: #334155;">
+      Verified in <b>Rocq 9.3.0</b> (<code class="pill">910 .v theories</code>, <b>0 admits</b>) &amp; extracted to native <b>C99</b>: Selectors L4, <code class="pill">@container</code>, <code class="pill">@scope</code>, Multi-Span Inline Fragments, Floats &amp; Appendix E <code class="pill">z-index</code> Stacking.
+    </div>
+  </div>
+
+  <div class="layer-demo">
+    <b>External &lt;link&gt; + @layer + revert-layer:</b> Loaded from <code class="pill">blink_pillars_theme.css</code>; utility red rolled back via <code class="pill">revert-layer</code> to <code class="pill">@layer theme</code> teal (#0f766e) with <code class="pill">color-mix()</code> tint.
+  </div>
+
+  <div class="sec-title">Pillar 2: @container Inline-Size Queries &amp; @scope Donut Containment</div>
+  <div class="cq-row">
+    <div class="cq-host-wide">
+      <div class="cq-box"><b>Wide Container (440px &gt;= 360px):</b> Matched <code class="pill">@container (min-width: 360px)</code> emerald theme!</div>
+    </div>
+    <div class="cq-host-narrow">
+      <div class="cq-box"><b>Narrow Container (&lt; 360px):</b> Base amber fallback preserved!</div>
+    </div>
+  </div>
+  <div class="donut-root">
+    <div class="scope-line">Outer @scope (.donut-root) to (.donut-limit): Scoped selector active here (royal blue bold).</div>
+    <div class="donut-limit">
+      <div class="scope-line">Inside .donut-limit hole: Donut boundary excludes this subtree from @scope styling!</div>
+    </div>
+  </div>
+
+  <div class="sec-title">Pillar 3: Multi-Span Inline Formatting Context &amp; Preformatted Gallina</div>
+  <div class="card">
+    <div class="verified-tag">Relational :has(&gt; .verified-tag) &amp; ::after Pseudo-Element</div>
+    <p style="margin: 4px 0;">
+      Single line boxes preserve <b>bold weights</b>, <i>italic posture</i>, <a href="https://w3.org">underlined links</a>, bordered <code class="pill">blink_inline_frag_t</code> &amp; <code class="warn-pill">NGInlineNode</code> pills, <s>lossy text flattening</s>, complexity bounds <b>O(N<sup>2</sup>)</b>, and chemical indices <b>H<sub>2</sub>O</b>.<br>
+      Forced <code class="pill">&lt;br&gt;</code> break lands cleanly on Line 2 with exact baseline metrics.
+    </p>
+    <pre class="coq-box">Theorem abs_inset_stretch_fills_cb : forall cb l r sz st,
+  0 &lt;= cb - l - r -&gt; snd (resolve_abs_axis cb (Some l) (Some r) None sz st) = cb - l - r.</pre>
+  </div>
+
+  <div class="sec-title">Pillar 4A: FloatExclusionSpace Wrapping + CSS 2.2 Appendix E z-index Stacking</div>
+  <div class="card">
+    <div class="float-aside">
+      <b>Float: Right (230px)</b><br>
+      Narrows inline line bands <code class="pill">[band_l, band_r]</code> in <code class="pill">ExclusionSpace</code> without displacing block flow.
+    </div>
+    <p style="margin: 0 0 6px 0;">
+      Inline fragments wrap dynamically to the left of the floated specification box! Every line queries <code class="pill">float_space_band(y, line_h)</code> so multi-span runs (<a href="#spec">CSS 2.2 §9.5</a>, <b>bold</b>, and <i>italic</i>) never collide with the float border.
+    </p>
+    <div class="clear-banner"><b>clear: both</b> — Advances vertical cursor strictly below active float bottom y1!</div>
+  </div>
+
+  <div class="stack-stage">
+    <div class="z-top-card"><b>Phase 7 (z-index: 10, DOM #1)</b><br>Paints above all lower z-layers despite appearing first in HTML!</div>
+    <div class="z-mid-card"><b>Phase 7 (z-index: 2, DOM #2)</b><br>Below z:10, above in-flow green.</div>
+    <div class="inflow-stage-box"><b>Phase 3 (In-Flow Block)</b><br>Above z:-1 amber backdrop!</div>
+    <div class="z-neg-backdrop"><b>Phase 2 (z-index: -1)</b><br>Above root bg, behind Phase 3!</div>
+    <div class="abs-stretch-bar"><b>Out-of-Flow Inset Stretch:</b> left: 14px + right: 14px + width: auto stretches across positioned stage</div>
+  </div>
+
+  <div class="sec-title">Pillar 4B: Flex-Wrap, Grid minmax() + span 2 &amp; Collapsed 2D rowspan/colspan Table</div>
+  <div class="wrap-strip">
+    <div class="wrap-chip"><b>Flex Line 1, Item 1</b> (235px)</div>
+    <div class="wrap-chip"><b>Flex Line 1, Item 2</b> (235px)</div>
+    <div class="wrap-chip"><b>Flex Line 1, Item 3</b> (235px)</div>
+    <div class="wrap-chip"><b>Flex Line 2, Wrapped!</b> (row-gap: 8px)</div>
+  </div>
+  <div class="grid-demo">
+    <div class="grid-cell"><b>Col 1:</b> <code class="pill">minmax(220px, 1fr)</code></div>
+    <div class="grid-wide"><b>Cols 2..3:</b> <code class="pill">grid-column: span 2</code> across tracks + gap</div>
+  </div>
+
+  <table class="formal-tbl">
+    <thead>
+      <tr>
+        <th>Pillar</th>
+        <th colspan="2">Formal Rocq Theory &amp; C99 Runtime Invariant (colspan=2)</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td rowspan="2"><b>Pillar 4<br>(rowspan=2)</b></td>
+        <td>Out-of-Flow &amp; Appendix E</td>
+        <td>7-phase stacking paint + <code class="pill">resolve_abs_axis</code></td>
+        <td><b>PASS</b></td>
+      </tr>
+      <tr>
+        <td>2D Table + Collapsed Borders</td>
+        <td>Occupancy map + <code class="pill">hidden &gt; wider &gt; style</code></td>
+        <td><b>PASS</b></td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

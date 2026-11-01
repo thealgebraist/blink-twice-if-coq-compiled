@@ -1,0 +1,43 @@
+/* External Theme Stylesheet loaded via <link rel="stylesheet" href="blink_pillars_theme.css"> */
+@layer reset, theme, utilities;
+
+@layer reset {
+  body {
+    background-color: #f6f8fc;
+    color: #1f2937;
+    font-family: sans-serif;
+  }
+  .layer-demo {
+    color: #6b7280;
+    background-color: #f3f4f6;
+  }
+}
+
+@layer theme {
+  :root {
+    --brand: #1a73e8;
+    --emerald: #0f766e;
+    --ink: #111827;
+  }
+  .hero-banner {
+    background-color: color-mix(in srgb, #1a73e8 11%, #ffffff 89%);
+    border: 1px solid color-mix(in srgb, #1a73e8 35%, #cbd5e1 65%);
+    border-left: 5px solid #1a73e8;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+  }
+  .layer-demo {
+    color: #0f766e;
+    background-color: color-mix(in srgb, #0f766e 10%, #ffffff 90%);
+    border: 1px solid #99f6e4;
+    padding: 8px 12px;
+  }
+}
+
+@layer utilities {
+  .layer-demo {
+    color: #dc2626;
+    /* Rolls back @layer utilities to @layer theme (#0f766e)! */
+    color: revert-layer;
+  }
+}

@@ -282,16 +282,30 @@ static void init_initial_style(dom_style_t* st) {
     st->border_left_width = 0;
     st->border_bottom_width = 0;
     st->border_radius = 0;
+    st->border_style = BDR_STYLE_NONE;
+    st->border_collapse = false;
     st->font_size = 14.0f;
     st->font_weight = 400;
     st->font_style = 0;
     strcpy(st->font_family, "sans-serif");
     st->width = -1;
     st->height = -1;
+    st->min_width = 0;
+    st->max_width = -1;
     st->gap = 0;
+    st->row_gap = 0;
     st->flex_grow = 0;
+    st->flex_shrink = 1;
+    st->flex_direction = FLEX_DIR_ROW;
+    st->flex_wrap = false;
+    st->grid_col_span = 1;
     st->line_height = 1.4f;
     st->text_align = ALIGN_LEFT;
+    st->vertical_align = VALIGN_BASELINE;
+    st->white_space = WS_NORMAL;
+    st->position = POS_STATIC;
+    st->css_float = FLOAT_NONE;
+    st->css_clear = CLEAR_NONE;
 }
 
 dom_node_t* dom_node_create(const char* tag) {
@@ -320,12 +334,14 @@ dom_node_t* dom_node_create(const char* tag) {
         n->style.margin_top = 18;
         n->style.margin_bottom = 14;
         n->style.border_bottom_width = 1;
+        n->style.border_style = BDR_STYLE_SOLID;
     } else if (strcmp(n->tag, "h2") == 0) {
         n->style.font_size = 22.0f;
         n->style.font_weight = 700;
         n->style.margin_top = 16;
         n->style.margin_bottom = 10;
         n->style.border_bottom_width = 1;
+        n->style.border_style = BDR_STYLE_SOLID;
     } else if (strcmp(n->tag, "h3") == 0) {
         n->style.font_size = 18.0f;
         n->style.font_weight = 700;
@@ -354,6 +370,7 @@ dom_node_t* dom_node_create(const char* tag) {
         n->style.bg_color = 0xFFF8F9FAu;
         n->style.has_bg = true;
         n->style.border_width = 1;
+        n->style.border_style = BDR_STYLE_SOLID;
         n->style.border_color = 0xFFC8CCD1u;
     } else if (strcmp(n->tag, "figcaption") == 0) {
         n->style.font_size = 12.5f;
@@ -364,23 +381,39 @@ dom_node_t* dom_node_create(const char* tag) {
         n->style.bg_color = 0xFFEAECF0u;
         n->style.has_bg = true;
         n->style.border_width = 1;
+        n->style.border_style = BDR_STYLE_SOLID;
         n->style.border_color = 0xFFA2A9B1u;
         n->style.height = 140;
         n->style.width = 220;
     } else if (strcmp(n->tag, "a") == 0) {
         n->style.display = DISPLAY_INLINE;
         n->style.color = BLINK_COLOR_LINK_BLUE;
+        n->style.text_underline = true;
+    } else if (strcmp(n->tag, "br") == 0) {
+        n->style.display = DISPLAY_INLINE;
     } else if (strcmp(n->tag, "span") == 0 || strcmp(n->tag, "b") == 0 || strcmp(n->tag, "strong") == 0 ||
                strcmp(n->tag, "i") == 0 || strcmp(n->tag, "em") == 0 || strcmp(n->tag, "small") == 0 ||
                strcmp(n->tag, "abbr") == 0 || strcmp(n->tag, "cite") == 0 || strcmp(n->tag, "sub") == 0 ||
                strcmp(n->tag, "sup") == 0 || strcmp(n->tag, "q") == 0 || strcmp(n->tag, "mark") == 0 ||
                strcmp(n->tag, "time") == 0 || strcmp(n->tag, "dfn") == 0 || strcmp(n->tag, "u") == 0 ||
+               strcmp(n->tag, "ins") == 0 || strcmp(n->tag, "s") == 0 || strcmp(n->tag, "del") == 0 ||
+               strcmp(n->tag, "strike") == 0 || strcmp(n->tag, "kbd") == 0 || strcmp(n->tag, "samp") == 0 ||
                strcmp(n->tag, "#text") == 0) {
         n->style.display = DISPLAY_INLINE;
         if (strcmp(n->tag, "b") == 0 || strcmp(n->tag, "strong") == 0) n->style.font_weight = 700;
-        if (strcmp(n->tag, "i") == 0 || strcmp(n->tag, "em") == 0 || strcmp(n->tag, "cite") == 0) n->style.font_style = 1;
+        if (strcmp(n->tag, "i") == 0 || strcmp(n->tag, "em") == 0 || strcmp(n->tag, "cite") == 0 || strcmp(n->tag, "dfn") == 0) n->style.font_style = 1;
         if (strcmp(n->tag, "small") == 0) n->style.font_size = 12.0f;
-        if (strcmp(n->tag, "mark") == 0) { n->style.bg_color = 0xFFFFF3CDu; n->style.has_bg = true; }
+        if (strcmp(n->tag, "sub") == 0) { n->style.font_size = 11.0f; n->style.vertical_align = VALIGN_SUB; }
+        if (strcmp(n->tag, "sup") == 0) { n->style.font_size = 11.0f; n->style.vertical_align = VALIGN_SUPER; }
+        if (strcmp(n->tag, "u") == 0 || strcmp(n->tag, "ins") == 0) n->style.text_underline = true;
+        if (strcmp(n->tag, "s") == 0 || strcmp(n->tag, "del") == 0 || strcmp(n->tag, "strike") == 0) n->style.text_line_through = true;
+        if (strcmp(n->tag, "kbd") == 0 || strcmp(n->tag, "samp") == 0) strcpy(n->style.font_family, "monospace");
+        if (strcmp(n->tag, "mark") == 0) {
+            n->style.bg_color = 0xFFFFF3CDu;
+            n->style.has_bg = true;
+            n->style.padding_left = 3;
+            n->style.padding_right = 3;
+        }
     } else if (strcmp(n->tag, "ul") == 0 || strcmp(n->tag, "ol") == 0) {
         n->style.margin_top = 10;
         n->style.margin_bottom = 10;
@@ -394,6 +427,7 @@ dom_node_t* dom_node_create(const char* tag) {
         n->style.margin_top = 12;
         n->style.margin_bottom = 12;
         n->style.border_width = 1;
+        n->style.border_style = BDR_STYLE_SOLID;
     } else if (strcmp(n->tag, "thead") == 0 || strcmp(n->tag, "tbody") == 0 || strcmp(n->tag, "tfoot") == 0) {
         n->style.display = DISPLAY_TABLE_ROW_GROUP;
     } else if (strcmp(n->tag, "tr") == 0) {
@@ -407,6 +441,7 @@ dom_node_t* dom_node_create(const char* tag) {
         n->style.padding_left = 10;
         n->style.padding_right = 10;
         n->style.border_width = 1;
+        n->style.border_style = BDR_STYLE_SOLID;
     } else if (strcmp(n->tag, "td") == 0) {
         n->style.display = DISPLAY_TABLE_CELL;
         n->style.box_sizing = BOX_SIZING_BORDER_BOX;
@@ -415,6 +450,7 @@ dom_node_t* dom_node_create(const char* tag) {
         n->style.padding_left = 10;
         n->style.padding_right = 10;
         n->style.border_width = 1;
+        n->style.border_style = BDR_STYLE_SOLID;
     } else if (strcmp(n->tag, "button") == 0) {
         n->style.display = DISPLAY_INLINE_BLOCK;
         n->style.padding_top = 8;
@@ -431,6 +467,7 @@ dom_node_t* dom_node_create(const char* tag) {
         n->style.bg_color = 0xFFF1F3F4u;
         n->style.has_bg = true;
         if (strcmp(n->tag, "pre") == 0) {
+            n->style.white_space = WS_PRE;
             n->style.padding_top = 10;
             n->style.padding_bottom = 10;
             n->style.padding_left = 12;
@@ -440,14 +477,18 @@ dom_node_t* dom_node_create(const char* tag) {
             n->style.border_radius = 4;
         } else {
             n->style.display = DISPLAY_INLINE;
-            n->style.padding_left = 4;
-            n->style.padding_right = 4;
+            n->style.padding_left = 5;
+            n->style.padding_right = 5;
+            n->style.padding_top = 1;
+            n->style.padding_bottom = 1;
+            n->style.border_radius = 3;
         }
     } else if (strcmp(n->tag, "blockquote") == 0) {
         n->style.margin_top = 10;
         n->style.margin_bottom = 10;
         n->style.padding_left = 16;
         n->style.border_left_width = 3;
+        n->style.border_style = BDR_STYLE_SOLID;
         n->style.border_color = BLINK_COLOR_LINK_BLUE;
         n->style.border_left_color = BLINK_COLOR_LINK_BLUE;
         n->style.color = 0xFF5F6368u;
@@ -455,6 +496,7 @@ dom_node_t* dom_node_create(const char* tag) {
         n->style.margin_top = 14;
         n->style.margin_bottom = 14;
         n->style.border_width = 1;
+        n->style.border_style = BDR_STYLE_SOLID;
         n->style.border_color = BLINK_COLOR_BORDER_GRAY;
         n->style.height = 1;
     }
@@ -474,6 +516,21 @@ void dom_node_add_child(dom_node_t* parent, dom_node_t* child) {
     child->parent = parent;
 }
 
+void dom_node_insert_child_first(dom_node_t* parent, dom_node_t* child) {
+    if (!parent || !child) return;
+    if (parent->num_children + 1 > parent->cap_children) {
+        int new_cap = (parent->cap_children == 0) ? 4 : parent->cap_children * 2;
+        parent->children = (dom_node_t**)realloc(parent->children, (size_t)new_cap * sizeof(dom_node_t*));
+        parent->cap_children = new_cap;
+    }
+    for (int i = parent->num_children; i > 0; i--) {
+        parent->children[i] = parent->children[i - 1];
+    }
+    parent->children[0] = child;
+    parent->num_children++;
+    child->parent = parent;
+}
+
 void dom_node_free(dom_node_t* n) {
     if (!n) return;
     free(n->text);
@@ -482,6 +539,7 @@ void dom_node_free(dom_node_t* n) {
     free(n->src);
     free(n->href);
     free(n->inline_style_raw);
+    free(n->inline_frags);
     for (int i = 0; i < n->num_children; i++) {
         dom_node_free(n->children[i]);
     }
@@ -499,6 +557,10 @@ blink_specificity_t blink_specificity_add(blink_specificity_t a, blink_specifici
     r.class_cnt = a.class_cnt + b.class_cnt;
     r.tag_cnt = a.tag_cnt + b.tag_cnt;
     return r;
+}
+
+blink_specificity_t blink_specificity_max(blink_specificity_t a, blink_specificity_t b) {
+    return blink_specificity_lt(a, b) ? b : a;
 }
 
 bool blink_specificity_lt(blink_specificity_t a, blink_specificity_t b) {
@@ -592,16 +654,78 @@ static void parse_nth_expr(const char* expr, int* out_a, int* out_b) {
     *out_b = (*rest) ? atoi(rest) : 0;
 }
 
+/* Forward declaration for recursive max-branch specificity & selector matching */
+bool blink_css_parse_selector(const char* sel_text, blink_complex_sel_t* out_sel);
+static bool match_selector_internal(const dom_node_t* el,
+                                    const blink_complex_sel_t* sel,
+                                    const dom_node_t* scope_root,
+                                    bool ignore_pseudo_elem);
+
+static blink_specificity_t compute_selector_list_max_specificity(const char* list_text, bool is_relative) {
+    blink_specificity_t max_sp = {0, 0, 0};
+    if (!list_text) return max_sp;
+    const char* p = list_text;
+    while (*p) {
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (!*p) break;
+        const char* start = p;
+        int paren = 0;
+        while (*p && !(paren == 0 && *p == ',')) {
+            if (*p == '(') paren++;
+            else if (*p == ')' && paren > 0) paren--;
+            p++;
+        }
+        char item[160];
+        size_t len = (size_t)(p - start);
+        if (len >= sizeof(item)) len = sizeof(item) - 1;
+        memcpy(item, start, len);
+        item[len] = '\0';
+        trim_inplace(item);
+
+        const char* body = item;
+        if (is_relative && (*body == '>' || *body == '+' || *body == '~')) {
+            body++;
+            while (*body && isspace((unsigned char)*body)) body++;
+        }
+        blink_complex_sel_t sub;
+        if (body[0] && blink_css_parse_selector(body, &sub)) {
+            max_sp = blink_specificity_max(max_sp, sub.specificity);
+        }
+        if (*p == ',') p++;
+    }
+    return max_sp;
+}
+
+static const char* read_paren_arg(const char* p, char* out_buf, size_t out_cap) {
+    if (*p == '(') p++;
+    const char* start = p;
+    int depth = 1;
+    while (*p && depth > 0) {
+        if (*p == '(') depth++;
+        else if (*p == ')') depth--;
+        if (depth > 0) p++;
+    }
+    size_t len = (size_t)(p - start);
+    if (len >= out_cap) len = out_cap - 1;
+    memcpy(out_buf, start, len);
+    out_buf[len] = '\0';
+    trim_inplace(out_buf);
+    if (*p == ')') p++;
+    return p;
+}
+
 static const char* parse_compound_segment(const char* p,
                                           blink_compound_sel_t* comp,
                                           blink_specificity_t* io_spec,
+                                          blink_pseudo_elem_t* out_pseudo_elem,
                                           bool suppress_specificity) {
     memset(comp, 0, sizeof(*comp));
     comp->zero_specificity = suppress_specificity;
 
     bool parsed_any = false;
     while (*p) {
-        if (isspace((unsigned char)*p) || *p == '>' || *p == '+' || *p == ',' || *p == '{' || *p == ')') {
+        if (isspace((unsigned char)*p) || *p == '>' || *p == '+' || *p == '~' ||
+            *p == ',' || *p == '{' || *p == ')') {
             break;
         }
         if (*p == '*') {
@@ -633,12 +757,31 @@ static const char* parse_compound_segment(const char* p,
             p++;
             while (*p && isspace((unsigned char)*p)) p++;
             const char* ks = p;
-            while (*p && *p != '=' && *p != ']' && !isspace((unsigned char)*p)) p++;
+            while (*p && *p != '=' && *p != '~' && *p != '|' && *p != '^' &&
+                   *p != '$' && *p != '*' && *p != ']' && !isspace((unsigned char)*p)) {
+                p++;
+            }
             copy_lower_bounded(comp->attr_name, sizeof(comp->attr_name), ks, (size_t)(p - ks));
             comp->has_attr = true;
+            comp->attr_op = ATTR_OP_EXISTS;
             while (*p && isspace((unsigned char)*p)) p++;
-            if (*p == '=') {
+
+            bool saw_op = false;
+            if ((*p == '~' || *p == '|' || *p == '^' || *p == '$' || *p == '*') && p[1] == '=') {
+                if (*p == '~') comp->attr_op = ATTR_OP_SPACE_LIST;
+                else if (*p == '|') comp->attr_op = ATTR_OP_DASH_PREFIX;
+                else if (*p == '^') comp->attr_op = ATTR_OP_PREFIX;
+                else if (*p == '$') comp->attr_op = ATTR_OP_SUFFIX;
+                else if (*p == '*') comp->attr_op = ATTR_OP_SUBSTR;
+                p += 2;
+                saw_op = true;
+            } else if (*p == '=') {
+                comp->attr_op = ATTR_OP_EXACT;
                 p++;
+                saw_op = true;
+            }
+
+            if (saw_op) {
                 while (*p && isspace((unsigned char)*p)) p++;
                 char q = (*p == '"' || *p == '\'') ? *p++ : 0;
                 const char* vs = p;
@@ -656,19 +799,34 @@ static const char* parse_compound_segment(const char* p,
             parsed_any = true;
         } else if (*p == ':') {
             p++;
+            bool double_colon = false;
             if (*p == ':') {
-                /* Pseudo-elements (::before, ::after) not modeled as DOM elements: fail match cleanly */
-                while (*p && is_ident_char(*p)) p++;
-                strcpy(comp->tag, "__unsupported_pseudo_element__");
-                return p;
+                double_colon = true;
+                p++;
             }
             const char* ps = p;
             while (*p && is_ident_char(*p)) p++;
             char pname[32];
             copy_lower_bounded(pname, sizeof(pname), ps, (size_t)(p - ps));
 
-            if (strcmp(pname, "root") == 0) {
+            if (strcmp(pname, "before") == 0) {
+                if (out_pseudo_elem) *out_pseudo_elem = PSEUDO_ELEM_BEFORE;
+                if (!suppress_specificity) io_spec->tag_cnt++;
+                parsed_any = true;
+            } else if (strcmp(pname, "after") == 0) {
+                if (out_pseudo_elem) *out_pseudo_elem = PSEUDO_ELEM_AFTER;
+                if (!suppress_specificity) io_spec->tag_cnt++;
+                parsed_any = true;
+            } else if (double_colon) {
+                /* Other pseudo-elements (::placeholder, ::selection) fail match cleanly */
+                strcpy(comp->tag, "__unsupported_pseudo_element__");
+                return p;
+            } else if (strcmp(pname, "root") == 0) {
                 strcpy(comp->tag, "body");
+                if (!suppress_specificity) io_spec->class_cnt++;
+                parsed_any = true;
+            } else if (strcmp(pname, "scope") == 0) {
+                comp->pseudo = PSEUDO_SCOPE;
                 if (!suppress_specificity) io_spec->class_cnt++;
                 parsed_any = true;
             } else if (strcmp(pname, "first-child") == 0) {
@@ -679,60 +837,58 @@ static const char* parse_compound_segment(const char* p,
                 comp->pseudo = PSEUDO_LAST_CHILD;
                 if (!suppress_specificity) io_spec->class_cnt++;
                 parsed_any = true;
-            } else if (strcmp(pname, "nth-child") == 0 && *p == '(') {
-                p++;
-                const char* es = p;
-                int depth = 1;
-                while (*p && depth > 0) {
-                    if (*p == '(') depth++;
-                    else if (*p == ')') depth--;
-                    if (depth > 0) p++;
-                }
+            } else if (strcmp(pname, "first-of-type") == 0) {
+                comp->pseudo = PSEUDO_FIRST_OF_TYPE;
+                if (!suppress_specificity) io_spec->class_cnt++;
+                parsed_any = true;
+            } else if (strcmp(pname, "last-of-type") == 0) {
+                comp->pseudo = PSEUDO_LAST_OF_TYPE;
+                if (!suppress_specificity) io_spec->class_cnt++;
+                parsed_any = true;
+            } else if ((strcmp(pname, "nth-child") == 0 || strcmp(pname, "nth-of-type") == 0) && *p == '(') {
                 char expr[64];
-                size_t elen = (size_t)(p - es);
-                if (elen > 63) elen = 63;
-                memcpy(expr, es, elen);
-                expr[elen] = '\0';
-                if (*p == ')') p++;
-                comp->pseudo = PSEUDO_NTH_CHILD;
+                p = read_paren_arg(p, expr, sizeof(expr));
+                comp->pseudo = (strcmp(pname, "nth-of-type") == 0) ? PSEUDO_NTH_OF_TYPE : PSEUDO_NTH_CHILD;
                 parse_nth_expr(expr, &comp->nth_a, &comp->nth_b);
                 if (!suppress_specificity) io_spec->class_cnt++;
                 parsed_any = true;
             } else if (strcmp(pname, "where") == 0 && *p == '(') {
                 /* `:where(...)` contributes ZERO specificity per `where_pseudo_zero_specificity`! */
-                p++;
-                while (*p && isspace((unsigned char)*p)) p++;
-                blink_compound_sel_t inner;
-                p = parse_compound_segment(p, &inner, io_spec, true);
-                if (inner.tag[0] && !comp->tag[0]) strcpy(comp->tag, inner.tag);
-                if (inner.id[0] && !comp->id[0]) strcpy(comp->id, inner.id);
-                for (int c = 0; c < inner.num_classes && comp->num_classes < BLINK_MAX_CLASSES_PER_COMPOUND; c++) {
-                    strcpy(comp->classes[comp->num_classes++], inner.classes[c]);
+                p = read_paren_arg(p, comp->where_args, sizeof(comp->where_args));
+                comp->has_where = true;
+                parsed_any = true;
+            } else if (strcmp(pname, "is") == 0 && *p == '(') {
+                /* `:is(...)` takes MAX specificity of its selector list (`is_pseudo_max_spec`)! */
+                p = read_paren_arg(p, comp->is_args, sizeof(comp->is_args));
+                comp->has_is = true;
+                if (!suppress_specificity) {
+                    blink_specificity_t ms = compute_selector_list_max_specificity(comp->is_args, false);
+                    *io_spec = blink_specificity_add(*io_spec, ms);
                 }
-                if (inner.has_attr) {
-                    comp->has_attr = true;
-                    comp->has_attr_val = inner.has_attr_val;
-                    strcpy(comp->attr_name, inner.attr_name);
-                    strcpy(comp->attr_val, inner.attr_val);
+                parsed_any = true;
+            } else if (strcmp(pname, "not") == 0 && *p == '(') {
+                /* `:not(...)` negates selector list & takes MAX specificity of its branches! */
+                p = read_paren_arg(p, comp->not_args, sizeof(comp->not_args));
+                comp->has_not = true;
+                if (!suppress_specificity) {
+                    blink_specificity_t ms = compute_selector_list_max_specificity(comp->not_args, false);
+                    *io_spec = blink_specificity_add(*io_spec, ms);
                 }
-                if (inner.pseudo != PSEUDO_NONE) {
-                    comp->pseudo = inner.pseudo;
-                    comp->nth_a = inner.nth_a;
-                    comp->nth_b = inner.nth_b;
+                parsed_any = true;
+            } else if (strcmp(pname, "has") == 0 && *p == '(') {
+                /* `:has(...)` relational lookahead + MAX specificity of relative selector list! */
+                p = read_paren_arg(p, comp->has_args, sizeof(comp->has_args));
+                comp->has_has = true;
+                if (!suppress_specificity) {
+                    blink_specificity_t ms = compute_selector_list_max_specificity(comp->has_args, true);
+                    *io_spec = blink_specificity_add(*io_spec, ms);
                 }
-                while (*p && *p != ')') p++;
-                if (*p == ')') p++;
                 parsed_any = true;
             } else {
                 /* Unsupported pseudo-class (e.g. :hover) should not falsely match static document */
                 if (*p == '(') {
-                    int depth = 1;
-                    p++;
-                    while (*p && depth > 0) {
-                        if (*p == '(') depth++;
-                        else if (*p == ')') depth--;
-                        p++;
-                    }
+                    char dummy[64];
+                    p = read_paren_arg(p, dummy, sizeof(dummy));
                 }
                 strcpy(comp->tag, "__unsupported_pseudo_class__");
                 return p;
@@ -769,10 +925,14 @@ bool blink_css_parse_selector(const char* sel_text, blink_complex_sel_t* out_sel
     blink_combinator_t pending_comb = COMB_NONE;
     while (*p && out_sel->num_compounds < BLINK_MAX_COMPOUNDS_PER_SEL) {
         blink_compound_sel_t comp;
+        blink_pseudo_elem_t pe = PSEUDO_ELEM_NONE;
         const char* before = p;
-        p = parse_compound_segment(p, &comp, &out_sel->specificity, false);
+        p = parse_compound_segment(p, &comp, &out_sel->specificity, &pe, false);
         if (p == before) break;
 
+        if (pe != PSEUDO_ELEM_NONE) {
+            out_sel->pseudo_elem = pe;
+        }
         int idx = out_sel->num_compounds++;
         out_sel->compounds[idx] = comp;
         out_sel->combinators[idx] = pending_comb;
@@ -789,6 +949,10 @@ bool blink_css_parse_selector(const char* sel_text, blink_complex_sel_t* out_sel
             pending_comb = COMB_NEXT_SIBLING;
             p++;
             while (*p && isspace((unsigned char)*p)) p++;
+        } else if (*p == '~') {
+            pending_comb = COMB_SUBSEQUENT_SIBLING;
+            p++;
+            while (*p && isspace((unsigned char)*p)) p++;
         } else if (saw_space) {
             pending_comb = COMB_DESCENDANT;
         } else {
@@ -799,18 +963,34 @@ bool blink_css_parse_selector(const char* sel_text, blink_complex_sel_t* out_sel
     return out_sel->num_compounds > 0;
 }
 
-static void element_sibling_metrics(const dom_node_t* el, int* out_idx_1based, int* out_total_el_siblings, const dom_node_t** out_prev_el) {
+static bool is_real_dom_element(const dom_node_t* ch) {
+    return ch && strcmp(ch->tag, "#text") != 0 && !ch->is_generated_pseudo;
+}
+
+static void element_sibling_metrics(const dom_node_t* el,
+                                    int* out_idx_1based,
+                                    int* out_total_el_siblings,
+                                    int* out_type_idx_1based,
+                                    int* out_type_total,
+                                    const dom_node_t** out_prev_el) {
     *out_idx_1based = 1;
     *out_total_el_siblings = 1;
+    *out_type_idx_1based = 1;
+    *out_type_total = 1;
     *out_prev_el = NULL;
     if (!el || !el->parent) return;
 
     int count = 0;
+    int type_count = 0;
     const dom_node_t* prev = NULL;
     for (int i = 0; i < el->parent->num_children; i++) {
         const dom_node_t* ch = el->parent->children[i];
-        if (strcmp(ch->tag, "#text") == 0) continue;
+        if (!is_real_dom_element(ch)) continue;
         count++;
+        if (strcmp(ch->tag, el->tag) == 0) {
+            type_count++;
+            if (ch == el) *out_type_idx_1based = type_count;
+        }
         if (ch == el) {
             *out_idx_1based = count;
             *out_prev_el = prev;
@@ -818,6 +998,7 @@ static void element_sibling_metrics(const dom_node_t* el, int* out_idx_1based, i
         prev = ch;
     }
     *out_total_el_siblings = count;
+    *out_type_total = type_count;
 }
 
 static const char* get_element_attr(const dom_node_t* el, const char* attr_name) {
@@ -832,8 +1013,158 @@ static const char* get_element_attr(const dom_node_t* el, const char* attr_name)
     return NULL;
 }
 
-static bool match_compound_on_element(const dom_node_t* el, const blink_compound_sel_t* comp) {
-    if (!el || strcmp(el->tag, "#text") == 0) return false;
+static bool match_attr_operator(blink_attr_op_t op, const char* actual, const char* pat) {
+    if (!actual) return false;
+    if (op == ATTR_OP_EXISTS) return true;
+    if (!pat) return false;
+    size_t alen = strlen(actual);
+    size_t plen = strlen(pat);
+    switch (op) {
+        case ATTR_OP_EXISTS:
+            return true;
+        case ATTR_OP_EXACT:
+            return strcmp(actual, pat) == 0;
+        case ATTR_OP_SPACE_LIST:
+            return plen > 0 && token_list_contains(actual, pat);
+        case ATTR_OP_DASH_PREFIX:
+            return strcmp(actual, pat) == 0 ||
+                   (alen > plen && strncmp(actual, pat, plen) == 0 && actual[plen] == '-');
+        case ATTR_OP_PREFIX:
+            return plen > 0 && alen >= plen && strncmp(actual, pat, plen) == 0;
+        case ATTR_OP_SUFFIX:
+            return plen > 0 && alen >= plen && strcmp(actual + (alen - plen), pat) == 0;
+        case ATTR_OP_SUBSTR:
+            return plen > 0 && strstr(actual, pat) != NULL;
+    }
+    return false;
+}
+
+static bool match_selector_list_any(const dom_node_t* el, const char* list_text, const dom_node_t* scope_root) {
+    if (!el || !list_text) return false;
+    const char* p = list_text;
+    while (*p) {
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (!*p) break;
+        const char* start = p;
+        int paren = 0;
+        while (*p && !(paren == 0 && *p == ',')) {
+            if (*p == '(') paren++;
+            else if (*p == ')' && paren > 0) paren--;
+            p++;
+        }
+        char item[160];
+        size_t len = (size_t)(p - start);
+        if (len >= sizeof(item)) len = sizeof(item) - 1;
+        memcpy(item, start, len);
+        item[len] = '\0';
+        trim_inplace(item);
+
+        blink_complex_sel_t sub;
+        if (item[0] && blink_css_parse_selector(item, &sub)) {
+            if (match_selector_internal(el, &sub, scope_root, false)) return true;
+        }
+        if (*p == ',') p++;
+    }
+    return false;
+}
+
+/* Match `sub` on `cand` while requiring the leftmost compound of `sub` to match `root_cand`
+   or a descendant of `anchor`! */
+static bool match_complex_anchored_rtl(const dom_node_t* el,
+                                       const blink_complex_sel_t* sel,
+                                       int comp_idx,
+                                       const dom_node_t* anchor,
+                                       bool leftmost_must_be_child_of_anchor,
+                                       const dom_node_t* scope_root);
+
+static bool subtree_has_match(const dom_node_t* node,
+                              const blink_complex_sel_t* sub,
+                              const dom_node_t* anchor,
+                              bool direct_child_leftmost,
+                              const dom_node_t* scope_root) {
+    if (!node) return false;
+    for (int i = 0; i < node->num_children; i++) {
+        const dom_node_t* ch = node->children[i];
+        if (!is_real_dom_element(ch)) continue;
+        if (match_complex_anchored_rtl(ch, sub, sub->num_compounds - 1, anchor, direct_child_leftmost, scope_root)) {
+            return true;
+        }
+        if (subtree_has_match(ch, sub, anchor, direct_child_leftmost, scope_root)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool match_has_relative_list(const dom_node_t* anchor, const char* list_text, const dom_node_t* scope_root) {
+    if (!anchor || !list_text) return false;
+    const char* p = list_text;
+    while (*p) {
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (!*p) break;
+        const char* start = p;
+        int paren = 0;
+        while (*p && !(paren == 0 && *p == ',')) {
+            if (*p == '(') paren++;
+            else if (*p == ')' && paren > 0) paren--;
+            p++;
+        }
+        char item[160];
+        size_t len = (size_t)(p - start);
+        if (len >= sizeof(item)) len = sizeof(item) - 1;
+        memcpy(item, start, len);
+        item[len] = '\0';
+        trim_inplace(item);
+
+        char rel_comb = ' ';
+        const char* body = item;
+        if (*body == '>' || *body == '+' || *body == '~') {
+            rel_comb = *body++;
+            while (*body && isspace((unsigned char)*body)) body++;
+        }
+
+        blink_complex_sel_t sub;
+        if (body[0] && blink_css_parse_selector(body, &sub)) {
+            if (rel_comb == '>') {
+                if (sub.num_compounds == 1) {
+                    for (int i = 0; i < anchor->num_children; i++) {
+                        const dom_node_t* ch = anchor->children[i];
+                        if (is_real_dom_element(ch) && match_selector_internal(ch, &sub, scope_root, false)) {
+                            return true;
+                        }
+                    }
+                } else if (subtree_has_match(anchor, &sub, anchor, true, scope_root)) {
+                    return true;
+                }
+            } else if (rel_comb == '+' || rel_comb == '~') {
+                if (anchor->parent) {
+                    bool seen_anchor = false;
+                    for (int i = 0; i < anchor->parent->num_children; i++) {
+                        const dom_node_t* sib = anchor->parent->children[i];
+                        if (!is_real_dom_element(sib)) continue;
+                        if (sib == anchor) { seen_anchor = true; continue; }
+                        if (!seen_anchor) continue;
+                        if (sub.num_compounds == 1) {
+                            if (match_selector_internal(sib, &sub, scope_root, false)) return true;
+                        } else {
+                            if (subtree_has_match(sib, &sub, sib, false, scope_root)) return true;
+                        }
+                        if (rel_comb == '+') break; /* Next element sibling only! */
+                    }
+                }
+            } else {
+                if (subtree_has_match(anchor, &sub, anchor, false, scope_root)) return true;
+            }
+        }
+        if (*p == ',') p++;
+    }
+    return false;
+}
+
+static bool match_compound_on_element(const dom_node_t* el,
+                                      const blink_compound_sel_t* comp,
+                                      const dom_node_t* scope_root) {
+    if (!is_real_dom_element(el)) return false;
     if (comp->tag[0] != '\0' && strcmp(el->tag, comp->tag) != 0) return false;
     if (comp->id[0] != '\0') {
         if (!el->id || strcasecmp(el->id, comp->id) != 0) return false;
@@ -843,47 +1174,117 @@ static bool match_compound_on_element(const dom_node_t* el, const blink_compound
     }
     if (comp->has_attr) {
         const char* av = get_element_attr(el, comp->attr_name);
-        if (!av) return false;
-        if (comp->has_attr_val && strcmp(av, comp->attr_val) != 0) return false;
-    }
-    if (comp->pseudo != PSEUDO_NONE) {
-        int idx1 = 1, total = 1;
-        const dom_node_t* prev = NULL;
-        element_sibling_metrics(el, &idx1, &total, &prev);
-        if (comp->pseudo == PSEUDO_FIRST_CHILD && idx1 != 1) return false;
-        if (comp->pseudo == PSEUDO_LAST_CHILD && idx1 != total) return false;
-        if (comp->pseudo == PSEUDO_NTH_CHILD && !blink_css_match_nth_child(idx1, comp->nth_a, comp->nth_b)) {
+        if (!match_attr_operator(comp->attr_op, av, comp->has_attr_val ? comp->attr_val : NULL)) {
             return false;
         }
     }
+    if (comp->pseudo != PSEUDO_NONE) {
+        if (comp->pseudo == PSEUDO_SCOPE) {
+            const dom_node_t* target = scope_root;
+            if (!target) {
+                target = el;
+                while (target->parent) target = target->parent;
+            }
+            if (el != target) return false;
+        } else {
+            int idx1 = 1, total = 1, tidx1 = 1, ttotal = 1;
+            const dom_node_t* prev = NULL;
+            element_sibling_metrics(el, &idx1, &total, &tidx1, &ttotal, &prev);
+            if (comp->pseudo == PSEUDO_FIRST_CHILD && idx1 != 1) return false;
+            if (comp->pseudo == PSEUDO_LAST_CHILD && idx1 != total) return false;
+            if (comp->pseudo == PSEUDO_NTH_CHILD && !blink_css_match_nth_child(idx1, comp->nth_a, comp->nth_b)) return false;
+            if (comp->pseudo == PSEUDO_FIRST_OF_TYPE && tidx1 != 1) return false;
+            if (comp->pseudo == PSEUDO_LAST_OF_TYPE && tidx1 != ttotal) return false;
+            if (comp->pseudo == PSEUDO_NTH_OF_TYPE && !blink_css_match_nth_child(tidx1, comp->nth_a, comp->nth_b)) return false;
+        }
+    }
+    if (comp->has_is && !match_selector_list_any(el, comp->is_args, scope_root)) return false;
+    if (comp->has_where && !match_selector_list_any(el, comp->where_args, scope_root)) return false;
+    if (comp->has_not && match_selector_list_any(el, comp->not_args, scope_root)) return false;
+    if (comp->has_has && !match_has_relative_list(el, comp->has_args, scope_root)) return false;
     return true;
 }
 
-static bool match_complex_rtl_from(const dom_node_t* el, const blink_complex_sel_t* sel, int comp_idx) {
-    if (!el || comp_idx < 0) return false;
-    if (!match_compound_on_element(el, &sel->compounds[comp_idx])) return false;
-    if (comp_idx == 0) return true;
-
-    blink_combinator_t comb = sel->combinators[comp_idx];
-    if (comb == COMB_CHILD) {
-        return el->parent && match_complex_rtl_from(el->parent, sel, comp_idx - 1);
-    } else if (comb == COMB_DESCENDANT) {
-        for (const dom_node_t* anc = el->parent; anc != NULL; anc = anc->parent) {
-            if (match_complex_rtl_from(anc, sel, comp_idx - 1)) return true;
-        }
-        return false;
-    } else if (comb == COMB_NEXT_SIBLING) {
-        int idx1 = 1, total = 1;
-        const dom_node_t* prev = NULL;
-        element_sibling_metrics(el, &idx1, &total, &prev);
-        return prev && match_complex_rtl_from(prev, sel, comp_idx - 1);
+static bool is_descendant_of(const dom_node_t* el, const dom_node_t* anc) {
+    for (const dom_node_t* p = el ? el->parent : NULL; p != NULL; p = p->parent) {
+        if (p == anc) return true;
     }
     return false;
 }
 
-bool blink_css_match_selector(const dom_node_t* el, const blink_complex_sel_t* sel) {
+static bool match_complex_anchored_rtl(const dom_node_t* el,
+                                       const blink_complex_sel_t* sel,
+                                       int comp_idx,
+                                       const dom_node_t* anchor,
+                                       bool leftmost_must_be_child_of_anchor,
+                                       const dom_node_t* scope_root) {
+    if (!el || comp_idx < 0) return false;
+    if (!match_compound_on_element(el, &sel->compounds[comp_idx], scope_root)) return false;
+    if (comp_idx == 0) {
+        if (!anchor) return true;
+        if (leftmost_must_be_child_of_anchor) return el->parent == anchor;
+        return is_descendant_of(el, anchor);
+    }
+
+    blink_combinator_t comb = sel->combinators[comp_idx];
+    if (comb == COMB_CHILD) {
+        return el->parent && match_complex_anchored_rtl(el->parent, sel, comp_idx - 1, anchor, leftmost_must_be_child_of_anchor, scope_root);
+    } else if (comb == COMB_DESCENDANT) {
+        for (const dom_node_t* anc = el->parent; anc != NULL; anc = anc->parent) {
+            if (anchor && anc == anchor) break;
+            if (match_complex_anchored_rtl(anc, sel, comp_idx - 1, anchor, leftmost_must_be_child_of_anchor, scope_root)) return true;
+        }
+        return false;
+    } else if (comb == COMB_NEXT_SIBLING) {
+        int idx1 = 1, total = 1, tidx1 = 1, ttotal = 1;
+        const dom_node_t* prev = NULL;
+        element_sibling_metrics(el, &idx1, &total, &tidx1, &ttotal, &prev);
+        return prev && match_complex_anchored_rtl(prev, sel, comp_idx - 1, anchor, leftmost_must_be_child_of_anchor, scope_root);
+    } else if (comb == COMB_SUBSEQUENT_SIBLING) {
+        if (!el->parent) return false;
+        for (int i = 0; i < el->parent->num_children; i++) {
+            const dom_node_t* sib = el->parent->children[i];
+            if (sib == el) break;
+            if (!is_real_dom_element(sib)) continue;
+            if (match_complex_anchored_rtl(sib, sel, comp_idx - 1, anchor, leftmost_must_be_child_of_anchor, scope_root)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    return false;
+}
+
+static bool match_selector_internal(const dom_node_t* el,
+                                    const blink_complex_sel_t* sel,
+                                    const dom_node_t* scope_root,
+                                    bool ignore_pseudo_elem) {
     if (!el || !sel || sel->num_compounds <= 0) return false;
-    return match_complex_rtl_from(el, sel, sel->num_compounds - 1);
+    if (!ignore_pseudo_elem && sel->pseudo_elem != PSEUDO_ELEM_NONE) return false;
+    return match_complex_anchored_rtl(el, sel, sel->num_compounds - 1, NULL, false, scope_root);
+}
+
+bool blink_css_match_selector(const dom_node_t* el, const blink_complex_sel_t* sel) {
+    return match_selector_internal(el, sel, NULL, false);
+}
+
+bool blink_css_in_donut_scope(const dom_node_t* el,
+                              const blink_complex_sel_t* root_sel,
+                              const blink_complex_sel_t* limit_sel_or_null,
+                              const dom_node_t** out_scope_root) {
+    if (out_scope_root) *out_scope_root = NULL;
+    if (!el || !root_sel) return false;
+    for (const dom_node_t* anc = el; anc != NULL; anc = anc->parent) {
+        if (limit_sel_or_null && blink_css_match_selector(anc, limit_sel_or_null)) {
+            /* Hit donut scope limit boundary strictly before scope root! */
+            return false;
+        }
+        if (blink_css_match_selector(anc, root_sel)) {
+            if (out_scope_root) *out_scope_root = anc;
+            return true;
+        }
+    }
+    return false;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1052,20 +1453,69 @@ static int64_t eval_single_length_in_mode_z(const char* tok,
     return (int64_t)llround(val * (double)scale);
 }
 
-int32_t blink_css_eval_length_or_calc(const char* expr,
-                                      int32_t parent_px,
-                                      int32_t em_px,
-                                      int32_t rem_px,
-                                      int32_t vw_px,
-                                      int32_t vh_px,
-                                      blink_layout_mode_t mode,
-                                      bool* out_is_auto) {
-    if (out_is_auto) *out_is_auto = false;
+static int64_t eval_math_expr_in_mode_z(const char* expr,
+                                        int32_t parent_px,
+                                        int32_t em_px,
+                                        int32_t rem_px,
+                                        int32_t vw_px,
+                                        int32_t vh_px,
+                                        blink_layout_mode_t mode) {
     if (!expr) return 0;
     while (*expr && isspace((unsigned char)*expr)) expr++;
-    if (strncasecmp(expr, "auto", 4) == 0 && (!expr[4] || isspace((unsigned char)expr[4]))) {
-        if (out_is_auto) *out_is_auto = true;
-        return -1;
+
+    /* Nonlinear CSS Math Functions: min(...), max(...), clamp(lo, val, hi) */
+    bool is_min = (strncasecmp(expr, "min(", 4) == 0);
+    bool is_max = (strncasecmp(expr, "max(", 4) == 0);
+    bool is_clamp = (strncasecmp(expr, "clamp(", 6) == 0);
+    if (is_min || is_max || is_clamp) {
+        size_t head_len = is_clamp ? 6 : 4;
+        const char* p = expr + head_len;
+        const char* end = strrchr(p, ')');
+        size_t len = end ? (size_t)(end - p) : strlen(p);
+        char inner[192];
+        if (len >= sizeof(inner)) len = sizeof(inner) - 1;
+        memcpy(inner, p, len);
+        inner[len] = '\0';
+
+        int64_t args[8];
+        int n_args = 0;
+        const char* cur = inner;
+        while (*cur && n_args < 8) {
+            const char* as = cur;
+            int paren = 0;
+            while (*cur && !(paren == 0 && *cur == ',')) {
+                if (*cur == '(') paren++;
+                else if (*cur == ')' && paren > 0) paren--;
+                cur++;
+            }
+            char abuf[96];
+            size_t alen = (size_t)(cur - as);
+            if (alen >= sizeof(abuf)) alen = sizeof(abuf) - 1;
+            memcpy(abuf, as, alen);
+            abuf[alen] = '\0';
+            trim_inplace(abuf);
+            args[n_args++] = eval_math_expr_in_mode_z(abuf, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+            if (*cur == ',') cur++;
+        }
+
+        if (n_args == 0) return 0;
+        if (is_min) {
+            int64_t best = args[0];
+            for (int i = 1; i < n_args; i++) if (args[i] < best) best = args[i];
+            return best;
+        }
+        if (is_max) {
+            int64_t best = args[0];
+            for (int i = 1; i < n_args; i++) if (args[i] > best) best = args[i];
+            return best;
+        }
+        if (n_args >= 3) {
+            /* `clamp(lo, val, hi) = max(lo, min(val, hi))` (`css_clamp_min_wins_on_inversion`) */
+            int64_t lo = args[0], val = args[1], hi = args[2];
+            int64_t mid = (val < hi) ? val : hi;
+            return (lo > mid) ? lo : mid;
+        }
+        return args[0];
     }
 
     if (strncasecmp(expr, "calc(", 5) == 0) {
@@ -1077,7 +1527,7 @@ int32_t blink_css_eval_length_or_calc(const char* expr,
         memcpy(inner, p, len);
         inner[len] = '\0';
 
-        /* Parse linear sum/difference of length terms: `T0 (+|-) T1 (+|-) T2 ...` */
+        /* Parse linear sum/difference of length/math terms: `T0 (+|-) T1 ...` respecting parens */
         int64_t acc_z = 0;
         int sign = 1;
         const char* cur = inner;
@@ -1087,39 +1537,65 @@ int32_t blink_css_eval_length_or_calc(const char* expr,
             if (*cur == '+') { sign = 1; cur++; continue; }
             if (*cur == '-' && isspace((unsigned char)cur[1])) { sign = -1; cur++; continue; }
 
-            /* Read one term up to space-surrounded '+' or '-' */
             const char* ts = cur;
+            int paren = 0;
             while (*cur) {
-                if ((*cur == '+' || *cur == '-') && cur > ts && isspace((unsigned char)cur[-1])) {
+                if (*cur == '(') paren++;
+                else if (*cur == ')' && paren > 0) paren--;
+                else if (paren == 0 && (*cur == '+' || *cur == '-') && cur > ts && isspace((unsigned char)cur[-1])) {
                     break;
                 }
                 cur++;
             }
-            char term_buf[64];
+            char term_buf[96];
             size_t tlen = (size_t)(cur - ts);
             if (tlen >= sizeof(term_buf)) tlen = sizeof(term_buf) - 1;
             memcpy(term_buf, ts, tlen);
             term_buf[tlen] = '\0';
             trim_inplace(term_buf);
 
-            /* Also support `k * <length>` inside a term */
-            char* star = strchr(term_buf, '*');
             int64_t term_z = 0;
-            if (star) {
-                *star = '\0';
-                double mult = strtod(term_buf, NULL);
-                int64_t rhs_z = eval_single_length_in_mode_z(star + 1, parent_px, em_px, rem_px, vw_px, vh_px, mode);
-                term_z = (int64_t)llround(mult * (double)rhs_z);
+            if (strncasecmp(term_buf, "min(", 4) == 0 || strncasecmp(term_buf, "max(", 4) == 0 ||
+                strncasecmp(term_buf, "clamp(", 6) == 0 || strncasecmp(term_buf, "calc(", 5) == 0) {
+                term_z = eval_math_expr_in_mode_z(term_buf, parent_px, em_px, rem_px, vw_px, vh_px, mode);
             } else {
-                term_z = eval_single_length_in_mode_z(term_buf, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                char* star = strchr(term_buf, '*');
+                if (star) {
+                    *star = '\0';
+                    double mult = strtod(term_buf, NULL);
+                    int64_t rhs_z = eval_math_expr_in_mode_z(star + 1, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                    term_z = (int64_t)llround(mult * (double)rhs_z);
+                } else {
+                    term_z = eval_single_length_in_mode_z(term_buf, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                }
             }
             acc_z += (int64_t)sign * term_z;
             sign = 1;
         }
-        return (int32_t)blink_z_floor_device_pixel(acc_z, mode);
+        return acc_z;
     }
 
-    int64_t raw_z = eval_single_length_in_mode_z(expr, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+    return eval_single_length_in_mode_z(expr, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+}
+
+int32_t blink_css_eval_length_or_calc(const char* expr,
+                                      int32_t parent_px,
+                                      int32_t em_px,
+                                      int32_t rem_px,
+                                      int32_t vw_px,
+                                      int32_t vh_px,
+                                      blink_layout_mode_t mode,
+                                      bool* out_is_auto) {
+    if (out_is_auto) *out_is_auto = false;
+    if (!expr) return 0;
+    while (*expr && isspace((unsigned char)*expr)) expr++;
+    if ((strncasecmp(expr, "auto", 4) == 0 && (!expr[4] || isspace((unsigned char)expr[4]))) ||
+        (strncasecmp(expr, "none", 4) == 0 && (!expr[4] || isspace((unsigned char)expr[4])))) {
+        if (out_is_auto) *out_is_auto = true;
+        return -1;
+    }
+
+    int64_t raw_z = eval_math_expr_in_mode_z(expr, parent_px, em_px, rem_px, vw_px, vh_px, mode);
     return (int32_t)blink_z_floor_device_pixel(raw_z, mode);
 }
 
@@ -1221,15 +1697,28 @@ int32_t blink_table_col_width_formal(int32_t avail_w,
 /* 7. CSS Color & Stylesheet Parser (`@layer`, `@media`, `!important`)       */
 /* ------------------------------------------------------------------------- */
 
-uint32_t blink_parse_css_color(const char* s, bool* out_ok) {
+static float hue_to_rgb_chan(float p, float q, float t) {
+    if (t < 0.0f) t += 1.0f;
+    if (t > 1.0f) t -= 1.0f;
+    if (t < 1.0f / 6.0f) return p + (q - p) * 6.0f * t;
+    if (t < 1.0f / 2.0f) return q;
+    if (t < 2.0f / 3.0f) return p + (q - p) * (2.0f / 3.0f - t) * 6.0f;
+    return p;
+}
+
+uint32_t blink_parse_css_color_with_current(const char* s, uint32_t current_color, bool* out_ok) {
     if (out_ok) *out_ok = false;
     if (!s) return BLINK_COLOR_TEXT_DEFAULT;
     while (*s && isspace((unsigned char)*s)) s++;
     if (!*s) return BLINK_COLOR_TEXT_DEFAULT;
 
-    if (strcasecmp(s, "transparent") == 0) {
+    if (strncasecmp(s, "transparent", 11) == 0 && (!s[11] || isspace((unsigned char)s[11]))) {
         if (out_ok) *out_ok = true;
         return 0x00000000u;
+    }
+    if (strncasecmp(s, "currentcolor", 12) == 0 && (!s[12] || isspace((unsigned char)s[12]))) {
+        if (out_ok) *out_ok = true;
+        return current_color;
     }
 
     if (*s == '#') {
@@ -1241,6 +1730,18 @@ uint32_t blink_parse_css_color(const char* s, bool* out_ok) {
             if (sscanf(s, "%1x%1x%1x", &r, &g, &b) == 3) {
                 if (out_ok) *out_ok = true;
                 return (0xFFu << 24) | ((r * 17u) << 16) | ((g * 17u) << 8) | (b * 17u);
+            }
+        } else if (hexlen == 4) {
+            unsigned int r, g, b, a;
+            if (sscanf(s, "%1x%1x%1x%1x", &r, &g, &b, &a) == 4) {
+                if (out_ok) *out_ok = true;
+                return ((a * 17u) << 24) | ((r * 17u) << 16) | ((g * 17u) << 8) | (b * 17u);
+            }
+        } else if (hexlen == 8) {
+            unsigned int r, g, b, a;
+            if (sscanf(s, "%2x%2x%2x%2x", &r, &g, &b, &a) == 4) {
+                if (out_ok) *out_ok = true;
+                return (a << 24) | (r << 16) | (g << 8) | b;
             }
         } else if (hexlen >= 6) {
             unsigned int r, g, b;
@@ -1258,6 +1759,7 @@ uint32_t blink_parse_css_color(const char* s, bool* out_ok) {
             int r = 0, g = 0, b = 0;
             float af = 1.0f;
             int matched = sscanf(p + 1, "%d , %d , %d , %f", &r, &g, &b, &af);
+            if (matched < 3) matched = sscanf(p + 1, "%d %d %d / %f", &r, &g, &b, &af);
             if (matched < 3) matched = sscanf(p + 1, "%d %d %d", &r, &g, &b);
             if (matched >= 3) {
                 if (r < 0) r = 0; else if (r > 255) r = 255;
@@ -1272,13 +1774,122 @@ uint32_t blink_parse_css_color(const char* s, bool* out_ok) {
         return BLINK_COLOR_TEXT_DEFAULT;
     }
 
+    if (strncasecmp(s, "hsla(", 5) == 0 || strncasecmp(s, "hsl(", 4) == 0) {
+        const char* p = strchr(s, '(');
+        if (p) {
+            char buf[128];
+            read_paren_arg(p, buf, sizeof(buf));
+            for (size_t i = 0; buf[i]; i++) {
+                if (buf[i] == ',' || buf[i] == '/' || buf[i] == '%') buf[i] = ' ';
+            }
+            float h_deg = 0.0f, s_pct = 0.0f, l_pct = 0.0f, af = 1.0f;
+            int matched = sscanf(buf, "%f %f %f %f", &h_deg, &s_pct, &l_pct, &af);
+            if (matched >= 3) {
+                float h = fmodf(h_deg, 360.0f);
+                if (h < 0.0f) h += 360.0f;
+                h /= 360.0f;
+                float sat = fminf(1.0f, fmaxf(0.0f, s_pct / 100.0f));
+                float lig = fminf(1.0f, fmaxf(0.0f, l_pct / 100.0f));
+                float rf, gf, bf;
+                if (sat == 0.0f) {
+                    rf = gf = bf = lig;
+                } else {
+                    float q = (lig < 0.5f) ? (lig * (1.0f + sat)) : (lig + sat - lig * sat);
+                    float pv = 2.0f * lig - q;
+                    rf = hue_to_rgb_chan(pv, q, h + 1.0f / 3.0f);
+                    gf = hue_to_rgb_chan(pv, q, h);
+                    bf = hue_to_rgb_chan(pv, q, h - 1.0f / 3.0f);
+                }
+                int r = (int)lroundf(rf * 255.0f);
+                int g = (int)lroundf(gf * 255.0f);
+                int b = (int)lroundf(bf * 255.0f);
+                int a = (int)lroundf(fminf(1.0f, fmaxf(0.0f, af)) * 255.0f);
+                if (out_ok) *out_ok = true;
+                return ((uint32_t)a << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
+            }
+        }
+        return BLINK_COLOR_TEXT_DEFAULT;
+    }
+
+    /* CSS Color 5: `color-mix(in srgb, <c1> [<p1>%], <c2> [<p2>%])` */
+    if (strncasecmp(s, "color-mix(", 10) == 0) {
+        const char* p = s + 9;
+        char inner[192];
+        read_paren_arg(p, inner, sizeof(inner));
+
+        char parts[3][128];
+        int n_parts = 0;
+        const char* cur = inner;
+        while (*cur && n_parts < 3) {
+            const char* ps = cur;
+            int paren = 0;
+            while (*cur && !(paren == 0 && *cur == ',')) {
+                if (*cur == '(') paren++;
+                else if (*cur == ')') paren--;
+                cur++;
+            }
+            size_t plen = (size_t)(cur - ps);
+            if (plen >= 128) plen = 127;
+            memcpy(parts[n_parts], ps, plen);
+            parts[n_parts][plen] = '\0';
+            trim_inplace(parts[n_parts]);
+            n_parts++;
+            if (*cur == ',') cur++;
+        }
+
+        if (n_parts == 3) {
+            /* Extract optional trailing `<num>%` weight from parts[1] and parts[2] */
+            double w1 = -1.0, w2 = -1.0;
+            for (int k = 1; k <= 2; k++) {
+                size_t l = strlen(parts[k]);
+                if (l > 1 && parts[k][l - 1] == '%') {
+                    size_t i = l - 1;
+                    while (i > 0 && (isdigit((unsigned char)parts[k][i - 1]) || parts[k][i - 1] == '.')) i--;
+                    if (i > 0 && isspace((unsigned char)parts[k][i - 1])) {
+                        double pct = strtod(parts[k] + i, NULL);
+                        parts[k][i] = '\0';
+                        trim_inplace(parts[k]);
+                        if (k == 1) w1 = pct; else w2 = pct;
+                    }
+                }
+            }
+            if (w1 < 0.0 && w2 < 0.0) { w1 = 50.0; w2 = 50.0; }
+            else if (w1 < 0.0) { w1 = 100.0 - w2; }
+            else if (w2 < 0.0) { w2 = 100.0 - w1; }
+            if (w1 < 0.0) w1 = 0.0;
+            if (w2 < 0.0) w2 = 0.0;
+            double wsum = w1 + w2;
+            if (wsum <= 0.0) { w1 = 50.0; w2 = 50.0; wsum = 100.0; }
+
+            bool ok1 = false, ok2 = false;
+            uint32_t c1 = blink_parse_css_color_with_current(parts[1], current_color, &ok1);
+            uint32_t c2 = blink_parse_css_color_with_current(parts[2], current_color, &ok2);
+            if (ok1 && ok2) {
+                uint32_t a1 = (c1 >> 24) & 0xFFu, r1 = (c1 >> 16) & 0xFFu, g1 = (c1 >> 8) & 0xFFu, b1 = c1 & 0xFFu;
+                uint32_t a2 = (c2 >> 24) & 0xFFu, r2 = (c2 >> 16) & 0xFFu, g2 = (c2 >> 8) & 0xFFu, b2 = c2 & 0xFFu;
+                uint32_t am = (uint32_t)llround(((double)a1 * w1 + (double)a2 * w2) / wsum);
+                uint32_t rm = (uint32_t)llround(((double)r1 * w1 + (double)r2 * w2) / wsum);
+                uint32_t gm = (uint32_t)llround(((double)g1 * w1 + (double)g2 * w2) / wsum);
+                uint32_t bm = (uint32_t)llround(((double)b1 * w1 + (double)b2 * w2) / wsum);
+                if (am > 255u) am = 255u;
+                if (rm > 255u) rm = 255u;
+                if (gm > 255u) gm = 255u;
+                if (bm > 255u) bm = 255u;
+                if (out_ok) *out_ok = true;
+                return (am << 24) | (rm << 16) | (gm << 8) | bm;
+            }
+        }
+        return BLINK_COLOR_TEXT_DEFAULT;
+    }
+
     struct { const char* name; uint32_t argb; } named[] = {
         {"white", 0xFFFFFFFFu}, {"black", 0xFF000000u}, {"red", 0xFFEA4335u},
         {"crimson", 0xFFDC143Cu}, {"green", 0xFF34A853u}, {"blue", 0xFF1A73E8u},
         {"navy", 0xFF0D47A1u}, {"teal", 0xFF00796Bu}, {"orange", 0xFFFB8C00u},
         {"gold", 0xFFF9AB00u}, {"yellow", 0xFFFBBC05u}, {"purple", 0xFF7B1FA2u},
         {"indigo", 0xFF3949ABu}, {"gray", 0xFF5F6368u}, {"grey", 0xFF5F6368u},
-        {"lightgray", 0xFFDADCE0u}, {"lightgrey", 0xFFDADCE0u}, {"whitesmoke", 0xFFF5F5F5u}
+        {"lightgray", 0xFFDADCE0u}, {"lightgrey", 0xFFDADCE0u}, {"whitesmoke", 0xFFF5F5F5u},
+        {"cyan", 0xFF00BCD4u}, {"magenta", 0xFFE91E63u}, {"coral", 0xFFFF7043u}
     };
     for (size_t i = 0; i < sizeof(named) / sizeof(named[0]); i++) {
         size_t nl = strlen(named[i].name);
@@ -1288,6 +1899,10 @@ uint32_t blink_parse_css_color(const char* s, bool* out_ok) {
         }
     }
     return BLINK_COLOR_TEXT_DEFAULT;
+}
+
+uint32_t blink_parse_css_color(const char* s, bool* out_ok) {
+    return blink_parse_css_color_with_current(s, BLINK_COLOR_TEXT_DEFAULT, out_ok);
 }
 
 void blink_css_stylesheet_init(blink_css_stylesheet_t* sheet) {
@@ -1313,6 +1928,102 @@ static int32_t get_or_register_layer(blink_css_stylesheet_t* sheet, const char* 
     return sheet->num_layers - 1;
 }
 
+static char* load_local_stylesheet_file(const char* base_dir, const char* href, char* out_dir, size_t out_dir_cap) {
+    if (!href || !href[0]) return NULL;
+    if (strncasecmp(href, "http://", 7) == 0 || strncasecmp(href, "https://", 8) == 0 ||
+        strncasecmp(href, "data:", 5) == 0) {
+        return NULL;
+    }
+    const char* rel = href;
+    if (strncasecmp(rel, "file://", 7) == 0) rel += 7;
+
+    char full_path[1024];
+    if (rel[0] == '/' || !base_dir || !base_dir[0] || strcmp(base_dir, ".") == 0) {
+        snprintf(full_path, sizeof(full_path), "%s", rel);
+    } else {
+        snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, rel);
+    }
+
+    /* Strip query string or fragment from local path */
+    char* q = strpbrk(full_path, "?#");
+    if (q) *q = '\0';
+
+    if (out_dir && out_dir_cap > 0) {
+        const char* slash = strrchr(full_path, '/');
+        if (slash) {
+            size_t dlen = (size_t)(slash - full_path);
+            if (dlen >= out_dir_cap) dlen = out_dir_cap - 1;
+            memcpy(out_dir, full_path, dlen);
+            out_dir[dlen] = '\0';
+        } else {
+            strncpy(out_dir, ".", out_dir_cap - 1);
+            out_dir[out_dir_cap - 1] = '\0';
+        }
+    }
+
+    FILE* fp = fopen(full_path, "rb");
+    if (!fp) return NULL;
+    fseek(fp, 0, SEEK_END);
+    long sz = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    if (sz <= 0 || sz > 2 * 1024 * 1024) {
+        fclose(fp);
+        return NULL;
+    }
+    char* buf = (char*)malloc((size_t)sz + 1);
+    if (!buf) {
+        fclose(fp);
+        return NULL;
+    }
+    size_t rd = fread(buf, 1, (size_t)sz, fp);
+    buf[rd] = '\0';
+    fclose(fp);
+    return buf;
+}
+
+typedef struct {
+    int32_t             active_layer;
+    int32_t             media_min_w;
+    int32_t             media_max_w;
+    int32_t             container_min_w;
+    int32_t             container_max_w;
+    bool                has_scope;
+    blink_complex_sel_t scope_root;
+    bool                has_scope_limit;
+    blink_complex_sel_t scope_limit;
+    const char*         base_dir;
+    int                 import_depth;
+} css_parse_ctx_t;
+
+static void parse_css_rules_in_ctx(blink_css_stylesheet_t* sheet,
+                                   const char* css,
+                                   const css_parse_ctx_t* ctx);
+
+static void expand_nested_selector(const char* parent_sel, const char* child_sel, char* out, size_t out_cap) {
+    if (!parent_sel || !parent_sel[0]) {
+        snprintf(out, out_cap, "%s", child_sel ? child_sel : "");
+        return;
+    }
+    if (strchr(child_sel, '&') != NULL) {
+        size_t j = 0;
+        for (size_t i = 0; child_sel[i] && j + 1 < out_cap; i++) {
+            if (child_sel[i] == '&') {
+                size_t plen = strlen(parent_sel);
+                if (j + plen + 1 < out_cap) {
+                    memcpy(out + j, parent_sel, plen);
+                    j += plen;
+                }
+            } else {
+                out[j++] = child_sel[i];
+            }
+        }
+        out[j] = '\0';
+    } else {
+        snprintf(out, out_cap, "%s %s", parent_sel, child_sel);
+    }
+    trim_inplace(out);
+}
+
 static int parse_declarations_list(const char* block, blink_css_decl_t* out_decls, int max_decls) {
     if (!block || !out_decls || max_decls <= 0) return 0;
     int count = 0;
@@ -1322,27 +2033,11 @@ static int parse_declarations_list(const char* block, blink_css_decl_t* out_decl
         while (*p && (isspace((unsigned char)*p) || *p == ';')) p++;
         if (!*p) break;
 
-        /* Find ':' */
-        const char* ks = p;
-        while (*p && *p != ':' && *p != ';') p++;
-        if (*p != ':') {
-            while (*p && *p != ';') p++;
-            continue;
-        }
-        char key[48];
-        size_t klen = (size_t)(p - ks);
-        if (klen >= sizeof(key)) klen = sizeof(key) - 1;
-        memcpy(key, ks, klen);
-        key[klen] = '\0';
-        trim_inplace(key);
-        if (!(key[0] == '-' && key[1] == '-')) {
-            for (size_t i = 0; key[i]; i++) key[i] = (char)tolower((unsigned char)key[i]);
-        }
-
-        p++; /* skip ':' */
-        const char* vs = p;
+        /* Scan statement up to ';' or '{' at paren/quote depth 0 */
+        const char* stmt_start = p;
         int paren = 0;
         char quote = 0;
+        const char* first_colon = NULL;
         while (*p) {
             if (quote) {
                 if (*p == quote) quote = 0;
@@ -1350,11 +2045,43 @@ static int parse_declarations_list(const char* block, blink_css_decl_t* out_decl
                 if (*p == '"' || *p == '\'') quote = *p;
                 else if (*p == '(') paren++;
                 else if (*p == ')' && paren > 0) paren--;
-                else if (*p == ';' && paren == 0) break;
+                else if (paren == 0) {
+                    if (*p == ':' && !first_colon) first_colon = p;
+                    else if (*p == ';' || *p == '{') break;
+                }
             }
             p++;
         }
 
+        if (*p == '{') {
+            /* Nested rule block inside declarations — skip over balanced '{...}';
+               nested blocks are processed by `parse_css_rules_in_ctx`! */
+            int depth = 1;
+            p++;
+            while (*p && depth > 0) {
+                if (*p == '{') depth++;
+                else if (*p == '}') depth--;
+                p++;
+            }
+            continue;
+        }
+
+        if (!first_colon) {
+            if (*p == ';') p++;
+            continue;
+        }
+
+        char key[48];
+        size_t klen = (size_t)(first_colon - stmt_start);
+        if (klen >= sizeof(key)) klen = sizeof(key) - 1;
+        memcpy(key, stmt_start, klen);
+        key[klen] = '\0';
+        trim_inplace(key);
+        if (!(key[0] == '-' && key[1] == '-')) {
+            for (size_t i = 0; key[i]; i++) key[i] = (char)tolower((unsigned char)key[i]);
+        }
+
+        const char* vs = first_colon + 1;
         char val[192];
         size_t vlen = (size_t)(p - vs);
         if (vlen >= sizeof(val)) vlen = sizeof(val) - 1;
@@ -1381,6 +2108,116 @@ static int parse_declarations_list(const char* block, blink_css_decl_t* out_decl
     return count;
 }
 
+/* Extract and parse any nested `{ ... }` rules inside a qualified rule's body (CSS Nesting `&`) */
+static void parse_nested_rules_in_block(blink_css_stylesheet_t* sheet,
+                                        const char* parent_sel_group,
+                                        const char* decl_block,
+                                        const css_parse_ctx_t* ctx) {
+    const char* p = decl_block;
+    while (*p) {
+        while (*p && (isspace((unsigned char)*p) || *p == ';')) p++;
+        if (!*p) break;
+
+        const char* stmt_start = p;
+        int paren = 0;
+        char quote = 0;
+        while (*p) {
+            if (quote) {
+                if (*p == quote) quote = 0;
+            } else {
+                if (*p == '"' || *p == '\'') quote = *p;
+                else if (*p == '(') paren++;
+                else if (*p == ')' && paren > 0) paren--;
+                else if (paren == 0 && (*p == ';' || *p == '{')) break;
+            }
+            p++;
+        }
+
+        if (*p == ';') {
+            p++;
+            continue;
+        }
+        if (*p != '{') break;
+
+        char child_sel_group[192];
+        size_t clen = (size_t)(p - stmt_start);
+        if (clen >= sizeof(child_sel_group)) clen = sizeof(child_sel_group) - 1;
+        memcpy(child_sel_group, stmt_start, clen);
+        child_sel_group[clen] = '\0';
+        trim_inplace(child_sel_group);
+
+        p++; /* skip '{' */
+        const char* inner_start = p;
+        int depth = 1;
+        while (*p && depth > 0) {
+            if (*p == '{') depth++;
+            else if (*p == '}') depth--;
+            if (depth > 0) p++;
+        }
+        size_t inner_len = (size_t)(p - inner_start);
+        if (*p == '}') p++;
+
+        if (child_sel_group[0] == '@') {
+            /* Nested @media / @container / @layer inside selector! Wrap parent selector inside it */
+            size_t wrap_cap = clen + inner_len + strlen(parent_sel_group) + 16;
+            char* wrapped = (char*)malloc(wrap_cap);
+            if (wrapped) {
+                snprintf(wrapped, wrap_cap, "%s { %s { %.*s } }", child_sel_group, parent_sel_group, (int)inner_len, inner_start);
+                parse_css_rules_in_ctx(sheet, wrapped, ctx);
+                free(wrapped);
+            }
+            continue;
+        }
+
+        /* Expand cartesian product of parent_sel_group x child_sel_group */
+        const char* pp = parent_sel_group;
+        while (*pp) {
+            const char* p_item = pp;
+            int pparen = 0;
+            while (*pp && !(pparen == 0 && *pp == ',')) {
+                if (*pp == '(') pparen++;
+                else if (*pp == ')' && pparen > 0) pparen--;
+                pp++;
+            }
+            char psel[160];
+            size_t plen = (size_t)(pp - p_item);
+            if (plen >= sizeof(psel)) plen = sizeof(psel) - 1;
+            memcpy(psel, p_item, plen);
+            psel[plen] = '\0';
+            trim_inplace(psel);
+            if (*pp == ',') pp++;
+
+            const char* cp = child_sel_group;
+            while (*cp) {
+                const char* c_item = cp;
+                int cparen = 0;
+                while (*cp && !(cparen == 0 && *cp == ',')) {
+                    if (*cp == '(') cparen++;
+                    else if (*cp == ')' && cparen > 0) cparen--;
+                    cp++;
+                }
+                char csel[160];
+                size_t cslen = (size_t)(cp - c_item);
+                if (cslen >= sizeof(csel)) cslen = sizeof(csel) - 1;
+                memcpy(csel, c_item, cslen);
+                csel[cslen] = '\0';
+                trim_inplace(csel);
+                if (*cp == ',') cp++;
+
+                char combined[256];
+                expand_nested_selector(psel, csel, combined, sizeof(combined));
+                size_t syn_cap = strlen(combined) + inner_len + 8;
+                char* syn_rule = (char*)malloc(syn_cap);
+                if (syn_rule) {
+                    snprintf(syn_rule, syn_cap, "%s { %.*s }", combined, (int)inner_len, inner_start);
+                    parse_css_rules_in_ctx(sheet, syn_rule, ctx);
+                    free(syn_rule);
+                }
+            }
+        }
+    }
+}
+
 static char* strip_css_comments(const char* src) {
     if (!src) return NULL;
     size_t len = strlen(src);
@@ -1401,18 +2238,89 @@ static char* strip_css_comments(const char* src) {
     return dst;
 }
 
-static void parse_css_rules_in_context(blink_css_stylesheet_t* sheet,
-                                       const char* css,
-                                       int32_t active_layer,
-                                       int32_t media_min_w,
-                                       int32_t media_max_w) {
+static void parse_min_max_width_query(const char* qbuf, int32_t* io_min_w, int32_t* io_max_w) {
+    const char* mn = strcasestr_portable(qbuf, "min-width");
+    if (mn) {
+        const char* col = strchr(mn, ':');
+        if (col) *io_min_w = atoi(col + 1);
+    }
+    const char* mx = strcasestr_portable(qbuf, "max-width");
+    if (mx) {
+        const char* col = strchr(mx, ':');
+        if (col) *io_max_w = atoi(col + 1);
+    }
+}
+
+static void parse_css_rules_in_ctx(blink_css_stylesheet_t* sheet,
+                                   const char* css,
+                                   const css_parse_ctx_t* ctx) {
     const char* p = css;
     while (*p) {
         while (*p && isspace((unsigned char)*p)) p++;
         if (!*p) break;
 
         if (*p == '@') {
-            if (strncasecmp(p, "@layer", 6) == 0 && (isspace((unsigned char)p[6]) || p[6] == '{')) {
+            if (strncasecmp(p, "@import", 7) == 0 && (isspace((unsigned char)p[7]) || p[7] == '"' || p[7] == '\'')) {
+                p += 7;
+                const char* istart = p;
+                while (*p && *p != ';') p++;
+                char stmt[256];
+                size_t slen = (size_t)(p - istart);
+                if (slen >= sizeof(stmt)) slen = sizeof(stmt) - 1;
+                memcpy(stmt, istart, slen);
+                stmt[slen] = '\0';
+                if (*p == ';') p++;
+
+                if (ctx->import_depth < 8) {
+                    /* Extract URL from `@import "foo.css"` or `@import url("foo.css") layer(theme)` */
+                    char url_buf[192] = "";
+                    const char* up = stmt;
+                    while (*up && isspace((unsigned char)*up)) up++;
+                    if (strncasecmp(up, "url(", 4) == 0) {
+                        up = read_paren_arg(up + 3, url_buf, sizeof(url_buf));
+                        if ((url_buf[0] == '"' || url_buf[0] == '\'')) {
+                            size_t ul = strlen(url_buf);
+                            if (ul >= 2) {
+                                memmove(url_buf, url_buf + 1, ul - 2);
+                                url_buf[ul - 2] = '\0';
+                            }
+                        }
+                    } else if (*up == '"' || *up == '\'') {
+                        char q = *up++;
+                        const char* us = up;
+                        while (*up && *up != q) up++;
+                        size_t ul = (size_t)(up - us);
+                        if (ul >= sizeof(url_buf)) ul = sizeof(url_buf) - 1;
+                        memcpy(url_buf, us, ul);
+                        url_buf[ul] = '\0';
+                        if (*up == q) up++;
+                    }
+
+                    int32_t imp_layer = ctx->active_layer;
+                    const char* lp = strcasestr_portable(up, "layer(");
+                    if (lp) {
+                        char lname[48];
+                        read_paren_arg(lp + 5, lname, sizeof(lname));
+                        imp_layer = get_or_register_layer(sheet, lname);
+                    }
+
+                    char sub_dir[512];
+                    char* imp_css = load_local_stylesheet_file(ctx->base_dir, url_buf, sub_dir, sizeof(sub_dir));
+                    if (imp_css) {
+                        char* clean_imp = strip_css_comments(imp_css);
+                        free(imp_css);
+                        if (clean_imp) {
+                            css_parse_ctx_t sub_ctx = *ctx;
+                            sub_ctx.active_layer = imp_layer;
+                            sub_ctx.base_dir = sub_dir;
+                            sub_ctx.import_depth = ctx->import_depth + 1;
+                            parse_css_rules_in_ctx(sheet, clean_imp, &sub_ctx);
+                            free(clean_imp);
+                        }
+                    }
+                }
+                continue;
+            } else if (strncasecmp(p, "@layer", 6) == 0 && (isspace((unsigned char)p[6]) || p[6] == '{')) {
                 p += 6;
                 while (*p && isspace((unsigned char)*p)) p++;
                 const char* head_start = p;
@@ -1425,7 +2333,6 @@ static void parse_css_rules_in_context(blink_css_stylesheet_t* sheet,
                 trim_inplace(head);
 
                 if (*p == ';') {
-                    /* `@layer base, theme, utilities;` statement registers layer order! */
                     char* saveptr = NULL;
                     char* tok = strtok_r(head, ",", &saveptr);
                     while (tok) {
@@ -1449,14 +2356,17 @@ static void parse_css_rules_in_context(blink_css_stylesheet_t* sheet,
                     if (sub) {
                         memcpy(sub, body_start, blen);
                         sub[blen] = '\0';
-                        parse_css_rules_in_context(sheet, sub, layer_id, media_min_w, media_max_w);
+                        css_parse_ctx_t sub_ctx = *ctx;
+                        sub_ctx.active_layer = layer_id;
+                        parse_css_rules_in_ctx(sheet, sub, &sub_ctx);
                         free(sub);
                     }
                     if (*p == '}') p++;
                     continue;
                 }
-            } else if (strncasecmp(p, "@media", 6) == 0) {
-                p += 6;
+            } else if (strncasecmp(p, "@media", 6) == 0 || strncasecmp(p, "@container", 10) == 0) {
+                bool is_container = (strncasecmp(p, "@container", 10) == 0);
+                p += is_container ? 10 : 6;
                 const char* qstart = p;
                 while (*p && *p != '{') p++;
                 char qbuf[192];
@@ -1465,17 +2375,11 @@ static void parse_css_rules_in_context(blink_css_stylesheet_t* sheet,
                 memcpy(qbuf, qstart, qlen);
                 qbuf[qlen] = '\0';
 
-                int32_t min_w = media_min_w;
-                int32_t max_w = media_max_w;
-                const char* mn = strcasestr_portable(qbuf, "min-width");
-                if (mn) {
-                    const char* col = strchr(mn, ':');
-                    if (col) min_w = atoi(col + 1);
-                }
-                const char* mx = strcasestr_portable(qbuf, "max-width");
-                if (mx) {
-                    const char* col = strchr(mx, ':');
-                    if (col) max_w = atoi(col + 1);
+                css_parse_ctx_t sub_ctx = *ctx;
+                if (is_container) {
+                    parse_min_max_width_query(qbuf, &sub_ctx.container_min_w, &sub_ctx.container_max_w);
+                } else {
+                    parse_min_max_width_query(qbuf, &sub_ctx.media_min_w, &sub_ctx.media_max_w);
                 }
 
                 if (*p == '{') {
@@ -1492,14 +2396,65 @@ static void parse_css_rules_in_context(blink_css_stylesheet_t* sheet,
                     if (sub) {
                         memcpy(sub, body_start, blen);
                         sub[blen] = '\0';
-                        parse_css_rules_in_context(sheet, sub, active_layer, min_w, max_w);
+                        parse_css_rules_in_ctx(sheet, sub, &sub_ctx);
+                        free(sub);
+                    }
+                    if (*p == '}') p++;
+                    continue;
+                }
+            } else if (strncasecmp(p, "@scope", 6) == 0) {
+                /* CSS Cascade Level 6: `@scope (<root>) [to (<limit>)] { ... }` */
+                p += 6;
+                const char* sstart = p;
+                while (*p && *p != '{') p++;
+                char sbuf[192];
+                size_t slen = (size_t)(p - sstart);
+                if (slen >= sizeof(sbuf)) slen = sizeof(sbuf) - 1;
+                memcpy(sbuf, sstart, slen);
+                sbuf[slen] = '\0';
+
+                css_parse_ctx_t sub_ctx = *ctx;
+                const char* lp1 = strchr(sbuf, '(');
+                if (lp1) {
+                    char root_str[96];
+                    const char* after_root = read_paren_arg(lp1, root_str, sizeof(root_str));
+                    if (blink_css_parse_selector(root_str, &sub_ctx.scope_root)) {
+                        sub_ctx.has_scope = true;
+                    }
+                    const char* to_kw = strcasestr_portable(after_root, "to");
+                    if (to_kw) {
+                        const char* lp2 = strchr(to_kw, '(');
+                        if (lp2) {
+                            char lim_str[96];
+                            read_paren_arg(lp2, lim_str, sizeof(lim_str));
+                            if (blink_css_parse_selector(lim_str, &sub_ctx.scope_limit)) {
+                                sub_ctx.has_scope_limit = true;
+                            }
+                        }
+                    }
+                }
+
+                if (*p == '{') {
+                    p++;
+                    const char* body_start = p;
+                    int depth = 1;
+                    while (*p && depth > 0) {
+                        if (*p == '{') depth++;
+                        else if (*p == '}') depth--;
+                        if (depth > 0) p++;
+                    }
+                    size_t blen = (size_t)(p - body_start);
+                    char* sub = (char*)malloc(blen + 1);
+                    if (sub) {
+                        memcpy(sub, body_start, blen);
+                        sub[blen] = '\0';
+                        parse_css_rules_in_ctx(sheet, sub, &sub_ctx);
                         free(sub);
                     }
                     if (*p == '}') p++;
                     continue;
                 }
             } else {
-                /* Skip other @-rules (@import, @keyframes, @font-face) */
                 while (*p && *p != ';' && *p != '{') p++;
                 if (*p == ';') {
                     p++;
@@ -1516,7 +2471,7 @@ static void parse_css_rules_in_context(blink_css_stylesheet_t* sheet,
             }
         }
 
-        /* Standard qualified rule: `selector_list { declarations }` */
+        /* Standard qualified rule: `selector_list { declarations + optional nested rules }` */
         const char* sel_start = p;
         while (*p && *p != '{') p++;
         if (*p != '{') break;
@@ -1526,6 +2481,7 @@ static void parse_css_rules_in_context(blink_css_stylesheet_t* sheet,
         if (!sel_group) break;
         memcpy(sel_group, sel_start, sel_len);
         sel_group[sel_len] = '\0';
+        trim_inplace(sel_group);
 
         p++; /* skip '{' */
         const char* decl_start = p;
@@ -1546,7 +2502,6 @@ static void parse_css_rules_in_context(blink_css_stylesheet_t* sheet,
         blink_css_decl_t parsed_decls[BLINK_MAX_RULE_DECLS];
         int num_decls = parse_declarations_list(decl_block, parsed_decls, BLINK_MAX_RULE_DECLS);
 
-        /* Split comma-separated selector list (respecting parentheses like :where(...)) */
         if (num_decls > 0) {
             const char* sp = sel_group;
             while (*sp && sheet->num_rules < BLINK_MAX_STYLESHEET_RULES) {
@@ -1567,17 +2522,29 @@ static void parse_css_rules_in_context(blink_css_stylesheet_t* sheet,
                 blink_complex_sel_t csel;
                 if (single_sel[0] && blink_css_parse_selector(single_sel, &csel)) {
                     blink_css_rule_t* rule = &sheet->rules[sheet->num_rules++];
+                    memset(rule, 0, sizeof(*rule));
                     rule->selector = csel;
                     rule->num_decls = num_decls;
                     for (int d = 0; d < num_decls; d++) rule->decls[d] = parsed_decls[d];
-                    rule->layer_order = active_layer;
+                    rule->layer_order = ctx->active_layer;
                     rule->source_order = sheet->next_source_order;
                     sheet->next_source_order += 64;
-                    rule->media_min_w = media_min_w;
-                    rule->media_max_w = media_max_w;
+                    rule->media_min_w = ctx->media_min_w;
+                    rule->media_max_w = ctx->media_max_w;
+                    rule->container_min_w = ctx->container_min_w;
+                    rule->container_max_w = ctx->container_max_w;
+                    rule->has_scope = ctx->has_scope;
+                    rule->scope_root = ctx->scope_root;
+                    rule->has_scope_limit = ctx->has_scope_limit;
+                    rule->scope_limit = ctx->scope_limit;
                 }
                 if (*sp == ',') sp++;
             }
+        }
+
+        /* Process any nested `{ ... }` rules inside `decl_block` */
+        if (strchr(decl_block, '{') != NULL) {
+            parse_nested_rules_in_block(sheet, sel_group, decl_block, ctx);
         }
 
         free(decl_block);
@@ -1585,12 +2552,25 @@ static void parse_css_rules_in_context(blink_css_stylesheet_t* sheet,
     }
 }
 
-void blink_css_parse_stylesheet(blink_css_stylesheet_t* sheet, const char* css_text) {
+void blink_css_parse_stylesheet_ex(blink_css_stylesheet_t* sheet, const char* css_text, const char* base_dir) {
     if (!sheet || !css_text) return;
     char* clean = strip_css_comments(css_text);
     if (!clean) return;
-    parse_css_rules_in_context(sheet, clean, BLINK_UNLAYERED_ORDER, -1, -1);
+    css_parse_ctx_t ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.active_layer = BLINK_UNLAYERED_ORDER;
+    ctx.media_min_w = -1;
+    ctx.media_max_w = -1;
+    ctx.container_min_w = -1;
+    ctx.container_max_w = -1;
+    ctx.base_dir = base_dir ? base_dir : ".";
+    ctx.import_depth = 0;
+    parse_css_rules_in_ctx(sheet, clean, &ctx);
     free(clean);
+}
+
+void blink_css_parse_stylesheet(blink_css_stylesheet_t* sheet, const char* css_text) {
+    blink_css_parse_stylesheet_ex(sheet, css_text, ".");
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1617,7 +2597,9 @@ static bool is_inherited_css_prop(const char* prop) {
            strcmp(prop, "font-style") == 0 ||
            strcmp(prop, "font-family") == 0 ||
            strcmp(prop, "line-height") == 0 ||
-           strcmp(prop, "text-align") == 0;
+           strcmp(prop, "text-align") == 0 ||
+           strcmp(prop, "white-space") == 0 ||
+           strcmp(prop, "border-collapse") == 0;
 }
 
 static void set_custom_prop(dom_style_t* st, const char* name, const char* val) {
@@ -1646,54 +2628,168 @@ static void apply_keyword_reset(dom_style_t* st, const dom_style_t* src, const c
     else if (strcmp(prop, "font-weight") == 0) st->font_weight = src->font_weight;
     else if (strcmp(prop, "font-style") == 0) st->font_style = src->font_style;
     else if (strcmp(prop, "font-family") == 0) strcpy(st->font_family, src->font_family);
+    else if (strcmp(prop, "line-height") == 0) st->line_height = src->line_height;
     else if (strcmp(prop, "text-align") == 0) st->text_align = src->text_align;
+    else if (strcmp(prop, "text-decoration") == 0) {
+        st->text_underline = src->text_underline;
+        st->text_line_through = src->text_line_through;
+    } else if (strcmp(prop, "vertical-align") == 0) st->vertical_align = src->vertical_align;
+    else if (strcmp(prop, "white-space") == 0) st->white_space = src->white_space;
     else if (strcmp(prop, "margin") == 0) {
         st->margin_top = src->margin_top; st->margin_right = src->margin_right;
         st->margin_bottom = src->margin_bottom; st->margin_left = src->margin_left;
-    } else if (strcmp(prop, "padding") == 0) {
+    } else if (strcmp(prop, "margin-top") == 0) st->margin_top = src->margin_top;
+    else if (strcmp(prop, "margin-right") == 0) st->margin_right = src->margin_right;
+    else if (strcmp(prop, "margin-bottom") == 0) st->margin_bottom = src->margin_bottom;
+    else if (strcmp(prop, "margin-left") == 0) st->margin_left = src->margin_left;
+    else if (strcmp(prop, "padding") == 0) {
         st->padding_top = src->padding_top; st->padding_right = src->padding_right;
         st->padding_bottom = src->padding_bottom; st->padding_left = src->padding_left;
-    } else if (strcmp(prop, "border") == 0 || strcmp(prop, "border-width") == 0) {
+    } else if (strcmp(prop, "padding-top") == 0) st->padding_top = src->padding_top;
+    else if (strcmp(prop, "padding-right") == 0) st->padding_right = src->padding_right;
+    else if (strcmp(prop, "padding-bottom") == 0) st->padding_bottom = src->padding_bottom;
+    else if (strcmp(prop, "padding-left") == 0) st->padding_left = src->padding_left;
+    else if (strcmp(prop, "border") == 0 || strcmp(prop, "border-width") == 0) {
         st->border_width = src->border_width;
         st->border_left_width = src->border_left_width;
         st->border_bottom_width = src->border_bottom_width;
-    } else if (strcmp(prop, "width") == 0) st->width = src->width;
+        st->border_style = src->border_style;
+        st->border_color = src->border_color;
+    } else if (strcmp(prop, "border-color") == 0) st->border_color = src->border_color;
+    else if (strcmp(prop, "border-style") == 0) st->border_style = src->border_style;
+    else if (strcmp(prop, "border-collapse") == 0) st->border_collapse = src->border_collapse;
+    else if (strcmp(prop, "width") == 0) st->width = src->width;
     else if (strcmp(prop, "height") == 0) st->height = src->height;
+    else if (strcmp(prop, "min-width") == 0) st->min_width = src->min_width;
+    else if (strcmp(prop, "max-width") == 0) st->max_width = src->max_width;
     else if (strcmp(prop, "display") == 0) st->display = src->display;
     else if (strcmp(prop, "box-sizing") == 0) st->box_sizing = src->box_sizing;
+    else if (strcmp(prop, "position") == 0) st->position = src->position;
+    else if (strcmp(prop, "z-index") == 0) { st->z_index = src->z_index; st->has_z_index = src->has_z_index; }
+    else if (strcmp(prop, "float") == 0) st->css_float = src->css_float;
+    else if (strcmp(prop, "clear") == 0) st->css_clear = src->css_clear;
+}
+
+static bool parse_border_style_kw(const char* tok, css_border_style_t* out_style) {
+    if (!tok || !out_style) return false;
+    if (strcasecmp(tok, "none") == 0)   { *out_style = BDR_STYLE_NONE; return true; }
+    if (strcasecmp(tok, "hidden") == 0) { *out_style = BDR_STYLE_HIDDEN; return true; }
+    if (strcasecmp(tok, "inset") == 0)  { *out_style = BDR_STYLE_INSET; return true; }
+    if (strcasecmp(tok, "groove") == 0) { *out_style = BDR_STYLE_GROOVE; return true; }
+    if (strcasecmp(tok, "outset") == 0) { *out_style = BDR_STYLE_OUTSET; return true; }
+    if (strcasecmp(tok, "ridge") == 0)  { *out_style = BDR_STYLE_RIDGE; return true; }
+    if (strcasecmp(tok, "dotted") == 0) { *out_style = BDR_STYLE_DOTTED; return true; }
+    if (strcasecmp(tok, "dashed") == 0) { *out_style = BDR_STYLE_DASHED; return true; }
+    if (strcasecmp(tok, "solid") == 0)  { *out_style = BDR_STYLE_SOLID; return true; }
+    if (strcasecmp(tok, "double") == 0) { *out_style = BDR_STYLE_DOUBLE; return true; }
+    return false;
 }
 
 static void parse_border_shorthand(const char* val,
+                                   uint32_t current_color,
                                    int32_t em_px, int32_t rem_px, int32_t vw_px, int32_t vh_px,
                                    blink_layout_mode_t mode,
-                                   int* out_w, uint32_t* io_color) {
+                                   int* out_w,
+                                   css_border_style_t* io_style,
+                                   uint32_t* io_color) {
     *out_w = 0;
-    if (!val || strcasecmp(val, "none") == 0 || strcmp(val, "0") == 0) return;
+    if (!val || strcmp(val, "0") == 0) {
+        if (io_style) *io_style = BDR_STYLE_NONE;
+        return;
+    }
+    if (strcasecmp(val, "none") == 0) {
+        if (io_style) *io_style = BDR_STYLE_NONE;
+        return;
+    }
+    if (strcasecmp(val, "hidden") == 0) {
+        if (io_style) *io_style = BDR_STYLE_HIDDEN;
+        return;
+    }
 
-    char copy[192];
-    strncpy(copy, val, sizeof(copy) - 1);
-    copy[sizeof(copy) - 1] = '\0';
-
+    /* Tokenize respecting parentheses (e.g. `2px solid color-mix(...)` or `1px solid rgb(...)`) */
     bool saw_style = false;
     bool saw_width = false;
-    char* save = NULL;
-    char* tok = strtok_r(copy, " \t", &save);
-    while (tok) {
-        if (strcasecmp(tok, "solid") == 0 || strcasecmp(tok, "dashed") == 0 ||
-            strcasecmp(tok, "dotted") == 0 || strcasecmp(tok, "double") == 0) {
-            saw_style = true;
-        } else if (isdigit((unsigned char)tok[0])) {
+    css_border_style_t parsed_st = BDR_STYLE_SOLID;
+    const char* p = val;
+    while (*p) {
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (!*p) break;
+        const char* ts = p;
+        int paren = 0;
+        while (*p && (paren > 0 || !isspace((unsigned char)*p))) {
+            if (*p == '(') paren++;
+            else if (*p == ')' && paren > 0) paren--;
+            p++;
+        }
+        char tok[128];
+        size_t tlen = (size_t)(p - ts);
+        if (tlen >= sizeof(tok)) tlen = sizeof(tok) - 1;
+        memcpy(tok, ts, tlen);
+        tok[tlen] = '\0';
+
+        css_border_style_t bst;
+        if (parse_border_style_kw(tok, &bst)) {
+            parsed_st = bst;
+            saw_style = (bst != BDR_STYLE_NONE && bst != BDR_STYLE_HIDDEN);
+            if (io_style) *io_style = bst;
+        } else if (isdigit((unsigned char)tok[0]) || strncasecmp(tok, "calc(", 5) == 0 ||
+                   strncasecmp(tok, "min(", 4) == 0 || strncasecmp(tok, "max(", 4) == 0 ||
+                   strncasecmp(tok, "clamp(", 6) == 0) {
             bool is_auto = false;
             *out_w = blink_css_eval_length_or_calc(tok, 0, em_px, rem_px, vw_px, vh_px, mode, &is_auto);
             saw_width = true;
         } else {
             bool cok = false;
-            uint32_t c = blink_parse_css_color(tok, &cok);
+            uint32_t c = blink_parse_css_color_with_current(tok, current_color, &cok);
             if (cok) *io_color = c;
         }
-        tok = strtok_r(NULL, " \t", &save);
     }
-    if (!saw_width && saw_style) *out_w = 1;
+    if (parsed_st == BDR_STYLE_NONE || parsed_st == BDR_STYLE_HIDDEN) {
+        *out_w = 0;
+    } else if (!saw_width && saw_style) {
+        *out_w = 1;
+    }
+}
+
+static void parse_grid_track_spec(const char* track_str,
+                                  int32_t parent_avail_w, int32_t em_px, int32_t root_font_px,
+                                  int32_t vw_px, int32_t vh_px, blink_layout_mode_t mode,
+                                  int* out_min_px, int* out_max_spec) {
+    *out_min_px = 0;
+    *out_max_spec = -1;
+    if (!track_str) return;
+    while (*track_str && isspace((unsigned char)*track_str)) track_str++;
+
+    if (strncasecmp(track_str, "minmax(", 7) == 0) {
+        char inner[128];
+        read_paren_arg(track_str + 6, inner, sizeof(inner));
+        char* comma = strchr(inner, ',');
+        if (comma) {
+            *comma = '\0';
+            char* min_s = inner;
+            char* max_s = comma + 1;
+            trim_inplace(min_s);
+            trim_inplace(max_s);
+            *out_min_px = blink_css_eval_length_or_calc(min_s, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+            if (*out_min_px < 0) *out_min_px = 0;
+            if (strcasestr_portable(max_s, "fr")) {
+                int fr = atoi(max_s);
+                *out_max_spec = (fr > 0) ? -fr : -1;
+            } else {
+                int32_t mx = blink_css_eval_length_or_calc(max_s, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+                *out_max_spec = (mx > 0) ? mx : -1;
+            }
+            return;
+        }
+    }
+
+    if (strcasestr_portable(track_str, "fr")) {
+        int fr = atoi(track_str);
+        *out_max_spec = (fr > 0) ? -fr : -1;
+    } else {
+        int32_t w = blink_css_eval_length_or_calc(track_str, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+        *out_max_spec = (w > 0) ? w : -1;
+    }
 }
 
 static void apply_resolved_css_decl(dom_style_t* st,
@@ -1726,7 +2822,8 @@ static void apply_resolved_css_decl(dom_style_t* st,
 
     if (strcmp(prop, "color") == 0) {
         bool ok = false;
-        uint32_t c = blink_parse_css_color(val, &ok);
+        uint32_t inh_c = parent_st ? parent_st->color : initial_st->color;
+        uint32_t c = blink_parse_css_color_with_current(val, inh_c, &ok);
         if (ok) st->color = c;
     } else if (strcmp(prop, "background-color") == 0 || strcmp(prop, "background") == 0) {
         if (strcasecmp(val, "none") == 0 || strcasecmp(val, "transparent") == 0) {
@@ -1734,7 +2831,7 @@ static void apply_resolved_css_decl(dom_style_t* st,
             st->has_bg = false;
         } else {
             bool ok = false;
-            uint32_t c = blink_parse_css_color(val, &ok);
+            uint32_t c = blink_parse_css_color_with_current(val, st->color, &ok);
             if (ok) {
                 st->bg_color = c;
                 st->has_bg = ((c >> 24) > 0);
@@ -1755,6 +2852,26 @@ static void apply_resolved_css_decl(dom_style_t* st,
     } else if (strcmp(prop, "line-height") == 0) {
         float lh = strtof(val, NULL);
         if (lh > 0.0f) st->line_height = (lh > 4.0f) ? (lh / st->font_size) : lh;
+    } else if (strcmp(prop, "text-decoration") == 0 || strcmp(prop, "text-decoration-line") == 0) {
+        if (strcasestr_portable(val, "none")) {
+            st->text_underline = false;
+            st->text_line_through = false;
+        } else {
+            if (strcasestr_portable(val, "underline")) st->text_underline = true;
+            if (strcasestr_portable(val, "line-through")) st->text_line_through = true;
+        }
+    } else if (strcmp(prop, "vertical-align") == 0) {
+        if (strcasestr_portable(val, "sub")) st->vertical_align = VALIGN_SUB;
+        else if (strcasestr_portable(val, "super")) st->vertical_align = VALIGN_SUPER;
+        else if (strcasestr_portable(val, "middle")) st->vertical_align = VALIGN_MIDDLE;
+        else st->vertical_align = VALIGN_BASELINE;
+    } else if (strcmp(prop, "white-space") == 0) {
+        if (strcasestr_portable(val, "pre")) st->white_space = WS_PRE;
+        else if (strcasestr_portable(val, "nowrap")) st->white_space = WS_NOWRAP;
+        else st->white_space = WS_NORMAL;
+    } else if (strcmp(prop, "container-type") == 0 || strcmp(prop, "container") == 0) {
+        st->is_inline_size_container = (strcasestr_portable(val, "inline-size") != NULL ||
+                                        strcasestr_portable(val, "size") != NULL);
     } else if (strcmp(prop, "margin") == 0) {
         blink_box_edges_t e;
         blink_css_parse_box_shorthand(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &e);
@@ -1785,35 +2902,106 @@ static void apply_resolved_css_decl(dom_style_t* st,
         bool is_auto = false;
         int32_t w = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
         st->width = is_auto ? -1 : w;
+    } else if (strcmp(prop, "min-width") == 0) {
+        bool is_auto = false;
+        int32_t mw = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        st->min_width = (is_auto || mw < 0) ? 0 : mw;
+    } else if (strcmp(prop, "max-width") == 0) {
+        bool is_auto = false;
+        int32_t mw = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        st->max_width = is_auto ? -1 : mw;
     } else if (strcmp(prop, "height") == 0) {
         bool is_auto = false;
         int32_t h = blink_css_eval_length_or_calc(val, vh_px, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
         st->height = is_auto ? -1 : h;
     } else if (strcmp(prop, "border") == 0) {
         int bw = 0;
-        parse_border_shorthand(val, em_px, root_font_px, vw_px, vh_px, mode, &bw, &st->border_color);
+        parse_border_shorthand(val, st->color, em_px, root_font_px, vw_px, vh_px, mode, &bw, &st->border_style, &st->border_color);
         st->border_width = bw;
     } else if (strcmp(prop, "border-width") == 0) {
         st->border_width = blink_css_eval_length_or_calc(val, 0, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+        if (st->border_width > 0 && st->border_style == BDR_STYLE_NONE) st->border_style = BDR_STYLE_SOLID;
+    } else if (strcmp(prop, "border-style") == 0) {
+        css_border_style_t bst;
+        if (parse_border_style_kw(val, &bst)) {
+            st->border_style = bst;
+            if (bst == BDR_STYLE_NONE || bst == BDR_STYLE_HIDDEN) st->border_width = 0;
+        }
+    } else if (strcmp(prop, "border-collapse") == 0) {
+        st->border_collapse = (strcasestr_portable(val, "collapse") != NULL);
     } else if (strcmp(prop, "border-left") == 0) {
         int bw = 0;
         uint32_t lc = st->border_color;
-        parse_border_shorthand(val, em_px, root_font_px, vw_px, vh_px, mode, &bw, &lc);
+        css_border_style_t dummy = st->border_style;
+        parse_border_shorthand(val, st->color, em_px, root_font_px, vw_px, vh_px, mode, &bw, &dummy, &lc);
         st->border_left_width = bw;
         st->border_left_color = lc;
     } else if (strcmp(prop, "border-bottom") == 0) {
         int bw = 0;
-        parse_border_shorthand(val, em_px, root_font_px, vw_px, vh_px, mode, &bw, &st->border_color);
+        css_border_style_t dummy = st->border_style;
+        parse_border_shorthand(val, st->color, em_px, root_font_px, vw_px, vh_px, mode, &bw, &dummy, &st->border_color);
         st->border_bottom_width = bw;
     } else if (strcmp(prop, "border-color") == 0) {
         bool ok = false;
-        uint32_t c = blink_parse_css_color(val, &ok);
+        uint32_t c = blink_parse_css_color_with_current(val, st->color, &ok);
         if (ok) st->border_color = c;
     } else if (strcmp(prop, "border-radius") == 0) {
         st->border_radius = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
     } else if (strcmp(prop, "box-sizing") == 0) {
         if (strcasestr_portable(val, "border-box")) st->box_sizing = BOX_SIZING_BORDER_BOX;
         else st->box_sizing = BOX_SIZING_CONTENT_BOX;
+    } else if (strcmp(prop, "position") == 0) {
+        if (strcasestr_portable(val, "absolute")) st->position = POS_ABSOLUTE;
+        else if (strcasestr_portable(val, "fixed")) st->position = POS_FIXED;
+        else if (strcasestr_portable(val, "sticky")) st->position = POS_STICKY;
+        else if (strcasestr_portable(val, "relative")) st->position = POS_RELATIVE;
+        else st->position = POS_STATIC;
+    } else if (strcmp(prop, "top") == 0) {
+        bool is_auto = false;
+        int32_t v = blink_css_eval_length_or_calc(val, vh_px, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        st->has_top = !is_auto;
+        st->top = is_auto ? 0 : v;
+    } else if (strcmp(prop, "bottom") == 0) {
+        bool is_auto = false;
+        int32_t v = blink_css_eval_length_or_calc(val, vh_px, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        st->has_bottom = !is_auto;
+        st->bottom = is_auto ? 0 : v;
+    } else if (strcmp(prop, "left") == 0) {
+        bool is_auto = false;
+        int32_t v = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        st->has_left = !is_auto;
+        st->left = is_auto ? 0 : v;
+    } else if (strcmp(prop, "right") == 0) {
+        bool is_auto = false;
+        int32_t v = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        st->has_right = !is_auto;
+        st->right = is_auto ? 0 : v;
+    } else if (strcmp(prop, "inset") == 0) {
+        if (strcasecmp(val, "auto") == 0) {
+            st->has_top = st->has_right = st->has_bottom = st->has_left = false;
+        } else {
+            blink_box_edges_t e;
+            blink_css_parse_box_shorthand(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &e);
+            st->top = e.top; st->right = e.right; st->bottom = e.bottom; st->left = e.left;
+            st->has_top = st->has_right = st->has_bottom = st->has_left = true;
+        }
+    } else if (strcmp(prop, "z-index") == 0) {
+        if (strcasecmp(val, "auto") == 0) {
+            st->has_z_index = false;
+            st->z_index = 0;
+        } else {
+            st->has_z_index = true;
+            st->z_index = atoi(val);
+        }
+    } else if (strcmp(prop, "float") == 0) {
+        if (strcasestr_portable(val, "left")) st->css_float = FLOAT_LEFT;
+        else if (strcasestr_portable(val, "right")) st->css_float = FLOAT_RIGHT;
+        else st->css_float = FLOAT_NONE;
+    } else if (strcmp(prop, "clear") == 0) {
+        if (strcasestr_portable(val, "both")) st->css_clear = CLEAR_BOTH;
+        else if (strcasestr_portable(val, "left")) st->css_clear = CLEAR_LEFT;
+        else if (strcasestr_portable(val, "right")) st->css_clear = CLEAR_RIGHT;
+        else st->css_clear = CLEAR_NONE;
     } else if (strcmp(prop, "display") == 0) {
         if (strcasestr_portable(val, "none")) st->display = DISPLAY_NONE;
         else if (strcasestr_portable(val, "inline-block")) st->display = DISPLAY_INLINE_BLOCK;
@@ -1828,42 +3016,58 @@ static void apply_resolved_css_decl(dom_style_t* st,
         else st->display = DISPLAY_BLOCK;
     } else if (strcmp(prop, "grid-template-columns") == 0) {
         st->num_grid_cols = 0;
-        if (strncasecmp(val, "repeat(", 7) == 0) {
-            int reps = atoi(val + 7);
-            const char* comma = strchr(val + 7, ',');
-            if (reps > 0 && reps <= 16 && comma) {
-                char track[64];
-                strncpy(track, comma + 1, sizeof(track) - 1);
-                track[sizeof(track) - 1] = '\0';
-                char* rp = strrchr(track, ')');
-                if (rp) *rp = '\0';
-                trim_inplace(track);
-                int w_spec = -1;
-                if (strcasestr_portable(track, "fr")) {
-                    int fr = atoi(track);
-                    w_spec = (fr > 0) ? -fr : -1;
-                } else {
-                    w_spec = blink_css_eval_length_or_calc(track, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
-                }
-                for (int r = 0; r < reps && st->num_grid_cols < 16; r++) {
-                    st->grid_col_widths[st->num_grid_cols++] = w_spec;
-                }
+        const char* p = val;
+        while (*p && st->num_grid_cols < 16) {
+            while (*p && isspace((unsigned char)*p)) p++;
+            if (!*p) break;
+            const char* ts = p;
+            int paren = 0;
+            while (*p && (paren > 0 || !isspace((unsigned char)*p))) {
+                if (*p == '(') paren++;
+                else if (*p == ')' && paren > 0) paren--;
+                p++;
             }
-        } else {
-            char copy[192];
-            strncpy(copy, val, sizeof(copy) - 1);
-            copy[sizeof(copy) - 1] = '\0';
-            char* save = NULL;
-            char* tok = strtok_r(copy, " \t", &save);
-            while (tok && st->num_grid_cols < 16) {
-                if (strcasestr_portable(tok, "fr")) {
-                    int fr = atoi(tok);
-                    st->grid_col_widths[st->num_grid_cols++] = (fr > 0) ? -fr : -1;
-                } else {
-                    int32_t w = blink_css_eval_length_or_calc(tok, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
-                    st->grid_col_widths[st->num_grid_cols++] = (w > 0) ? w : -1;
+            char tok[128];
+            size_t tlen = (size_t)(p - ts);
+            if (tlen >= sizeof(tok)) tlen = sizeof(tok) - 1;
+            memcpy(tok, ts, tlen);
+            tok[tlen] = '\0';
+
+            if (strncasecmp(tok, "repeat(", 7) == 0) {
+                char rinner[128];
+                read_paren_arg(tok + 6, rinner, sizeof(rinner));
+                int reps = atoi(rinner);
+                char* comma = strchr(rinner, ',');
+                if (reps > 0 && reps <= 16 && comma) {
+                    int min_px = 0, max_spec = -1;
+                    parse_grid_track_spec(comma + 1, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &min_px, &max_spec);
+                    for (int r = 0; r < reps && st->num_grid_cols < 16; r++) {
+                        st->grid_col_min[st->num_grid_cols] = min_px;
+                        st->grid_col_widths[st->num_grid_cols] = max_spec;
+                        st->num_grid_cols++;
+                    }
                 }
-                tok = strtok_r(NULL, " \t", &save);
+            } else {
+                int min_px = 0, max_spec = -1;
+                parse_grid_track_spec(tok, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &min_px, &max_spec);
+                st->grid_col_min[st->num_grid_cols] = min_px;
+                st->grid_col_widths[st->num_grid_cols] = max_spec;
+                st->num_grid_cols++;
+            }
+        }
+    } else if (strcmp(prop, "grid-column") == 0) {
+        const char* sp_kw = strcasestr_portable(val, "span");
+        if (sp_kw) {
+            int sp = atoi(sp_kw + 4);
+            st->grid_col_span = (sp > 1) ? sp : 1;
+        } else {
+            const char* slash = strchr(val, '/');
+            if (slash) {
+                int start_line = atoi(val);
+                int end_line = atoi(slash + 1);
+                if (start_line > 0 && end_line > start_line) {
+                    st->grid_col_span = end_line - start_line;
+                }
             }
         }
     } else if (strcmp(prop, "align-items") == 0) {
@@ -1881,9 +3085,39 @@ static void apply_resolved_css_decl(dom_style_t* st,
         st->gap = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
     } else if (strcmp(prop, "row-gap") == 0) {
         st->row_gap = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
-    } else if (strcmp(prop, "flex-grow") == 0 || strcmp(prop, "flex") == 0) {
+    } else if (strcmp(prop, "flex-direction") == 0) {
+        st->flex_direction = strcasestr_portable(val, "column") ? FLEX_DIR_COLUMN : FLEX_DIR_ROW;
+    } else if (strcmp(prop, "flex-wrap") == 0) {
+        st->flex_wrap = (strcasestr_portable(val, "wrap") != NULL && strcasestr_portable(val, "nowrap") == NULL);
+    } else if (strcmp(prop, "flex-grow") == 0) {
         int fg = atoi(val);
         if (fg >= 0) st->flex_grow = fg;
+    } else if (strcmp(prop, "flex-shrink") == 0) {
+        int fs = atoi(val);
+        if (fs >= 0) st->flex_shrink = fs;
+    } else if (strcmp(prop, "flex") == 0) {
+        if (strcasecmp(val, "none") == 0) {
+            st->flex_grow = 0;
+            st->flex_shrink = 0;
+        } else if (strcasecmp(val, "auto") == 0) {
+            st->flex_grow = 1;
+            st->flex_shrink = 1;
+        } else {
+            char copy[128];
+            strncpy(copy, val, sizeof(copy) - 1);
+            copy[sizeof(copy) - 1] = '\0';
+            char* save = NULL;
+            char* t1 = strtok_r(copy, " \t", &save);
+            char* t2 = t1 ? strtok_r(NULL, " \t", &save) : NULL;
+            char* t3 = t2 ? strtok_r(NULL, " \t", &save) : NULL;
+            if (t1 && isdigit((unsigned char)t1[0])) st->flex_grow = atoi(t1);
+            if (t2 && isdigit((unsigned char)t2[0])) st->flex_shrink = atoi(t2);
+            if (t3) {
+                bool is_auto = false;
+                int32_t bw = blink_css_eval_length_or_calc(t3, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+                if (!is_auto && bw >= 0) st->width = bw;
+            }
+        }
     } else if (strcmp(prop, "text-align") == 0) {
         if (strcasestr_portable(val, "center")) st->text_align = ALIGN_CENTER;
         else if (strcasestr_portable(val, "right") || strcasestr_portable(val, "end")) st->text_align = ALIGN_RIGHT;
@@ -1891,19 +3125,207 @@ static void apply_resolved_css_decl(dom_style_t* st,
     }
 }
 
+static bool rule_matches_environment(const blink_css_rule_t* rule,
+                                     const dom_node_t* node,
+                                     int32_t vw_px,
+                                     int32_t nearest_container_w,
+                                     const dom_node_t** out_scope_root) {
+    if (out_scope_root) *out_scope_root = NULL;
+    if (rule->media_min_w >= 0 && vw_px < rule->media_min_w) return false;
+    if (rule->media_max_w >= 0 && vw_px > rule->media_max_w) return false;
+    if (rule->container_min_w >= 0 || rule->container_max_w >= 0) {
+        if (nearest_container_w < 0) return false;
+        if (rule->container_min_w >= 0 && nearest_container_w < rule->container_min_w) return false;
+        if (rule->container_max_w >= 0 && nearest_container_w > rule->container_max_w) return false;
+    }
+    if (rule->has_scope) {
+        const blink_complex_sel_t* lim = rule->has_scope_limit ? &rule->scope_limit : NULL;
+        if (!blink_css_in_donut_scope(node, &rule->scope_root, lim, out_scope_root)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool is_strictly_earlier_layer_candidate(const candidate_decl_t* cur, const candidate_decl_t* prev) {
+    if (cur->meta.origin == CSS_ORIGIN_INLINE) {
+        return prev->meta.origin == CSS_ORIGIN_AUTHOR;
+    }
+    if (cur->meta.origin == CSS_ORIGIN_AUTHOR && prev->meta.origin == CSS_ORIGIN_AUTHOR) {
+        return prev->meta.layer_order != cur->meta.layer_order;
+    }
+    return false;
+}
+
+static void unquote_css_content(const char* raw, char* out, size_t out_cap) {
+    out[0] = '\0';
+    if (!raw) return;
+    while (*raw && isspace((unsigned char)*raw)) raw++;
+    if (strcasecmp(raw, "none") == 0 || strcasecmp(raw, "normal") == 0) return;
+
+    size_t j = 0;
+    const char* p = raw;
+    while (*p && j + 1 < out_cap) {
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (*p == '"' || *p == '\'') {
+            char q = *p++;
+            while (*p && *p != q && j + 1 < out_cap) {
+                if (*p == '\\' && p[1]) {
+                    p++;
+                    out[j++] = *p++;
+                } else if ((unsigned char)p[0] == 0xC2 && ((unsigned char)p[1] & 0xC0) == 0x80) {
+                    /* UTF-8 U+0080..U+00BF (e.g. '§' = 0xC2 0xA7) -> Latin-1 byte */
+                    out[j++] = (char)((unsigned char)p[1] == 0xA0 ? ' ' : p[1]);
+                    p += 2;
+                } else if ((unsigned char)p[0] == 0xC3 && ((unsigned char)p[1] & 0xC0) == 0x80) {
+                    /* UTF-8 U+00C0..U+00FF -> Latin-1 byte */
+                    out[j++] = (char)((unsigned char)p[1] + 0x40);
+                    p += 2;
+                } else if ((unsigned char)p[0] >= 0x80) {
+                    unsigned char c = (unsigned char)p[0];
+                    if ((c & 0xF0) == 0xE0 && p[1] && p[2]) p += 3;
+                    else if ((c & 0xF8) == 0xF0 && p[1] && p[2] && p[3]) p += 4;
+                    else p++;
+                } else {
+                    out[j++] = *p++;
+                }
+            }
+            if (*p == q) p++;
+        } else {
+            break;
+        }
+    }
+    out[j] = '\0';
+}
+
+static void materialize_pseudo_element(dom_node_t* host,
+                                       blink_pseudo_elem_t which,
+                                       const blink_css_stylesheet_t* sheet,
+                                       const dom_style_t* initial_st,
+                                       int32_t host_content_w,
+                                       int32_t nearest_container_w,
+                                       int32_t root_font_px,
+                                       int32_t vw_px,
+                                       int32_t vh_px,
+                                       blink_layout_mode_t mode) {
+    if (!host || !sheet || blink_html_is_void_tag(host->tag)) return;
+
+    candidate_decl_t pcands[128];
+    int n_pcands = 0;
+
+    for (int r = 0; r < sheet->num_rules; r++) {
+        const blink_css_rule_t* rule = &sheet->rules[r];
+        if (rule->selector.pseudo_elem != which) continue;
+        const dom_node_t* scope_root = NULL;
+        if (!rule_matches_environment(rule, host, vw_px, nearest_container_w, &scope_root)) continue;
+        if (!match_selector_internal(host, &rule->selector, scope_root, true)) continue;
+
+        for (int d = 0; d < rule->num_decls && n_pcands < 128; d++) {
+            pcands[n_pcands].decl = rule->decls[d];
+            pcands[n_pcands].meta.origin = CSS_ORIGIN_AUTHOR;
+            pcands[n_pcands].meta.important = rule->decls[d].important;
+            pcands[n_pcands].meta.layer_order = rule->layer_order;
+            pcands[n_pcands].meta.specificity = rule->selector.specificity;
+            pcands[n_pcands].meta.source_order = rule->source_order + d;
+            n_pcands++;
+        }
+    }
+
+    if (n_pcands == 0) return;
+    if (n_pcands > 1) {
+        qsort(pcands, (size_t)n_pcands, sizeof(candidate_decl_t), cmp_candidate_decl);
+    }
+
+    dom_style_t pst;
+    init_initial_style(&pst);
+    pst.display = DISPLAY_INLINE;
+    pst.color = host->style.color;
+    pst.font_size = host->style.font_size;
+    pst.font_weight = host->style.font_weight;
+    pst.font_style = host->style.font_style;
+    strcpy(pst.font_family, host->style.font_family);
+    pst.line_height = host->style.line_height;
+    pst.text_align = host->style.text_align;
+    pst.white_space = host->style.white_space;
+    pst.num_custom_props = host->style.num_custom_props;
+    for (int i = 0; i < host->style.num_custom_props; i++) {
+        pst.custom_props[i] = host->style.custom_props[i];
+    }
+
+    bool saw_content = false;
+    char content_text[160] = "";
+
+    for (int i = 0; i < n_pcands; i++) {
+        const char* prop = pcands[i].decl.prop;
+        if (prop[0] == '-' && prop[1] == '-') {
+            set_custom_prop(&pst, prop, pcands[i].decl.value);
+            continue;
+        }
+        char resolved_val[192];
+        if (!blink_css_resolve_var_value(pst.custom_props, pst.num_custom_props,
+                                         pcands[i].decl.value, resolved_val, sizeof(resolved_val))) {
+            continue;
+        }
+        if (strcmp(prop, "content") == 0) {
+            saw_content = true;
+            unquote_css_content(resolved_val, content_text, sizeof(content_text));
+        } else {
+            apply_resolved_css_decl(&pst, &host->style, initial_st, prop, resolved_val,
+                                    host_content_w, root_font_px, vw_px, vh_px, mode);
+        }
+    }
+
+    if (!saw_content || pst.display == DISPLAY_NONE || !content_text[0]) return;
+
+    dom_node_t* syn = dom_node_create("span");
+    syn->is_generated_pseudo = true;
+    syn->style = pst;
+    dom_node_t* tn = dom_node_create("#text");
+    tn->is_generated_pseudo = true;
+    tn->text = strdup(content_text);
+    tn->style = pst;
+    tn->style.display = DISPLAY_INLINE;
+    tn->style.has_bg = false;
+    tn->style.border_width = 0;
+    tn->style.padding_left = tn->style.padding_right = tn->style.padding_top = tn->style.padding_bottom = 0;
+    dom_node_add_child(syn, tn);
+
+    if (which == PSEUDO_ELEM_BEFORE) {
+        dom_node_insert_child_first(host, syn);
+    } else {
+        dom_node_add_child(host, syn);
+    }
+}
+
+static void remove_existing_generated_pseudos(dom_node_t* node) {
+    if (!node) return;
+    int write_idx = 0;
+    for (int i = 0; i < node->num_children; i++) {
+        if (node->children[i] && node->children[i]->is_generated_pseudo) {
+            dom_node_free(node->children[i]);
+        } else {
+            node->children[write_idx++] = node->children[i];
+        }
+    }
+    node->num_children = write_idx;
+}
+
 static void resolve_node_recursive(dom_node_t* node,
                                    const blink_css_stylesheet_t* sheet,
                                    const dom_style_t* initial_st,
                                    int32_t parent_avail_w,
+                                   int32_t nearest_container_w,
                                    int32_t root_font_px,
                                    int32_t vw_px,
                                    int32_t vh_px,
                                    blink_layout_mode_t mode) {
-    if (!node) return;
+    if (!node || node->is_generated_pseudo) return;
+
+    remove_existing_generated_pseudos(node);
 
     const dom_style_t* parent_st = node->parent ? &node->parent->style : NULL;
 
-    /* Text nodes purely inherit parent's computed typographic & color properties */
+    /* Text nodes purely inherit parent's computed typographic, decoration & color properties */
     if (strcmp(node->tag, "#text") == 0) {
         if (parent_st) {
             node->style.color = parent_st->color;
@@ -1913,6 +3335,10 @@ static void resolve_node_recursive(dom_node_t* node,
             strcpy(node->style.font_family, parent_st->font_family);
             node->style.line_height = parent_st->line_height;
             node->style.text_align = parent_st->text_align;
+            node->style.text_underline = parent_st->text_underline;
+            node->style.text_line_through = parent_st->text_line_through;
+            node->style.vertical_align = parent_st->vertical_align;
+            node->style.white_space = parent_st->white_space;
         }
         return;
     }
@@ -1927,12 +3353,22 @@ static void resolve_node_recursive(dom_node_t* node,
         if (!tag_has_explicit_ua_font_family(node->tag)) strcpy(node->style.font_family, parent_st->font_family);
         node->style.line_height = parent_st->line_height;
         node->style.text_align = parent_st->text_align;
+        if (strcmp(node->tag, "pre") != 0) node->style.white_space = parent_st->white_space;
+        if (strcmp(node->tag, "table") != 0) node->style.border_collapse = parent_st->border_collapse;
+        if (parent_st->text_underline) node->style.text_underline = true;
+        if (parent_st->text_line_through) node->style.text_line_through = true;
+        if (parent_st->vertical_align != VALIGN_BASELINE && node->ua_style.vertical_align == VALIGN_BASELINE) {
+            node->style.vertical_align = parent_st->vertical_align;
+        }
 
         node->style.num_custom_props = parent_st->num_custom_props;
         for (int i = 0; i < parent_st->num_custom_props; i++) {
             node->style.custom_props[i] = parent_st->custom_props[i];
         }
     }
+
+    /* Snapshot exact UA + Inherited style for CSS Cascade `revert` & `revert-layer`! */
+    dom_style_t base_ua_inherited = node->style;
 
     /* 2. Gather matching Author & Inline declarations */
     candidate_decl_t cands[512];
@@ -1941,9 +3377,10 @@ static void resolve_node_recursive(dom_node_t* node,
     if (sheet) {
         for (int r = 0; r < sheet->num_rules; r++) {
             const blink_css_rule_t* rule = &sheet->rules[r];
-            if (rule->media_min_w >= 0 && vw_px < rule->media_min_w) continue;
-            if (rule->media_max_w >= 0 && vw_px > rule->media_max_w) continue;
-            if (!blink_css_match_selector(node, &rule->selector)) continue;
+            if (rule->selector.pseudo_elem != PSEUDO_ELEM_NONE) continue;
+            const dom_node_t* scope_root = NULL;
+            if (!rule_matches_environment(rule, node, vw_px, nearest_container_w, &scope_root)) continue;
+            if (!match_selector_internal(node, &rule->selector, scope_root, false)) continue;
 
             for (int d = 0; d < rule->num_decls && num_cands < 512; d++) {
                 cands[num_cands].decl = rule->decls[d];
@@ -1983,8 +3420,8 @@ static void resolve_node_recursive(dom_node_t* node,
         }
     }
 
-    /* 5. Pass B: Apply font-size first (so `em` units on same element use updated font-size!),
-       then apply all standard properties with cycle-safe `var()` substitution */
+    /* 5. Pass B: Apply font-size first, then all standard properties with cycle-safe `var()`,
+       `revert` (`revert_author_restores_ua`), and `revert-layer` (`revert_layer_selects_strictly_earlier_layer`)! */
     for (int pass = 0; pass < 2; pass++) {
         for (int i = 0; i < num_cands; i++) {
             const char* prop = cands[i].decl.prop;
@@ -2001,6 +3438,31 @@ static void resolve_node_recursive(dom_node_t* node,
                 continue; /* Cyclic or unresolved var() -> IACVT fallback */
             }
 
+            if (strcasecmp(resolved_val, "revert") == 0) {
+                apply_keyword_reset(&node->style, &base_ua_inherited, prop);
+                continue;
+            }
+            if (strcasecmp(resolved_val, "revert-layer") == 0) {
+                apply_keyword_reset(&node->style, &base_ua_inherited, prop);
+                for (int j = 0; j < i; j++) {
+                    if (strcmp(cands[j].decl.prop, prop) != 0) continue;
+                    if (!is_strictly_earlier_layer_candidate(&cands[i], &cands[j])) continue;
+                    char prev_val[192];
+                    if (blink_css_resolve_var_value(node->style.custom_props,
+                                                    node->style.num_custom_props,
+                                                    cands[j].decl.value,
+                                                    prev_val,
+                                                    sizeof(prev_val)) &&
+                        strcasecmp(prev_val, "revert") != 0 &&
+                        strcasecmp(prev_val, "revert-layer") != 0) {
+                        apply_resolved_css_decl(&node->style, parent_st, initial_st,
+                                                prop, prev_val,
+                                                parent_avail_w, root_font_px, vw_px, vh_px, mode);
+                    }
+                }
+                continue;
+            }
+
             apply_resolved_css_decl(&node->style, parent_st, initial_st,
                                     prop, resolved_val,
                                     parent_avail_w, root_font_px, vw_px, vh_px, mode);
@@ -2011,9 +3473,9 @@ static void resolve_node_recursive(dom_node_t* node,
         root_font_px = (int32_t)lroundf(node->style.font_size);
     }
 
-    /* Compute approximate available width passed to child `%` resolutions */
+    /* Compute available inline width passed to child `%` & `@container` resolutions */
     int32_t child_avail = parent_avail_w - node->style.margin_left - node->style.margin_right;
-    if (node->style.width > 0) {
+    if (node->style.width >= 0) {
         child_avail = blink_css_resolve_content_inline_size(
             node->style.box_sizing,
             node->style.width,
@@ -2022,11 +3484,33 @@ static void resolve_node_recursive(dom_node_t* node,
     } else {
         child_avail -= (node->style.padding_left + node->style.padding_right + node->style.border_width * 2);
     }
+    if (node->style.max_width >= 0 && child_avail > node->style.max_width) {
+        child_avail = node->style.max_width;
+    }
+    if (child_avail < node->style.min_width) {
+        child_avail = node->style.min_width;
+    }
     if (child_avail < 0) child_avail = 0;
+
+    int32_t child_container_w = node->style.is_inline_size_container ? child_avail : nearest_container_w;
 
     for (int i = 0; i < node->num_children; i++) {
         resolve_node_recursive(node->children[i], sheet, initial_st,
-                               child_avail, root_font_px, vw_px, vh_px, mode);
+                               child_avail, child_container_w, root_font_px, vw_px, vh_px, mode);
+    }
+
+    /* Materialize synthetic `::before` and `::after` inline spans after resolving real children! */
+    materialize_pseudo_element(node, PSEUDO_ELEM_BEFORE, sheet, initial_st,
+                               child_avail, nearest_container_w, root_font_px, vw_px, vh_px, mode);
+    materialize_pseudo_element(node, PSEUDO_ELEM_AFTER, sheet, initial_st,
+                               child_avail, nearest_container_w, root_font_px, vw_px, vh_px, mode);
+}
+
+static void assign_dom_order_preorder(dom_node_t* n, int* io_ord) {
+    if (!n) return;
+    n->dom_order = (*io_ord)++;
+    for (int i = 0; i < n->num_children; i++) {
+        assign_dom_order_preorder(n->children[i], io_ord);
     }
 }
 
@@ -2039,7 +3523,9 @@ void blink_css_resolve_document_styles(dom_node_t* root,
     dom_style_t initial_st;
     init_initial_style(&initial_st);
     int32_t root_font_px = 14;
-    resolve_node_recursive(root, sheet, &initial_st, viewport_w - 32, root_font_px, viewport_w, viewport_h, mode);
+    resolve_node_recursive(root, sheet, &initial_st, viewport_w - 32, -1, root_font_px, viewport_w, viewport_h, mode);
+    int ord = 0;
+    assign_dom_order_preorder(root, &ord);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -2136,9 +3622,21 @@ static void apply_parsed_attribute(dom_node_t* node, const char* attr_k, const c
     }
 }
 
-dom_node_t* blink_parse_html5_document(const char* html, blink_css_stylesheet_t* out_sheet) {
+static bool is_inside_pre_element(const dom_node_t* n) {
+    const dom_node_t* cur = n;
+    while (cur) {
+        if (strcmp(cur->tag, "pre") == 0) return true;
+        cur = cur->parent;
+    }
+    return false;
+}
+
+dom_node_t* blink_parse_html5_document_ex(const char* html,
+                                          const char* base_dir,
+                                          blink_css_stylesheet_t* out_sheet) {
     if (!html) return NULL;
     if (out_sheet) blink_css_stylesheet_init(out_sheet);
+    const char* eff_base = (base_dir && base_dir[0]) ? base_dir : ".";
 
     dom_node_t* root = dom_node_create("body");
     dom_node_t* current = root;
@@ -2238,11 +3736,60 @@ dom_node_t* blink_parse_html5_document(const char* html, blink_css_stylesheet_t*
                     if (css_buf) {
                         memcpy(css_buf, p, clen);
                         css_buf[clen] = '\0';
-                        blink_css_parse_stylesheet(out_sheet, css_buf);
+                        blink_css_parse_stylesheet_ex(out_sheet, css_buf, eff_base);
                         free(css_buf);
                     }
                 }
                 p = css_end ? (css_end + 8) : (p + clen);
+                continue;
+            }
+
+            /* Parse external <link rel="stylesheet" href="..."> in <head> or <body>! */
+            if (strcmp(tag, "link") == 0) {
+                char link_rel[128] = "";
+                char link_href[512] = "";
+                while (*p && *p != '>') {
+                    while (*p && isspace((unsigned char)*p)) p++;
+                    if (*p == '/' && p[1] == '>') { p++; break; }
+                    if (*p == '>') break;
+                    char attr_k[64];
+                    int ki = 0;
+                    while (*p && *p != '=' && *p != '>' && *p != '/' && !isspace((unsigned char)*p) && ki < 63) {
+                        attr_k[ki++] = (char)tolower((unsigned char)*p++);
+                    }
+                    attr_k[ki] = '\0';
+                    while (*p && isspace((unsigned char)*p)) p++;
+                    char attr_v[512];
+                    attr_v[0] = '\0';
+                    if (*p == '=') {
+                        p++;
+                        while (*p && isspace((unsigned char)*p)) p++;
+                        char quote = 0;
+                        if (*p == '"' || *p == '\'') quote = *p++;
+                        int vi = 0;
+                        while (*p && vi < 511) {
+                            if (quote && *p == quote) { p++; break; }
+                            if (!quote && (*p == '>' || isspace((unsigned char)*p))) break;
+                            attr_v[vi++] = *p++;
+                        }
+                        attr_v[vi] = '\0';
+                    }
+                    if (strcmp(attr_k, "rel") == 0) {
+                        strncpy(link_rel, attr_v, sizeof(link_rel) - 1);
+                    } else if (strcmp(attr_k, "href") == 0) {
+                        strncpy(link_href, attr_v, sizeof(link_href) - 1);
+                    }
+                    if (!attr_k[0] && *p && *p != '>') p++;
+                }
+                if (*p == '>') p++;
+                if (out_sheet && link_href[0] && strcasestr_portable(link_rel, "stylesheet") != NULL) {
+                    char link_dir[512];
+                    char* link_css = load_local_stylesheet_file(eff_base, link_href, link_dir, sizeof(link_dir));
+                    if (link_css) {
+                        blink_css_parse_stylesheet_ex(out_sheet, link_css, link_dir);
+                        free(link_css);
+                    }
+                }
                 continue;
             }
 
@@ -2259,7 +3806,7 @@ dom_node_t* blink_parse_html5_document(const char* html, blink_css_stylesheet_t*
             }
 
             if (in_head) {
-                /* Skip other head metadata tags (<meta>, <link>, <base>) */
+                /* Skip other head metadata tags (<meta>, <base>) */
                 while (*p && *p != '>') p++;
                 if (*p == '>') p++;
                 continue;
@@ -2335,7 +3882,14 @@ dom_node_t* blink_parse_html5_document(const char* html, blink_css_stylesheet_t*
                 for (size_t k = 0; clean_text[k]; k++) {
                     if (!isspace((unsigned char)clean_text[k])) { all_ws = false; break; }
                 }
-                if (!all_ws) {
+                /* Preserve pure-whitespace runs inside `<pre>` or between inline elements (e.g. `<b>a</b> <i>b</i>`) */
+                bool after_inline = (current->num_children > 0 &&
+                                     current->children[current->num_children - 1]->ua_style.display == DISPLAY_INLINE);
+                bool before_own_close = (p[0] == '<' && p[1] == '/' &&
+                                         strncasecmp(p + 2, current->tag, strlen(current->tag)) == 0);
+                bool keep_inline_space = (all_ws && clean_text[0] != '\0' &&
+                                          (is_inside_pre_element(current) || (after_inline && !before_own_close)));
+                if (!all_ws || keep_inline_space) {
                     dom_node_t* tn = dom_node_create("#text");
                     tn->text = clean_text;
                     dom_node_add_child(current, tn);
@@ -2347,4 +3901,8 @@ dom_node_t* blink_parse_html5_document(const char* html, blink_css_stylesheet_t*
     }
 
     return root;
+}
+
+dom_node_t* blink_parse_html5_document(const char* html, blink_css_stylesheet_t* out_sheet) {
+    return blink_parse_html5_document_ex(html, ".", out_sheet);
 }

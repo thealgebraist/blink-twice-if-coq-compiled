@@ -401,7 +401,7 @@ typedef struct {
 } blink_css_decl_t;
 
 #define BLINK_MAX_RULE_DECLS 24
-#define BLINK_MAX_STYLESHEET_RULES 512
+#define BLINK_MAX_STYLESHEET_RULES 8192
 #define BLINK_MAX_LAYERS 32
 
 typedef struct {
@@ -528,9 +528,12 @@ char* blink_unescape_html(const char* src);
 uint32_t blink_parse_css_color(const char* s, bool* out_ok);
 uint32_t blink_parse_css_color_with_current(const char* s, uint32_t current_color, bool* out_ok);
 
+typedef char* (*blink_stylesheet_loader_fn)(const char* href, void* user_data, char* out_dir, size_t out_dir_cap);
+
 void blink_css_stylesheet_init(blink_css_stylesheet_t* sheet);
 void blink_css_parse_stylesheet(blink_css_stylesheet_t* sheet, const char* css_text);
 void blink_css_parse_stylesheet_ex(blink_css_stylesheet_t* sheet, const char* css_text, const char* base_dir);
+void blink_css_set_custom_loader(blink_stylesheet_loader_fn loader, void* user_data);
 
 dom_node_t* blink_parse_html5_document(const char* html, blink_css_stylesheet_t* out_sheet);
 dom_node_t* blink_parse_html5_document_ex(const char* html, const char* base_dir, blink_css_stylesheet_t* out_sheet);

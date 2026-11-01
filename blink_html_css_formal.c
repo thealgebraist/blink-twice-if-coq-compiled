@@ -940,8 +940,15 @@ static const char* parse_compound_segment(const char* p,
                     *io_spec = blink_specificity_add(*io_spec, ms);
                 }
                 parsed_any = true;
+            } else if (strcmp(pname, "focus") == 0 || strcmp(pname, "active") == 0 ||
+                       strcmp(pname, "hover") == 0 || strcmp(pname, "visited") == 0 ||
+                       strcmp(pname, "focus-visible") == 0 || strcmp(pname, "focus-within") == 0) {
+                /* Dynamic user-action / interaction pseudo-classes are FALSE on static document render */
+                strcpy(comp->tag, "__dynamic_pseudo_class__");
+                if (!suppress_specificity) io_spec->class_cnt++;
+                parsed_any = true;
             } else {
-                /* Unsupported pseudo-class (e.g. :hover) should not falsely match static document */
+                /* Unsupported pseudo-class should not falsely match static document */
                 if (*p == '(') {
                     char dummy[64];
                     p = read_paren_arg(p, dummy, sizeof(dummy));
@@ -1984,10 +1991,24 @@ static int32_t get_or_register_layer(blink_css_stylesheet_t* sheet, const char* 
     return sheet->num_layers - 1;
 }
 
+static blink_stylesheet_loader_fn g_custom_stylesheet_loader = NULL;
+static void*                       g_custom_stylesheet_loader_data = NULL;
+
+void blink_css_set_custom_loader(blink_stylesheet_loader_fn loader, void* user_data) {
+    g_custom_stylesheet_loader = loader;
+    g_custom_stylesheet_loader_data = user_data;
+}
+
 static char* load_local_stylesheet_file(const char* base_dir, const char* href, char* out_dir, size_t out_dir_cap) {
     if (!href || !href[0]) return NULL;
+
+    if (g_custom_stylesheet_loader) {
+        char* custom_res = g_custom_stylesheet_loader(href, g_custom_stylesheet_loader_data, out_dir, out_dir_cap);
+        if (custom_res) return custom_res;
+    }
+
     if (strncasecmp(href, "http://", 7) == 0 || strncasecmp(href, "https://", 8) == 0 ||
-        strncasecmp(href, "data:", 5) == 0) {
+        strncasecmp(href, "//", 2) == 0 || strncasecmp(href, "data:", 5) == 0) {
         return NULL;
     }
     const char* rel = href;

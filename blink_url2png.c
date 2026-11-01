@@ -289,6 +289,51 @@ static void extract_parent_dir(const char* path_or_url, char* out_dir, size_t ca
     }
 }
 
+static char* url2png_stylesheet_loader(const char* href, void* user_data, char* out_dir, size_t out_dir_cap) {
+    if (!href || !href[0]) return NULL;
+
+    const char* base_url = (const char*)user_data;
+    char target_url[2048];
+
+    if (strncmp(href, "http://", 7) == 0 || strncmp(href, "https://", 8) == 0) {
+        snprintf(target_url, sizeof(target_url), "%s", href);
+    } else if (strncmp(href, "//", 2) == 0) {
+        snprintf(target_url, sizeof(target_url), "https:%s", href);
+    } else if (base_url && (strncmp(base_url, "http://", 7) == 0 || strncmp(base_url, "https://", 8) == 0)) {
+        if (href[0] == '/') {
+            char origin[1024];
+            const char* p = strstr(base_url, "://");
+            if (p) {
+                const char* slash = strchr(p + 3, '/');
+                size_t olen = slash ? (size_t)(slash - base_url) : strlen(base_url);
+                if (olen >= sizeof(origin)) olen = sizeof(origin) - 1;
+                memcpy(origin, base_url, olen);
+                origin[olen] = '\0';
+                snprintf(target_url, sizeof(target_url), "%s%s", origin, href);
+            } else {
+                snprintf(target_url, sizeof(target_url), "%s", href);
+            }
+        } else {
+            char pdir[1024];
+            extract_parent_dir(base_url, pdir, sizeof(pdir));
+            snprintf(target_url, sizeof(target_url), "%s/%s", pdir, href);
+        }
+    } else {
+        return NULL; /* Fallback to local file loader */
+    }
+
+    size_t sz = 0;
+    char* eff = NULL;
+    char* css_data = fetch_url_data(target_url, &sz, &eff);
+    if (eff) {
+        if (out_dir && out_dir_cap > 0) {
+            extract_parent_dir(eff, out_dir, out_dir_cap);
+        }
+        free(eff);
+    }
+    return css_data;
+}
+
 /* ------------------------------------------------------------------------- */
 /* Command-Line Driver & Main Pipeline                                       */
 /* ------------------------------------------------------------------------- */
@@ -369,6 +414,7 @@ int main(int argc, char* argv[]) {
     // 2. Initialize font system, parse HTML5 DOM + <style>/<link>/@import rules, and run CSS Cascade Level 5/6
     double t_parse_0 = get_time_ms();
     blink_skia_font_init();
+    blink_css_set_custom_loader(url2png_stylesheet_loader, effective_url ? effective_url : (char*)target_url);
     blink_css_stylesheet_t* stylesheet = (blink_css_stylesheet_t*)malloc(sizeof(blink_css_stylesheet_t));
     if (!stylesheet) {
         free(html_data);

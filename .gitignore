@@ -71,3 +71,11 @@ render_wikipedia_flowers
 render_wikipedia_flowers_multipage
 blink_url2png
 test_*.png_multipage
+
+# Test & benchmark run artifacts
+Testing/
+gallery/
+gallery_wiki/
+*.bmp
+*.mp4
+

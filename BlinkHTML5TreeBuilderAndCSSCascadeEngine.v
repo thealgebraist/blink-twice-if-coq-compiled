@@ -877,6 +877,65 @@ Proof.
   split; intro H; rewrite H; reflexivity.
 Qed.
 
+(** CSS Inductive Cascade & Evaluation Order (Chromium: style_cascade.cc, resolve_node_recursive):
+    Evaluation follows an exact staged pipeline:
+    1. Base Style: Inherit inherited properties from parent's already-resolved computed style,
+       default non-inherited properties to UA defaults.
+    2. Cascade Ordering: Sort matching declarations by Cascade Level 5 priority (origin, !important, layer, specificity, source order).
+    3. Custom Properties: Resolve `--*` custom properties in cascade order.
+    4. Two-Pass Standard Properties: Pass 0 resolves `font-size` (to establish relative `em` units for child declarations),
+       Pass 1 resolves remaining layout & styling properties.
+    5. Inflow Inline Container Size & Grid Child Pre-extraction: Compute container available inline size,
+       pre-extract grid child track placements, and descend into DOM children in pre-order. *)
+
+Inductive CascadeEvaluationStage : Type :=
+  | Stage_InheritParent
+  | Stage_SortCandidateRules
+  | Stage_CustomProperties
+  | Stage_FontSizePass
+  | Stage_RemainingPropertiesPass
+  | Stage_PreExtractGridPlacement
+  | Stage_DescendPreOrderChildren.
+
+Definition cascade_stage_rank (st : CascadeEvaluationStage) : nat :=
+  match st with
+  | Stage_InheritParent           => 0%nat
+  | Stage_SortCandidateRules      => 1%nat
+  | Stage_CustomProperties        => 2%nat
+  | Stage_FontSizePass            => 3%nat
+  | Stage_RemainingPropertiesPass => 4%nat
+  | Stage_PreExtractGridPlacement => 5%nat
+  | Stage_DescendPreOrderChildren => 6%nat
+  end.
+
+Definition cascade_stage_lt (s1 s2 : CascadeEvaluationStage) : Prop :=
+  (cascade_stage_rank s1 < cascade_stage_rank s2)%nat.
+
+Theorem cascade_stage_order_strict :
+  cascade_stage_lt Stage_InheritParent Stage_SortCandidateRules /\
+  cascade_stage_lt Stage_SortCandidateRules Stage_CustomProperties /\
+  cascade_stage_lt Stage_CustomProperties Stage_FontSizePass /\
+  cascade_stage_lt Stage_FontSizePass Stage_RemainingPropertiesPass /\
+  cascade_stage_lt Stage_RemainingPropertiesPass Stage_PreExtractGridPlacement /\
+  cascade_stage_lt Stage_PreExtractGridPlacement Stage_DescendPreOrderChildren.
+Proof.
+  unfold cascade_stage_lt, cascade_stage_rank.
+  repeat split; lia.
+Qed.
+
+(** Invariance: When no rules match an element, inherited properties strictly
+    preserve parent's computed values, while non-inherited properties remain at initial UA defaults. *)
+Theorem unstyled_child_evaluation_soundness :
+  forall (prop : CSSPropertyId) (init_v parent_v : Z),
+    resolve_property_value prop init_v parent_v CVal_Missing =
+    (if is_inherited_property prop then parent_v else init_v).
+Proof.
+  intros prop init_v parent_v.
+  unfold resolve_property_value. reflexivity.
+Qed.
+
+
+
 (* ========================================================================= *)
 (* SECTION 6: TRBL SHORTHANDS, LENGTH UNITS & DUAL-MODE Z calc()             *)
 (*   Chromium: core/css/css_primitive_value.cc, css_math_expression_node.cc  *)

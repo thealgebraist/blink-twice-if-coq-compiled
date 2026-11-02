@@ -813,6 +813,79 @@ Proof.
   intros. unfold resolve_minmax_track. lia.
 Qed.
 
+(** CSS Grid §7.2 / §11: Multi-column track span inline size resolution.
+    Pre-extracted track span K combines the widths of K consecutive tracks
+    plus (K - 1) column gaps! *)
+Definition multi_track_span_width (track_widths : list Z) (gap : Z) (start_idx span_len : nat) : Z :=
+  let sub := firstn span_len (skipn start_idx track_widths) in
+  let sum_tracks := fold_right Z.add 0 sub in
+  let n_tracks := Z.of_nat (length sub) in
+  if n_tracks <=? 1 then sum_tracks
+  else sum_tracks + (n_tracks - 1) * gap.
+
+Lemma in_firstn_in : forall (A : Type) (n : nat) (l : list A) (x : A),
+  In x (firstn n l) -> In x l.
+Proof.
+  intros A n. induction n as [| n' IH]; intros l x Hin; simpl in Hin.
+  - contradiction.
+  - destruct l as [| h tl]; simpl in Hin; [contradiction |].
+    destruct Hin as [Heq | Hin].
+    + left; exact Heq.
+    + right; apply (IH tl x Hin).
+Qed.
+
+Lemma in_skipn_in : forall (A : Type) (n : nat) (l : list A) (x : A),
+  In x (skipn n l) -> In x l.
+Proof.
+  intros A n. induction n as [| n' IH]; intros l x Hin; simpl in Hin.
+  - exact Hin.
+  - destruct l as [| h tl]; simpl in Hin; [contradiction |].
+    right; apply (IH tl x Hin).
+Qed.
+
+Theorem multi_track_span_width_nonnegative :
+  forall (tracks : list Z) (gap : Z) (start_idx span_len : nat),
+    (forall w, In w tracks -> 0 <= w) ->
+    0 <= gap ->
+    0 <= multi_track_span_width tracks gap start_idx span_len.
+Proof.
+  intros tracks gap start_idx span_len Hw Hgap.
+  unfold multi_track_span_width.
+  set (sub := firstn span_len (skipn start_idx tracks)).
+  assert (Hsub: forall w, In w sub -> 0 <= w).
+  { intros w Hwsub. apply Hw.
+    unfold sub in Hwsub.
+    apply (in_firstn_in Z span_len (skipn start_idx tracks) w) in Hwsub.
+    apply (in_skipn_in Z start_idx tracks w) in Hwsub.
+    exact Hwsub. }
+  assert (Hsum: 0 <= fold_right Z.add 0 sub).
+  { clear Hw. induction sub as [| tw rest IH]; simpl.
+    - lia.
+    - assert (0 <= tw) by (apply Hsub; left; reflexivity).
+      assert (Hrest: 0 <= fold_right Z.add 0 rest).
+      { apply IH. intros x Hx; apply Hsub; right; exact Hx. }
+      lia. }
+  set (n_tracks := Z.of_nat (length sub)).
+  destruct (n_tracks <=? 1) eqn:E.
+  - exact Hsum.
+  - apply Z.leb_gt in E.
+    assert (0 <= (n_tracks - 1) * gap).
+    { apply Z.mul_nonneg_nonneg; lia. }
+    lia.
+Qed.
+
+(** Pre-extracted 2-column span equals track 0 + gap + track 1 *)
+Theorem multi_track_span_two_columns_sum :
+  forall (w0 w1 : Z) (gap : Z),
+    multi_track_span_width [w0; w1] gap 0 2 = w0 + gap + w1.
+Proof.
+  intros w0 w1 gap.
+  unfold multi_track_span_width. simpl.
+  destruct gap; lia.
+Qed.
+
+
+
 (** 3.6 Table 2D `rowspan x colspan` Occupancy & `border-collapse` Conflict *)
 Definition CellCoord : Type := (Z * Z).
 

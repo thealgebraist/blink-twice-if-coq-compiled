@@ -139,34 +139,63 @@ static bool draw_text_skia_freetype(uint32_t* fb, int fb_w, int fb_h,
         delta.y = (FT_Pos)((baseline_y - floorf(baseline_y)) * 64.0f);
         FT_Set_Transform(face, NULL, &delta);
 
-        FT_Load_Glyph(face, g, FT_LOAD_NO_HINTING);
-        FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+        FT_Load_Glyph(face, g, FT_LOAD_TARGET_LCD);
+        FT_Render_Glyph(face->glyph, FT_RENDER_MODE_LCD);
 
         FT_Bitmap* bm = &face->glyph->bitmap;
         int gx = (int)floorf(pen_x) + face->glyph->bitmap_left;
         int gy = (int)floorf(baseline_y) - face->glyph->bitmap_top;
 
+        /* Row buffer for Skia 5-tap horizontal FIR low-pass filtered subpixels */
+        uint8_t filtered_cov[1024];
+
         for (unsigned int r = 0; r < bm->rows; r++) {
             int py = gy + r;
             if (py < 0 || py >= fb_h) continue;
-            for (unsigned int c = 0; c < bm->width; c++) {
+
+            const uint8_t* src_row = &bm->buffer[r * bm->pitch];
+            unsigned int subpixel_w = bm->width; /* 3 bytes per logical pixel */
+            if (subpixel_w > sizeof(filtered_cov)) subpixel_w = sizeof(filtered_cov);
+
+            /* 1. Apply Skia 5-tap horizontal low-pass FIR filter:
+             *    filter = (16 * sm2 + 64 * sm1 + 112 * s0 + 64 * sp1 + 16 * sp2) / 272
+             *    per theorem skia_lcd_5tap_bounds in BlinkGlyphRasterizerSemantics.v */
+            for (unsigned int i = 0; i < subpixel_w; i++) {
+                int sm2 = (i >= 2) ? src_row[i - 2] : 0;
+                int sm1 = (i >= 1) ? src_row[i - 1] : 0;
+                int s0  = src_row[i];
+                int sp1 = (i + 1 < subpixel_w) ? src_row[i + 1] : 0;
+                int sp2 = (i + 2 < subpixel_w) ? src_row[i + 2] : 0;
+
+                int sum = 16 * sm2 + 64 * sm1 + 112 * s0 + 64 * sp1 + 16 * sp2;
+                int filtered = sum / 272;
+                if (filtered > 255) filtered = 255;
+                /* Apply Skia gamma boost table to each subpixel channel */
+                filtered_cov[i] = s_gamma_table[filtered];
+            }
+
+            /* 2. Blit each logical pixel using individual subpixel RGB coverage:
+             *    per theorem blit_subpixel_channel_bounds */
+            unsigned int num_pixels = subpixel_w / 3;
+            for (unsigned int c = 0; c < num_pixels; c++) {
                 int px = gx + c;
                 if (px < 0 || px >= fb_w) continue;
-                uint8_t raw_cov = bm->buffer[r * bm->pitch + c];
-                if (raw_cov == 0) continue;
 
-                // Apply Skia font gamma table per theorem blit_glyph_coverage_bounds
-                uint8_t cov = s_gamma_table[raw_cov];
+                uint8_t cov_r = filtered_cov[c * 3 + 0];
+                uint8_t cov_g = filtered_cov[c * 3 + 1];
+                uint8_t cov_b = filtered_cov[c * 3 + 2];
+
+                if ((cov_r | cov_g | cov_b) == 0) continue;
 
                 uint32_t bg = fb[py * fb_w + px];
                 uint8_t bg_r = (bg >> 16) & 0xFF;
                 uint8_t bg_g = (bg >> 8) & 0xFF;
                 uint8_t bg_b = bg & 0xFF;
 
-                // Blending theorem per BlinkGlyphRasterizerSemantics.v
-                uint8_t out_r = (fg_r * cov + bg_r * (255 - cov) + 127) / 255;
-                uint8_t out_g = (fg_g * cov + bg_g * (255 - cov) + 127) / 255;
-                uint8_t out_b = (fg_b * cov + bg_b * (255 - cov) + 127) / 255;
+                /* Independent subpixel channel blending matching Skia/Chromium LCD pipeline */
+                uint8_t out_r = (fg_r * cov_r + bg_r * (255 - cov_r) + 127) / 255;
+                uint8_t out_g = (fg_g * cov_g + bg_g * (255 - cov_g) + 127) / 255;
+                uint8_t out_b = (fg_b * cov_b + bg_b * (255 - cov_b) + 127) / 255;
 
                 fb[py * fb_w + px] = (0xFF << 24) | (out_r << 16) | (out_g << 8) | out_b;
             }

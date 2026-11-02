@@ -253,7 +253,7 @@ static dom_node_t* html5_close_implicit_before_start(dom_node_t* current, dom_no
 /* ------------------------------------------------------------------------- */
 
 static bool tag_has_explicit_ua_color(const char* tag) {
-    return strcmp(tag, "a") == 0 || strcmp(tag, "button") == 0 ||
+    return strcmp(tag, "a") == 0 ||
            strcmp(tag, "blockquote") == 0 || strcmp(tag, "figcaption") == 0;
 }
 
@@ -293,7 +293,7 @@ static void init_initial_style(dom_style_t* st) {
     st->border_radius = 0;
     st->border_style = BDR_STYLE_NONE;
     st->border_collapse = false;
-    st->font_size = 14.0f;
+    st->font_size = 16.0f;
     st->font_weight = 400;
     st->font_style = 0;
     strcpy(st->font_family, "sans-serif");
@@ -305,9 +305,14 @@ static void init_initial_style(dom_style_t* st) {
     st->row_gap = 0;
     st->flex_grow = 0;
     st->flex_shrink = 1;
+    st->order = 0;
     st->flex_direction = FLEX_DIR_ROW;
     st->flex_wrap = false;
     st->grid_col_span = 1;
+    st->aspect_ratio_w = 0;
+    st->aspect_ratio_h = 0;
+    st->grid_template[0] = '\0';
+    st->grid_area[0] = '\0';
     st->line_height = 1.4f;
     st->text_align = ALIGN_LEFT;
     st->vertical_align = VALIGN_BASELINE;
@@ -340,7 +345,8 @@ dom_node_t* dom_node_create(const char* tag) {
         n->style.padding_right = 32;
     } else if (strcmp(n->tag, "head") == 0 || strcmp(n->tag, "title") == 0 ||
                strcmp(n->tag, "style") == 0 || strcmp(n->tag, "script") == 0 ||
-               strcmp(n->tag, "meta") == 0 || strcmp(n->tag, "link") == 0) {
+               strcmp(n->tag, "meta") == 0 || strcmp(n->tag, "link") == 0 ||
+               strcmp(n->tag, "template") == 0) {
         n->style.display = DISPLAY_NONE;
     } else if (strcmp(n->tag, "h1") == 0) {
         n->style.font_size = 28.0f;
@@ -392,13 +398,10 @@ dom_node_t* dom_node_create(const char* tag) {
         n->style.margin_top = 6;
     } else if (strcmp(n->tag, "img") == 0) {
         n->style.box_sizing = BOX_SIZING_BORDER_BOX;
-        n->style.bg_color = 0xFFEAECF0u;
-        n->style.has_bg = true;
-        n->style.border_width = 1;
-        n->style.border_style = BDR_STYLE_SOLID;
-        n->style.border_color = 0xFFA2A9B1u;
-        n->style.height = 140;
-        n->style.width = 220;
+        n->style.border_width = 0;
+        n->style.border_style = BDR_STYLE_NONE;
+        n->style.height = -1;
+        n->style.width = -1;
     } else if (strcmp(n->tag, "a") == 0) {
         n->style.display = DISPLAY_INLINE;
         n->style.color = BLINK_COLOR_LINK_BLUE;
@@ -467,14 +470,17 @@ dom_node_t* dom_node_create(const char* tag) {
         n->style.border_style = BDR_STYLE_SOLID;
     } else if (strcmp(n->tag, "button") == 0) {
         n->style.display = DISPLAY_INLINE_BLOCK;
-        n->style.padding_top = 8;
-        n->style.padding_bottom = 8;
-        n->style.padding_left = 16;
-        n->style.padding_right = 16;
-        n->style.bg_color = BLINK_COLOR_LINK_BLUE;
-        n->style.has_bg = true;
-        n->style.color = BLINK_COLOR_WHITE;
-        n->style.border_radius = 4;
+        n->style.padding_top = 2;
+        n->style.padding_bottom = 2;
+        n->style.padding_left = 6;
+        n->style.padding_right = 6;
+        n->style.bg_color = 0;
+        n->style.has_bg = false;
+        n->style.color = BLINK_COLOR_TEXT_DEFAULT;
+        n->style.border_radius = 2;
+        n->style.border_width = 1;
+        n->style.border_style = BDR_STYLE_SOLID;
+        n->style.border_color = 0xFF767676u;
     } else if (strcmp(n->tag, "pre") == 0 || strcmp(n->tag, "code") == 0) {
         strcpy(n->style.font_family, "monospace");
         n->style.font_size = 12.5f;
@@ -596,6 +602,7 @@ void dom_node_free(dom_node_t* n) {
     free(n->href);
     free(n->inline_style_raw);
     free(n->inline_frags);
+    /* Image data is owned by image cache in blink_url2png, or freed if non-NULL and desired */
     for (int i = 0; i < n->num_children; i++) {
         dom_node_free(n->children[i]);
     }
@@ -1406,7 +1413,7 @@ static bool resolve_var_recursive(const blink_custom_prop_t* props,
             }
 
             const char* target = (!has_cycle) ? lookup_custom_prop(props, num_props, var_name) : NULL;
-            char sub_resolved[192];
+            char sub_resolved[512];
             bool ok = false;
 
             if (target && num_visited < 16) {
@@ -1422,7 +1429,7 @@ static bool resolve_var_recursive(const blink_custom_prop_t* props,
 
             /* Fallback path when undefined OR when target has a cycle! */
             if (!ok && top_comma) {
-                char fb_raw[192];
+                char fb_raw[512];
                 size_t flen = (size_t)(scan - (top_comma + 1));
                 if (flen >= sizeof(fb_raw)) flen = sizeof(fb_raw) - 1;
                 memcpy(fb_raw, top_comma + 1, flen);
@@ -1525,117 +1532,238 @@ static int64_t eval_math_expr_in_mode_z(const char* expr,
                                         blink_layout_mode_t mode) {
     if (!expr) return 0;
     while (*expr && isspace((unsigned char)*expr)) expr++;
+    if (!*expr) return 0;
 
-    /* Nonlinear CSS Math Functions: min(...), max(...), clamp(lo, val, hi) */
+    /* If enclosed in calc(...), strip and recurse ONLY if the calc(...) spans the entire expression */
+    if (strncasecmp(expr, "calc(", 5) == 0) {
+        int paren = 1;
+        const char* p = expr + 5;
+        while (*p && paren > 0) {
+            if (*p == '(') paren++;
+            else if (*p == ')') paren--;
+            if (paren > 0) p++;
+        }
+        if (paren == 0 && *p == ')') {
+            const char* rest = p + 1;
+            while (*rest && isspace((unsigned char)*rest)) rest++;
+            if (*rest == '\0') {
+                char inner[256];
+                size_t len = (size_t)(p - (expr + 5));
+                if (len >= sizeof(inner)) len = sizeof(inner) - 1;
+                memcpy(inner, expr + 5, len);
+                inner[len] = '\0';
+                return eval_math_expr_in_mode_z(inner, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+            }
+        }
+    }
+
+    /* If enclosed in outer parentheses: (...) where parens match full span */
+    if (*expr == '(') {
+        int paren = 0;
+        const char* p = expr;
+        while (*p) {
+            if (*p == '(') paren++;
+            else if (*p == ')') {
+                paren--;
+                if (paren == 0) {
+                    const char* rest = p + 1;
+                    while (*rest && isspace((unsigned char)*rest)) rest++;
+                    if (*rest == '\0') {
+                        char inner[256];
+                        size_t len = (size_t)(p - (expr + 1));
+                        if (len >= sizeof(inner)) len = sizeof(inner) - 1;
+                        memcpy(inner, expr + 1, len);
+                        inner[len] = '\0';
+                        return eval_math_expr_in_mode_z(inner, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                    }
+                    break;
+                }
+            }
+            p++;
+        }
+    }
+
+    /* Nonlinear CSS Math Functions: min(...), max(...), clamp(lo, val, hi), pow(base, exp), round([strategy,] val, step) */
     bool is_min = (strncasecmp(expr, "min(", 4) == 0);
     bool is_max = (strncasecmp(expr, "max(", 4) == 0);
     bool is_clamp = (strncasecmp(expr, "clamp(", 6) == 0);
-    if (is_min || is_max || is_clamp) {
-        size_t head_len = is_clamp ? 6 : 4;
+    bool is_pow = (strncasecmp(expr, "pow(", 4) == 0);
+    bool is_round = (strncasecmp(expr, "round(", 6) == 0);
+    if (is_min || is_max || is_clamp || is_pow || is_round) {
+        size_t head_len = (is_clamp || is_round) ? 6 : 4;
         const char* p = expr + head_len;
-        const char* end = strrchr(p, ')');
-        size_t len = end ? (size_t)(end - p) : strlen(p);
-        char inner[192];
-        if (len >= sizeof(inner)) len = sizeof(inner) - 1;
-        memcpy(inner, p, len);
-        inner[len] = '\0';
+        const char* scan = p;
+        int pdepth = 1;
+        while (*scan && pdepth > 0) {
+            if (*scan == '(') pdepth++;
+            else if (*scan == ')') pdepth--;
+            if (pdepth > 0) scan++;
+        }
+        const char* end = (pdepth == 0) ? scan : NULL;
+        const char* rest = end ? (end + 1) : NULL;
+        while (rest && isspace((unsigned char)*rest)) rest++;
 
-        int64_t args[8];
-        int n_args = 0;
-        const char* cur = inner;
-        while (*cur && n_args < 8) {
-            const char* as = cur;
-            int paren = 0;
-            while (*cur && !(paren == 0 && *cur == ',')) {
-                if (*cur == '(') paren++;
-                else if (*cur == ')' && paren > 0) paren--;
-                cur++;
+        /* Only process if the function encompasses the entire expression! */
+        if (end && (!rest || !*rest)) {
+            size_t len = (size_t)(end - p);
+            char inner[192];
+            if (len >= sizeof(inner)) len = sizeof(inner) - 1;
+            memcpy(inner, p, len);
+            inner[len] = '\0';
+
+            int64_t args[8];
+            char arg_str[8][96];
+            int n_args = 0;
+            const char* cur = inner;
+            while (*cur && n_args < 8) {
+                const char* as = cur;
+                int paren = 0;
+                while (*cur && !(paren == 0 && *cur == ',')) {
+                    if (*cur == '(') paren++;
+                    else if (*cur == ')' && paren > 0) paren--;
+                    cur++;
+                }
+                char abuf[96];
+                size_t alen = (size_t)(cur - as);
+                if (alen >= sizeof(abuf)) alen = sizeof(abuf) - 1;
+                memcpy(abuf, as, alen);
+                abuf[alen] = '\0';
+                trim_inplace(abuf);
+                strncpy(arg_str[n_args], abuf, sizeof(arg_str[n_args]) - 1);
+                arg_str[n_args][sizeof(arg_str[n_args]) - 1] = '\0';
+                args[n_args] = eval_math_expr_in_mode_z(abuf, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                n_args++;
+                if (*cur == ',') cur++;
             }
-            char abuf[96];
-            size_t alen = (size_t)(cur - as);
-            if (alen >= sizeof(abuf)) alen = sizeof(abuf) - 1;
-            memcpy(abuf, as, alen);
-            abuf[alen] = '\0';
-            trim_inplace(abuf);
-            args[n_args++] = eval_math_expr_in_mode_z(abuf, parent_px, em_px, rem_px, vw_px, vh_px, mode);
-            if (*cur == ',') cur++;
-        }
 
-        if (n_args == 0) return 0;
-        if (is_min) {
-            int64_t best = args[0];
-            for (int i = 1; i < n_args; i++) if (args[i] < best) best = args[i];
-            return best;
+            if (n_args == 0) return 0;
+            int64_t scale = blink_z_scale(mode);
+
+            if (is_pow && n_args >= 2) {
+                double b = (double)args[0] / (double)scale;
+                double e = (double)args[1] / (double)scale;
+                double res = pow(b, e);
+                return (int64_t)llround(res * (double)scale);
+            }
+
+            if (is_round) {
+                /* round([strategy,] A, B) */
+                int a_idx = 0;
+                int b_idx = 1;
+                if (n_args >= 3) {
+                    a_idx = 1;
+                    b_idx = 2;
+                }
+                if (n_args >= 2) {
+                    double a = (double)args[a_idx] / (double)scale;
+                    double b = (double)args[b_idx] / (double)scale;
+                    double res = (fabs(b) > 1e-9) ? (round(a / b) * b) : round(a);
+                    return (int64_t)llround(res * (double)scale);
+                }
+                double a = (double)args[0] / (double)scale;
+                return (int64_t)llround(round(a) * (double)scale);
+            }
+
+            if (is_min) {
+                int64_t best = args[0];
+                for (int i = 1; i < n_args; i++) if (args[i] < best) best = args[i];
+                return best;
+            }
+            if (is_max) {
+                int64_t best = args[0];
+                for (int i = 1; i < n_args; i++) if (args[i] > best) best = args[i];
+                return best;
+            }
+            if (n_args >= 3) {
+                /* `clamp(lo, val, hi) = max(lo, min(val, hi))` (`css_clamp_min_wins_on_inversion`) */
+                int64_t lo = args[0], val = args[1], hi = args[2];
+                int64_t mid = (val < hi) ? val : hi;
+                return (lo > mid) ? lo : mid;
+            }
+            return args[0];
         }
-        if (is_max) {
-            int64_t best = args[0];
-            for (int i = 1; i < n_args; i++) if (args[i] > best) best = args[i];
-            return best;
-        }
-        if (n_args >= 3) {
-            /* `clamp(lo, val, hi) = max(lo, min(val, hi))` (`css_clamp_min_wins_on_inversion`) */
-            int64_t lo = args[0], val = args[1], hi = args[2];
-            int64_t mid = (val < hi) ? val : hi;
-            return (lo > mid) ? lo : mid;
-        }
-        return args[0];
     }
 
-    if (strncasecmp(expr, "calc(", 5) == 0) {
-        const char* p = expr + 5;
-        const char* end = strrchr(p, ')');
-        size_t len = end ? (size_t)(end - p) : strlen(p);
-        char inner[192];
-        if (len >= sizeof(inner)) len = sizeof(inner) - 1;
-        memcpy(inner, p, len);
-        inner[len] = '\0';
-
-        /* Parse linear sum/difference of length/math terms: `T0 (+|-) T1 ...` respecting parens */
-        int64_t acc_z = 0;
-        int sign = 1;
-        const char* cur = inner;
-        while (*cur) {
-            while (*cur && isspace((unsigned char)*cur)) cur++;
-            if (!*cur) break;
-            if (*cur == '+') { sign = 1; cur++; continue; }
-            if (*cur == '-' && isspace((unsigned char)cur[1])) { sign = -1; cur++; continue; }
-
-            const char* ts = cur;
-            int paren = 0;
-            while (*cur) {
-                if (*cur == '(') paren++;
-                else if (*cur == ')' && paren > 0) paren--;
-                else if (paren == 0 && (*cur == '+' || *cur == '-') && cur > ts && isspace((unsigned char)cur[-1])) {
-                    break;
-                }
-                cur++;
-            }
-            char term_buf[96];
-            size_t tlen = (size_t)(cur - ts);
-            if (tlen >= sizeof(term_buf)) tlen = sizeof(term_buf) - 1;
-            memcpy(term_buf, ts, tlen);
-            term_buf[tlen] = '\0';
-            trim_inplace(term_buf);
-
-            int64_t term_z = 0;
-            if (strncasecmp(term_buf, "min(", 4) == 0 || strncasecmp(term_buf, "max(", 4) == 0 ||
-                strncasecmp(term_buf, "clamp(", 6) == 0 || strncasecmp(term_buf, "calc(", 5) == 0) {
-                term_z = eval_math_expr_in_mode_z(term_buf, parent_px, em_px, rem_px, vw_px, vh_px, mode);
-            } else {
-                char* star = strchr(term_buf, '*');
-                if (star) {
-                    *star = '\0';
-                    double mult = strtod(term_buf, NULL);
-                    int64_t rhs_z = eval_math_expr_in_mode_z(star + 1, parent_px, em_px, rem_px, vw_px, vh_px, mode);
-                    term_z = (int64_t)llround(mult * (double)rhs_z);
-                } else {
-                    term_z = eval_single_length_in_mode_z(term_buf, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+    /* 1. Lowest precedence: Addition and Subtraction (left-associative: scan right-to-left) */
+    {
+        int paren = 0;
+        size_t n = strlen(expr);
+        for (ssize_t i = (ssize_t)n - 1; i >= 0; i--) {
+            char c = expr[i];
+            if (c == ')') paren++;
+            else if (c == '(') { if (paren > 0) paren--; }
+            else if (paren == 0) {
+                if ((c == '+' || c == '-') && i > 0 && i + 1 < (ssize_t)n &&
+                    isspace((unsigned char)expr[i - 1]) && isspace((unsigned char)expr[i + 1])) {
+                    char lhs[256];
+                    size_t llen = (size_t)i;
+                    if (llen >= sizeof(lhs)) llen = sizeof(lhs) - 1;
+                    memcpy(lhs, expr, llen);
+                    lhs[llen] = '\0';
+                    trim_inplace(lhs);
+                    int64_t left_val = eval_math_expr_in_mode_z(lhs, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                    int64_t right_val = eval_math_expr_in_mode_z(expr + i + 1, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                    return (c == '+') ? (left_val + right_val) : (left_val - right_val);
                 }
             }
-            acc_z += (int64_t)sign * term_z;
-            sign = 1;
         }
-        return acc_z;
+    }
+
+    /* 2. Higher precedence: Multiplication and Division (left-associative: scan right-to-left) */
+    {
+        int paren = 0;
+        size_t n = strlen(expr);
+        for (ssize_t i = (ssize_t)n - 1; i >= 0; i--) {
+            char c = expr[i];
+            if (c == ')') paren++;
+            else if (c == '(') { if (paren > 0) paren--; }
+            else if (paren == 0) {
+                if (c == '*' || c == '/') {
+                    char lhs[256];
+                    size_t llen = (size_t)i;
+                    if (llen >= sizeof(lhs)) llen = sizeof(lhs) - 1;
+                    memcpy(lhs, expr, llen);
+                    lhs[llen] = '\0';
+                    trim_inplace(lhs);
+
+                    char rhs[256];
+                    strncpy(rhs, expr + i + 1, sizeof(rhs) - 1);
+                    rhs[sizeof(rhs) - 1] = '\0';
+                    trim_inplace(rhs);
+
+                    if (c == '*') {
+                        char* end_l = NULL;
+                        double num_l = strtod(lhs, &end_l);
+                        if (end_l && !*end_l) {
+                            int64_t rz = eval_math_expr_in_mode_z(rhs, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                            return (int64_t)llround(num_l * (double)rz);
+                        }
+                        char* end_r = NULL;
+                        double num_r = strtod(rhs, &end_r);
+                        if (end_r && !*end_r) {
+                            int64_t lz = eval_math_expr_in_mode_z(lhs, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                            return (int64_t)llround(num_r * (double)lz);
+                        }
+                        int64_t lz = eval_math_expr_in_mode_z(lhs, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                        int64_t rz = eval_math_expr_in_mode_z(rhs, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                        int64_t scale = blink_z_scale(mode);
+                        return (lz * rz) / scale;
+                    } else {
+                        int64_t lz = eval_math_expr_in_mode_z(lhs, parent_px, em_px, rem_px, vw_px, vh_px, mode);
+                        double div = strtod(rhs, NULL);
+                        if (fabs(div) < 1e-9) {
+                            int64_t rz = eval_math_expr_in_mode_z(rhs, 1, 1, 1, 1, 1, mode);
+                            int64_t scale = blink_z_scale(mode);
+                            div = (double)rz / (double)scale;
+                        }
+                        if (fabs(div) > 1e-9) {
+                            return (int64_t)llround((double)lz / div);
+                        }
+                        return lz;
+                    }
+                }
+            }
+        }
     }
 
     return eval_single_length_in_mode_z(expr, parent_px, em_px, rem_px, vw_px, vh_px, mode);
@@ -2159,7 +2287,7 @@ static int parse_declarations_list(const char* block, blink_css_decl_t* out_decl
         }
 
         const char* vs = first_colon + 1;
-        char val[192];
+        char val[512];
         size_t vlen = (size_t)(p - vs);
         if (vlen >= sizeof(val)) vlen = sizeof(val) - 1;
         memcpy(val, vs, vlen);
@@ -2315,17 +2443,243 @@ static char* strip_css_comments(const char* src) {
     return dst;
 }
 
+static const char* find_grid_template_slash(const char* val) {
+    if (!val) return NULL;
+    int paren = 0;
+    bool in_single_quote = false;
+    bool in_double_quote = false;
+    const char* last_slash = NULL;
+    for (const char* p = val; *p; p++) {
+        if (*p == '\'' && !in_double_quote) in_single_quote = !in_single_quote;
+        else if (*p == '\"' && !in_single_quote) in_double_quote = !in_double_quote;
+        else if (!in_single_quote && !in_double_quote) {
+            if (*p == '(') paren++;
+            else if (*p == ')' && paren > 0) paren--;
+            else if (*p == '/' && paren == 0) last_slash = p;
+        }
+    }
+    return last_slash;
+}
+
+static int32_t parse_len_val_simple(const char* s) {
+    if (!s) return 0;
+    while (*s && isspace((unsigned char)*s)) s++;
+    float val = strtof(s, NULL);
+    if (strcasestr_portable(s, "rem") || strcasestr_portable(s, "em")) {
+        return (int32_t)lroundf(val * 16.0f);
+    }
+    return (int32_t)lroundf(val);
+}
+
 static void parse_min_max_width_query(const char* qbuf, int32_t* io_min_w, int32_t* io_max_w) {
-    const char* mn = strcasestr_portable(qbuf, "min-width");
-    if (mn) {
-        const char* col = strchr(mn, ':');
-        if (col) *io_min_w = atoi(col + 1);
+    if (!qbuf) return;
+    bool is_negated = (strcasestr_portable(qbuf, "not ") != NULL);
+
+    int32_t raw_val = 0;
+    bool is_min = false;
+    bool is_max = false;
+
+    /* Check for CSS Container Queries Level 1 & Media Queries 4 range syntax:
+       (width >= 50rem), (width <= 480px), (width > 300px), (width < 600px), etc. */
+    const char* w_pos = strcasestr_portable(qbuf, "width");
+    if (w_pos) {
+        const char* p = w_pos + 5;
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (*p == '>' || *p == '<' || *p == '=') {
+            if (p[0] == '>' && p[1] == '=') {
+                is_min = true;
+                raw_val = parse_len_val_simple(p + 2);
+            } else if (p[0] == '>') {
+                is_min = true;
+                raw_val = parse_len_val_simple(p + 1) + 1;
+            } else if (p[0] == '<' && p[1] == '=') {
+                is_max = true;
+                raw_val = parse_len_val_simple(p + 2);
+            } else if (p[0] == '<') {
+                is_max = true;
+                raw_val = parse_len_val_simple(p + 1) - 1;
+                if (raw_val < 0) raw_val = 0;
+            }
+        }
     }
-    const char* mx = strcasestr_portable(qbuf, "max-width");
-    if (mx) {
-        const char* col = strchr(mx, ':');
-        if (col) *io_max_w = atoi(col + 1);
+
+    if (!is_min && !is_max) {
+        const char* mn = strcasestr_portable(qbuf, "min-width");
+        is_min = (mn != NULL);
+        const char* mx = strcasestr_portable(qbuf, "max-width");
+        is_max = (mx != NULL);
+
+        const char* target = mn ? mn : mx;
+        if (target) {
+            const char* col = strchr(target, ':');
+            if (col) {
+                raw_val = parse_len_val_simple(col + 1);
+            }
+        }
     }
+
+    if (!is_negated) {
+        if (is_min) *io_min_w = raw_val;
+        if (is_max) *io_max_w = raw_val;
+    } else {
+        /* "not (min-width: X)" is equivalent to "max-width: X - 1" */
+        if (is_min) *io_max_w = (raw_val > 0) ? (raw_val - 1) : 0;
+        /* "not (max-width: X)" is equivalent to "min-width: X + 1" */
+        if (is_max) *io_min_w = raw_val + 1;
+    }
+}
+
+static void resolve_grid_item_placement_helper(const char* template_str,
+                                               const char* item_area,
+                                               int n_cols,
+                                               int* io_col_start,
+                                               int* io_col_span) {
+    (void)n_cols;
+    if (!item_area || !item_area[0]) return;
+    const char* slash = strchr(item_area, '/');
+    if (slash) {
+        int col_start = atoi(slash + 1);
+        if (col_start > 0) {
+            *io_col_start = col_start - 1;
+            const char* slash2 = strchr(slash + 1, '/');
+            if (slash2) {
+                const char* slash3 = strchr(slash2 + 1, '/');
+                if (slash3) {
+                    int col_end = atoi(slash3 + 1);
+                    if (col_end > col_start) *io_col_span = col_end - col_start;
+                }
+            }
+            return;
+        }
+    }
+    if (!template_str || !template_str[0]) return;
+    char target[32];
+    strncpy(target, item_area, sizeof(target) - 1);
+    target[sizeof(target) - 1] = '\0';
+    char* s = strchr(target, '/');
+    if (s) *s = '\0';
+    char* t = target;
+    while (*t && isspace((unsigned char)*t)) t++;
+    char* tend = t + strlen(t) - 1;
+    while (tend >= t && isspace((unsigned char)*tend)) *tend-- = '\0';
+    if (!*t) return;
+
+    const char* p = template_str;
+    while (*p && *p != '/') {
+        while (*p && *p != '"' && *p != '\'' && *p != '/') {
+            if (strncmp(p, "&quot;", 6) == 0) { p += 6; break; }
+            p++;
+        }
+        if (*p == '/' || !*p) break;
+        if (*p == '"' || *p == '\'') p++;
+
+        int col = 0;
+        int found_start = -1;
+        int span = 0;
+        while (*p && *p != '"' && *p != '\'' && *p != '/') {
+            if (strncmp(p, "&quot;", 6) == 0) { p += 6; break; }
+            while (*p && isspace((unsigned char)*p)) p++;
+            if (!*p || *p == '"' || *p == '\'' || strncmp(p, "&quot;", 6) == 0) break;
+            const char* ts = p;
+            while (*p && !isspace((unsigned char)*p) && *p != '"' && *p != '\'' && strncmp(p, "&quot;", 6) != 0) p++;
+            size_t tlen = (size_t)(p - ts);
+            char tok[32];
+            if (tlen >= sizeof(tok)) tlen = sizeof(tok) - 1;
+            memcpy(tok, ts, tlen);
+            tok[tlen] = '\0';
+
+            if (strcmp(tok, t) == 0) {
+                if (found_start < 0) found_start = col;
+                span++;
+            }
+            col++;
+        }
+        if (found_start >= 0) {
+            *io_col_start = found_start;
+            if (span > 0) *io_col_span = span;
+            return;
+        }
+    }
+}
+
+static int32_t compute_grid_child_avail_w(int32_t parent_avail_w,
+                                         int num_grid_cols,
+                                         const int* grid_col_widths,
+                                         const int* grid_col_min,
+                                         int gap,
+                                         const char* grid_template,
+                                         const char* child_grid_area,
+                                         int child_span) {
+    if (num_grid_cols <= 0) return parent_avail_w;
+    int n_cols = (num_grid_cols > 16) ? 16 : num_grid_cols;
+
+    int c_start = -1, c_span = child_span > 0 ? child_span : 1;
+    if (child_grid_area && child_grid_area[0] && grid_template && grid_template[0]) {
+        resolve_grid_item_placement_helper(grid_template, child_grid_area, n_cols, &c_start, &c_span);
+    }
+    if (c_span < 1) c_span = 1;
+    if (c_span > n_cols) c_span = n_cols;
+
+    int fixed_sum = (n_cols > 1) ? (n_cols - 1) * gap : 0;
+    int fr_sum = 0;
+    int auto_count = 0;
+    int track_w[16];
+    for (int c = 0; c < n_cols; c++) {
+        int spec = grid_col_widths ? grid_col_widths[c] : -1;
+        int min_px = grid_col_min ? grid_col_min[c] : 0;
+        if (spec > 0) {
+            track_w[c] = (spec > min_px) ? spec : min_px;
+            fixed_sum += track_w[c];
+        } else if (spec == 0) {
+            track_w[c] = min_px;
+            fixed_sum += track_w[c];
+            auto_count++;
+        } else {
+            track_w[c] = min_px;
+            fr_sum += (-spec > 0) ? (-spec) : 1;
+        }
+    }
+
+    int rem_w = (parent_avail_w > fixed_sum) ? (parent_avail_w - fixed_sum) : 0;
+    if (fr_sum > 0) {
+        int acc = 0;
+        int last_fr = -1;
+        for (int c = 0; c < n_cols; c++) {
+            int spec = grid_col_widths ? grid_col_widths[c] : -1;
+            int min_px = grid_col_min ? grid_col_min[c] : 0;
+            if (spec < 0) {
+                int w_fr = (-spec > 0) ? (-spec) : 1;
+                int raw = (rem_w * w_fr) / fr_sum;
+                track_w[c] = (raw > min_px) ? raw : min_px;
+                acc += raw;
+                last_fr = c;
+            }
+        }
+        if (last_fr >= 0 && rem_w > acc) {
+            track_w[last_fr] += (rem_w - acc);
+        }
+    } else if (auto_count > 0 && rem_w > 0) {
+        int per_auto = rem_w / auto_count;
+        int rem_extra = rem_w % auto_count;
+        for (int c = 0; c < n_cols; c++) {
+            int spec = grid_col_widths ? grid_col_widths[c] : -1;
+            if (spec == 0) {
+                track_w[c] += per_auto + (rem_extra > 0 ? 1 : 0);
+                if (rem_extra > 0) rem_extra--;
+            }
+        }
+    }
+
+    int start_col = (c_start >= 0 && c_start < n_cols) ? c_start : 0;
+    int end_col = start_col + c_span - 1;
+    if (end_col >= n_cols) end_col = n_cols - 1;
+
+    int span_w = 0;
+    for (int c = start_col; c <= end_col; c++) {
+        span_w += track_w[c];
+    }
+    span_w += (end_col - start_col) * gap;
+    return span_w;
 }
 
 static void parse_css_rules_in_ctx(blink_css_stylesheet_t* sheet,
@@ -2732,10 +3086,17 @@ static void apply_keyword_reset(dom_style_t* st, const dom_style_t* src, const c
     else if (strcmp(prop, "margin") == 0) {
         st->margin_top = src->margin_top; st->margin_right = src->margin_right;
         st->margin_bottom = src->margin_bottom; st->margin_left = src->margin_left;
+        st->margin_left_auto = src->margin_left_auto;
+        st->margin_right_auto = src->margin_right_auto;
     } else if (strcmp(prop, "margin-top") == 0) st->margin_top = src->margin_top;
-    else if (strcmp(prop, "margin-right") == 0) st->margin_right = src->margin_right;
-    else if (strcmp(prop, "margin-bottom") == 0) st->margin_bottom = src->margin_bottom;
-    else if (strcmp(prop, "margin-left") == 0) st->margin_left = src->margin_left;
+    else if (strcmp(prop, "margin-right") == 0) {
+        st->margin_right = src->margin_right;
+        st->margin_right_auto = src->margin_right_auto;
+    } else if (strcmp(prop, "margin-bottom") == 0) st->margin_bottom = src->margin_bottom;
+    else if (strcmp(prop, "margin-left") == 0) {
+        st->margin_left = src->margin_left;
+        st->margin_left_auto = src->margin_left_auto;
+    }
     else if (strcmp(prop, "padding") == 0) {
         st->padding_top = src->padding_top; st->padding_right = src->padding_right;
         st->padding_bottom = src->padding_bottom; st->padding_left = src->padding_left;
@@ -2895,7 +3256,9 @@ static void parse_grid_track_spec(const char* track_str,
         }
     }
 
-    if (strcasestr_portable(track_str, "fr")) {
+    if (strcasecmp(track_str, "auto") == 0) {
+        *out_max_spec = 0; /* 0 represents 'auto' (intrinsic content sizing) */
+    } else if (strcasestr_portable(track_str, "fr")) {
         int fr = atoi(track_str);
         *out_max_spec = (fr > 0) ? -fr : -1;
     } else {
@@ -3257,8 +3620,16 @@ static void apply_resolved_css_decl(dom_style_t* st,
         strncpy(st->font_family, val, sizeof(st->font_family) - 1);
         st->font_family[sizeof(st->font_family) - 1] = '\0';
     } else if (strcmp(prop, "line-height") == 0) {
-        float lh = strtof(val, NULL);
-        if (lh > 0.0f) st->line_height = (lh > 4.0f) ? (lh / st->font_size) : lh;
+        if (strncasecmp(val, "calc(", 5) == 0 || strcasestr_portable(val, "em") || strcasestr_portable(val, "px") || strcasestr_portable(val, "rem")) {
+            bool is_auto = false;
+            int32_t lh_px = blink_css_eval_length_or_calc(val, (int32_t)lroundf(st->font_size), (int32_t)lroundf(st->font_size), root_font_px, vw_px, vh_px, mode, &is_auto);
+            if (!is_auto && lh_px > 0 && st->font_size > 0.0f) {
+                st->line_height = (float)lh_px / st->font_size;
+            }
+        } else {
+            float lh = strtof(val, NULL);
+            if (lh > 0.0f) st->line_height = (lh > 4.0f) ? (lh / st->font_size) : lh;
+        }
     } else if (strcmp(prop, "text-decoration") == 0 || strcmp(prop, "text-decoration-line") == 0) {
         if (strcasestr_portable(val, "none")) {
             st->text_underline = false;
@@ -3284,14 +3655,48 @@ static void apply_resolved_css_decl(dom_style_t* st,
         blink_css_parse_box_shorthand(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &e);
         st->margin_top = e.top; st->margin_right = e.right;
         st->margin_bottom = e.bottom; st->margin_left = e.left;
+        /* Check if shorthand specifies 'auto' for horizontal margins */
+        if (strcasestr_portable(val, "auto")) {
+            char t0[32] = "", t1[32] = "", t2[32] = "", t3[32] = "";
+            int cnt = sscanf(val, "%31s %31s %31s %31s", t0, t1, t2, t3);
+            if (cnt == 1) {
+                if (strcasecmp(t0, "auto") == 0) {
+                    st->margin_left_auto = true;
+                    st->margin_right_auto = true;
+                }
+            } else if (cnt == 2) {
+                if (strcasecmp(t1, "auto") == 0) {
+                    st->margin_left_auto = true;
+                    st->margin_right_auto = true;
+                }
+            } else if (cnt == 3) {
+                if (strcasecmp(t1, "auto") == 0) {
+                    st->margin_left_auto = true;
+                    st->margin_right_auto = true;
+                }
+            } else if (cnt == 4) {
+                if (strcasecmp(t1, "auto") == 0) st->margin_right_auto = true;
+                if (strcasecmp(t3, "auto") == 0) st->margin_left_auto = true;
+            }
+        }
     } else if (strcmp(prop, "margin-top") == 0) {
-        st->margin_top = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+        bool is_auto = false;
+        int32_t mt = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        st->margin_top = is_auto ? 0 : mt;
     } else if (strcmp(prop, "margin-right") == 0) {
-        st->margin_right = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+        bool is_auto = false;
+        st->margin_right = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        st->margin_right_auto = is_auto;
+        if (is_auto) st->margin_right = 0;
     } else if (strcmp(prop, "margin-bottom") == 0) {
-        st->margin_bottom = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+        bool is_auto = false;
+        int32_t mb = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        st->margin_bottom = is_auto ? 0 : mb;
     } else if (strcmp(prop, "margin-left") == 0) {
-        st->margin_left = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+        bool is_auto = false;
+        st->margin_left = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        st->margin_left_auto = is_auto;
+        if (is_auto) st->margin_left = 0;
     } else if (strcmp(prop, "padding") == 0) {
         blink_box_edges_t e;
         blink_css_parse_box_shorthand(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &e);
@@ -3309,6 +3714,12 @@ static void apply_resolved_css_decl(dom_style_t* st,
         bool is_auto = false;
         int32_t w = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
         st->width = is_auto ? -1 : w;
+        if (val && strchr(val, '%')) {
+            st->width_is_pct = true;
+            st->width_pct = strtof(val, NULL);
+        } else {
+            st->width_is_pct = false;
+        }
     } else if (strcmp(prop, "min-width") == 0) {
         bool is_auto = false;
         int32_t mw = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
@@ -3319,7 +3730,8 @@ static void apply_resolved_css_decl(dom_style_t* st,
         st->max_width = is_auto ? -1 : mw;
     } else if (strcmp(prop, "height") == 0) {
         bool is_auto = false;
-        int32_t h = blink_css_eval_length_or_calc(val, vh_px, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
+        int32_t parent_ref_h = (parent_st && parent_st->height >= 0) ? parent_st->height : -1;
+        int32_t h = blink_css_eval_length_or_calc(val, parent_ref_h, em_px, root_font_px, vw_px, vh_px, mode, &is_auto);
         st->height = is_auto ? -1 : h;
     } else if (strcmp(prop, "border") == 0) {
         int bw = 0;
@@ -3417,6 +3829,9 @@ static void apply_resolved_css_decl(dom_style_t* st,
         else st->css_clear = CLEAR_NONE;
     } else if (strcmp(prop, "display") == 0) {
         if (strcasestr_portable(val, "none")) st->display = DISPLAY_NONE;
+        else if (strcasestr_portable(val, "contents")) st->display = DISPLAY_CONTENTS;
+        else if (strcasestr_portable(val, "flow-root")) st->display = DISPLAY_FLOW_ROOT;
+        else if (strcasestr_portable(val, "inline-flex")) st->display = DISPLAY_FLEX;
         else if (strcasestr_portable(val, "inline-block")) st->display = DISPLAY_INLINE_BLOCK;
         else if (strcasestr_portable(val, "inline")) st->display = DISPLAY_INLINE;
         else if (strcasestr_portable(val, "grid")) st->display = DISPLAY_GRID;
@@ -3427,9 +3842,18 @@ static void apply_resolved_css_decl(dom_style_t* st,
         else if (strcasestr_portable(val, "table")) st->display = DISPLAY_TABLE;
         else if (strcasestr_portable(val, "list-item")) st->display = DISPLAY_LIST_ITEM;
         else st->display = DISPLAY_BLOCK;
-    } else if (strcmp(prop, "grid-template-columns") == 0) {
+    } else if (strcmp(prop, "grid-template-columns") == 0 ||
+               strcmp(prop, "grid-template") == 0 ||
+               strcmp(prop, "grid") == 0) {
+        if (strcmp(prop, "grid-template") == 0 || strcmp(prop, "grid") == 0) {
+            strncpy(st->grid_template, val, sizeof(st->grid_template) - 1);
+            st->grid_template[sizeof(st->grid_template) - 1] = '\0';
+        }
+        const char* slash = find_grid_template_slash(val);
+        const char* col_spec = slash ? (slash + 1) : val;
+        while (*col_spec && isspace((unsigned char)*col_spec)) col_spec++;
         st->num_grid_cols = 0;
-        const char* p = val;
+        const char* p = col_spec;
         while (*p && st->num_grid_cols < 16) {
             while (*p && isspace((unsigned char)*p)) p++;
             if (!*p) break;
@@ -3468,6 +3892,29 @@ static void apply_resolved_css_decl(dom_style_t* st,
                 st->num_grid_cols++;
             }
         }
+    } else if (strcmp(prop, "grid-area") == 0) {
+        strncpy(st->grid_area, val, sizeof(st->grid_area) - 1);
+        st->grid_area[sizeof(st->grid_area) - 1] = '\0';
+    } else if (strcmp(prop, "aspect-ratio") == 0) {
+        st->aspect_ratio_w = 0;
+        st->aspect_ratio_h = 0;
+        if (strcasecmp(val, "auto") != 0) {
+            const char* slash = strchr(val, '/');
+            if (slash) {
+                int w = atoi(val);
+                int h = atoi(slash + 1);
+                if (w > 0 && h > 0) {
+                    st->aspect_ratio_w = w;
+                    st->aspect_ratio_h = h;
+                }
+            } else {
+                float f = strtof(val, NULL);
+                if (f > 0.001f) {
+                    st->aspect_ratio_w = (int)(f * 1000.0f);
+                    st->aspect_ratio_h = 1000;
+                }
+            }
+        }
     } else if (strcmp(prop, "grid-column") == 0) {
         const char* sp_kw = strcasestr_portable(val, "span");
         if (sp_kw) {
@@ -3490,13 +3937,33 @@ static void apply_resolved_css_decl(dom_style_t* st,
         else if (strcasestr_portable(val, "center")) st->justify_content = JUSTIFY_CENTER;
         else if (strcasestr_portable(val, "flex-end") || strcasestr_portable(val, "end")) st->justify_content = JUSTIFY_FLEX_END;
         else st->justify_content = JUSTIFY_FLEX_START;
-    } else if (strcmp(prop, "gap") == 0) {
-        int32_t g = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
-        st->gap = g;
-        st->row_gap = g;
-    } else if (strcmp(prop, "column-gap") == 0) {
+    } else if (strcmp(prop, "gap") == 0 || strcmp(prop, "grid-gap") == 0) {
+        /* CSS Box Alignment §8: gap / grid-gap shorthand: <row-gap> <column-gap>? */
+        const char* p = val;
+        while (*p && isspace((unsigned char)*p)) p++;
+        const char* s2 = p;
+        while (*s2 && !isspace((unsigned char)*s2)) s2++;
+        if (*s2) {
+            char row_str[128];
+            size_t rlen = (size_t)(s2 - p);
+            if (rlen >= sizeof(row_str)) rlen = sizeof(row_str) - 1;
+            memcpy(row_str, p, rlen);
+            row_str[rlen] = '\0';
+            while (*s2 && isspace((unsigned char)*s2)) s2++;
+            st->row_gap = blink_css_eval_length_or_calc(row_str, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+            if (*s2) {
+                st->gap = blink_css_eval_length_or_calc(s2, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+            } else {
+                st->gap = st->row_gap;
+            }
+        } else {
+            int32_t g = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
+            st->gap = g;
+            st->row_gap = g;
+        }
+    } else if (strcmp(prop, "column-gap") == 0 || strcmp(prop, "grid-column-gap") == 0) {
         st->gap = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
-    } else if (strcmp(prop, "row-gap") == 0) {
+    } else if (strcmp(prop, "row-gap") == 0 || strcmp(prop, "grid-row-gap") == 0) {
         st->row_gap = blink_css_eval_length_or_calc(val, parent_avail_w, em_px, root_font_px, vw_px, vh_px, mode, NULL);
     } else if (strcmp(prop, "flex-direction") == 0) {
         st->flex_direction = strcasestr_portable(val, "column") ? FLEX_DIR_COLUMN : FLEX_DIR_ROW;
@@ -3508,6 +3975,8 @@ static void apply_resolved_css_decl(dom_style_t* st,
     } else if (strcmp(prop, "flex-shrink") == 0) {
         int fs = atoi(val);
         if (fs >= 0) st->flex_shrink = fs;
+    } else if (strcmp(prop, "order") == 0) {
+        st->order = atoi(val);
     } else if (strcmp(prop, "flex") == 0) {
         if (strcasecmp(val, "none") == 0) {
             st->flex_grow = 0;
@@ -3630,7 +4099,7 @@ static void materialize_pseudo_element(dom_node_t* host,
                                        blink_layout_mode_t mode) {
     if (!host || !sheet || blink_html_is_void_tag(host->tag)) return;
 
-    candidate_decl_t pcands[128];
+    candidate_decl_t* pcands = (candidate_decl_t*)malloc(128 * sizeof(candidate_decl_t));
     int n_pcands = 0;
 
     for (int r = 0; r < sheet->num_rules; r++) {
@@ -3681,7 +4150,7 @@ static void materialize_pseudo_element(dom_node_t* host,
             set_custom_prop(&pst, prop, pcands[i].decl.value);
             continue;
         }
-        char resolved_val[192];
+        char resolved_val[512];
         if (!blink_css_resolve_var_value(pst.custom_props, pst.num_custom_props,
                                          pcands[i].decl.value, resolved_val, sizeof(resolved_val))) {
             continue;
@@ -3695,7 +4164,10 @@ static void materialize_pseudo_element(dom_node_t* host,
         }
     }
 
-    if (!saw_content || pst.display == DISPLAY_NONE || !content_text[0]) return;
+    if (!saw_content || pst.display == DISPLAY_NONE || !content_text[0]) {
+        if (pcands) free(pcands);
+        return;
+    }
 
     dom_node_t* syn = dom_node_create("span");
     syn->is_generated_pseudo = true;
@@ -3715,6 +4187,7 @@ static void materialize_pseudo_element(dom_node_t* host,
     } else {
         dom_node_add_child(host, syn);
     }
+    if (pcands) free(pcands);
 }
 
 static void remove_existing_generated_pseudos(dom_node_t* node) {
@@ -3728,6 +4201,60 @@ static void remove_existing_generated_pseudos(dom_node_t* node) {
         }
     }
     node->num_children = write_idx;
+}
+
+
+static void pre_extract_child_grid_placement(const dom_node_t* ch,
+                                             const blink_css_stylesheet_t* sheet,
+                                             int32_t vw_px,
+                                             int32_t container_w,
+                                             char* out_area, size_t area_cap,
+                                             int* out_span) {
+    *out_span = 1;
+    out_area[0] = '\0';
+    if (!ch) return;
+
+    /* 1. Fast check for inline style attribute: e.g. style='grid-area:a' */
+    if (ch->inline_style_raw && ch->inline_style_raw[0]) {
+        blink_css_decl_t idecls[16];
+        int nd = parse_declarations_list(ch->inline_style_raw, idecls, 16);
+        for (int d = 0; d < nd; d++) {
+            if (strcmp(idecls[d].prop, "grid-area") == 0) {
+                strncpy(out_area, idecls[d].value, area_cap - 1);
+                out_area[area_cap - 1] = '\0';
+            } else if (strcmp(idecls[d].prop, "grid-column") == 0) {
+                const char* sp_kw = strcasestr_portable(idecls[d].value, "span");
+                if (sp_kw) {
+                    int sp = atoi(sp_kw + 4);
+                    if (sp > 1) *out_span = sp;
+                }
+            }
+        }
+    }
+    if (out_area[0] != '\0') return;
+
+    /* 2. Check stylesheet matching rules for grid-area / grid-column */
+    if (sheet) {
+        for (int r = 0; r < sheet->num_rules; r++) {
+            const blink_css_rule_t* rule = &sheet->rules[r];
+            if (rule->selector.pseudo_elem != PSEUDO_ELEM_NONE) continue;
+            const dom_node_t* scope_root = NULL;
+            if (!rule_matches_environment(rule, ch, vw_px, container_w, &scope_root)) continue;
+            if (!match_selector_internal(ch, &rule->selector, scope_root, false)) continue;
+            for (int d = 0; d < rule->num_decls; d++) {
+                if (strcmp(rule->decls[d].prop, "grid-area") == 0) {
+                    strncpy(out_area, rule->decls[d].value, area_cap - 1);
+                    out_area[area_cap - 1] = '\0';
+                } else if (strcmp(rule->decls[d].prop, "grid-column") == 0) {
+                    const char* sp_kw = strcasestr_portable(rule->decls[d].value, "span");
+                    if (sp_kw) {
+                        int sp = atoi(sp_kw + 4);
+                        if (sp > 1) *out_span = sp;
+                    }
+                }
+            }
+        }
+    }
 }
 
 static void resolve_node_recursive(dom_node_t* node,
@@ -3791,7 +4318,7 @@ static void resolve_node_recursive(dom_node_t* node,
     dom_style_t base_ua_inherited = node->style;
 
     /* 2. Gather matching Author & Inline declarations */
-    candidate_decl_t cands[512];
+    candidate_decl_t* cands = (candidate_decl_t*)malloc(512 * sizeof(candidate_decl_t));
     int num_cands = 0;
 
     if (sheet) {
@@ -3849,7 +4376,7 @@ static void resolve_node_recursive(dom_node_t* node,
             bool is_fs = (strcmp(prop, "font-size") == 0);
             if ((pass == 0 && !is_fs) || (pass == 1 && is_fs)) continue;
 
-            char resolved_val[192];
+            char resolved_val[512];
             if (!blink_css_resolve_var_value(node->style.custom_props,
                                              node->style.num_custom_props,
                                              cands[i].decl.value,
@@ -3867,7 +4394,7 @@ static void resolve_node_recursive(dom_node_t* node,
                 for (int j = 0; j < i; j++) {
                     if (strcmp(cands[j].decl.prop, prop) != 0) continue;
                     if (!is_strictly_earlier_layer_candidate(&cands[i], &cands[j])) continue;
-                    char prev_val[192];
+                    char prev_val[512];
                     if (blink_css_resolve_var_value(node->style.custom_props,
                                                     node->style.num_custom_props,
                                                     cands[j].decl.value,
@@ -3915,9 +4442,32 @@ static void resolve_node_recursive(dom_node_t* node,
     int32_t child_container_w = node->style.is_inline_size_container ? child_avail : nearest_container_w;
 
     for (int i = 0; i < node->num_children; i++) {
-        resolve_node_recursive(node->children[i], sheet, initial_st,
-                               child_avail, child_container_w, root_font_px, vw_px, vh_px, mode);
+        dom_node_t* ch = node->children[i];
+        int32_t item_avail = child_avail;
+        if (node->style.display == DISPLAY_GRID) {
+            if (node->style.num_grid_cols > 1) {
+                char ch_area[48] = "";
+                int ch_span = 1;
+                pre_extract_child_grid_placement(ch, sheet, vw_px, child_container_w, ch_area, sizeof(ch_area), &ch_span);
+                item_avail = compute_grid_child_avail_w(child_avail,
+                                                        node->style.num_grid_cols,
+                                                        node->style.grid_col_widths,
+                                                        node->style.grid_col_min,
+                                                        node->style.gap,
+                                                        node->style.grid_template,
+                                                        ch_area,
+                                                        ch_span);
+            } else {
+                /* Single column grid (or auto 1fr): item receives full content width */
+                item_avail = child_avail;
+            }
+        }
+        int32_t item_container_w = node->style.is_inline_size_container ? item_avail : child_container_w;
+        resolve_node_recursive(ch, sheet, initial_st,
+                               item_avail, item_container_w, root_font_px, vw_px, vh_px, mode);
     }
+
+    if (cands) free(cands);
 
     /* Materialize synthetic `::before` and `::after` inline spans after resolving real children! */
     materialize_pseudo_element(node, PSEUDO_ELEM_BEFORE, sheet, initial_st,
@@ -3942,8 +4492,8 @@ void blink_css_resolve_document_styles(dom_node_t* root,
     if (!root) return;
     dom_style_t initial_st;
     init_initial_style(&initial_st);
-    int32_t root_font_px = 14;
-    resolve_node_recursive(root, sheet, &initial_st, viewport_w - 32, -1, root_font_px, viewport_w, viewport_h, mode);
+    int32_t root_font_px = 16;
+    resolve_node_recursive(root, sheet, &initial_st, viewport_w, -1, root_font_px, viewport_w, viewport_h, mode);
     int ord = 0;
     assign_dom_order_preorder(root, &ord);
 }
@@ -4111,13 +4661,13 @@ static void apply_parsed_attribute(dom_node_t* node, const char* attr_k, const c
     } else if (strcmp(attr_k, "width") == 0 && strcmp(node->tag, "img") == 0) {
         int iw = atoi(attr_v);
         if (iw > 0) {
-            node->ua_style.width = (iw > 360) ? 360 : iw;
+            node->ua_style.width = iw;
             node->style.width = node->ua_style.width;
         }
     } else if (strcmp(attr_k, "height") == 0 && strcmp(node->tag, "img") == 0) {
         int ih = atoi(attr_v);
         if (ih > 0) {
-            node->ua_style.height = (ih > 260) ? 260 : ih;
+            node->ua_style.height = ih;
             node->style.height = node->ua_style.height;
         }
     } else if (node->num_attrs < BLINK_MAX_ATTRS && attr_k[0]) {

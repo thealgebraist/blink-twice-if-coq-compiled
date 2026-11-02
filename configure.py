@@ -249,14 +249,14 @@ def generate_ninja(checker):
 
     ninja_lines.append("\n# Rule & target for Pillars 2, 3 & 4 and Pillars 1 & 5 verification suites")
     ninja_lines.append("rule build_pillars_test")
-    ninja_lines.append("  command = $CC -O3 -std=c99 -Wall -Wextra -pedantic $in -framework CoreText -framework CoreGraphics -framework CoreFoundation $$(pkg-config --cflags --libs freetype2) -lm -o $out")
+    ninja_lines.append("  command = $CC -O3 -std=c99 -Wall -Wextra -pedantic $in -framework ImageIO -framework CoreText -framework CoreGraphics -framework CoreFoundation $$(pkg-config --cflags --libs freetype2) -lm -o $out")
     ninja_lines.append("  description = BUILD_PILLARS_TEST $out\n")
-    ninja_lines.append("build test_blink_pillars_2_3_4: build_pillars_test test_blink_pillars_2_3_4.c blink_html_css_formal.c blink_layout_paint_formal.c blink_skia_font_engine.c | blink_html_css_formal.h blink_layout_paint_formal.h blink_skia_font_engine.h blink_dual_mode_z.h")
-    ninja_lines.append("build test_blink_pillars_1_5: build_pillars_test test_blink_pillars_1_5.c blink_html_css_formal.c blink_layout_paint_formal.c blink_skia_font_engine.c | blink_html_css_formal.h blink_layout_paint_formal.h blink_skia_font_engine.h blink_dual_mode_z.h")
+    ninja_lines.append("build test_blink_pillars_2_3_4: build_pillars_test test_blink_pillars_2_3_4.c blink_html_css_formal.c blink_layout_paint_formal.c blink_skia_font_engine.c blink_image_codec.c | blink_html_css_formal.h blink_layout_paint_formal.h blink_skia_font_engine.h blink_image_codec.h blink_dual_mode_z.h")
+    ninja_lines.append("build test_blink_pillars_1_5: build_pillars_test test_blink_pillars_1_5.c blink_html_css_formal.c blink_layout_paint_formal.c blink_skia_font_engine.c blink_image_codec.c | blink_html_css_formal.h blink_layout_paint_formal.h blink_skia_font_engine.h blink_image_codec.h blink_dual_mode_z.h")
 
     ninja_lines.append("\n# Rule & target for standalone URL to PNG tool powered by Coq formal models")
     ninja_lines.append("rule build_url2png")
-    ninja_lines.append("  command = $CC -O3 -std=c99 blink_url2png.c blink_html_css_formal.c blink_layout_paint_formal.c blink_skia_font_engine.c blink_image_codec.c blink_vertical_flow.c -framework CoreText -framework CoreGraphics -framework CoreFoundation $$(pkg-config --cflags --libs freetype2) -lcurl -lz -lm -o $out")
+    ninja_lines.append("  command = $CC -O3 -std=c99 blink_url2png.c blink_html_css_formal.c blink_layout_paint_formal.c blink_skia_font_engine.c blink_image_codec.c blink_vertical_flow.c -framework ImageIO -framework CoreText -framework CoreGraphics -framework CoreFoundation $$(pkg-config --cflags --libs freetype2) -lcurl -lz -lm -o $out")
     ninja_lines.append("  description = BUILD_URL2PNG $out\n")
     ninja_lines.append("build blink_url2png: build_url2png blink_url2png.c blink_html_css_formal.c blink_layout_paint_formal.c blink_skia_font_engine.c blink_image_codec.c blink_vertical_flow.c | blink_html_css_formal.h blink_layout_paint_formal.h blink_skia_font_engine.h blink_image_codec.h blink_vertical_flow.h blink_dual_mode_z.h")
 

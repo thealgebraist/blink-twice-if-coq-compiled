@@ -43,6 +43,8 @@ typedef enum {
     DISPLAY_TABLE_ROW,
     DISPLAY_TABLE_CELL,
     DISPLAY_LIST_ITEM,
+    DISPLAY_CONTENTS,
+    DISPLAY_FLOW_ROOT,
     DISPLAY_NONE
 } css_display_t;
 
@@ -116,12 +118,12 @@ typedef enum {
     BDR_STYLE_HIDDEN = 9
 } css_border_style_t;
 
-#define BLINK_MAX_CUSTOM_PROPS 32
+#define BLINK_MAX_CUSTOM_PROPS 256
 #define BLINK_MAX_ATTRS        12
 
 typedef struct {
     char name[48];   /* e.g. "--accent" */
-    char value[160]; /* raw token stream */
+    char value[512]; /* raw token stream */
 } blink_custom_prop_t;
 
 typedef struct {
@@ -152,11 +154,15 @@ typedef struct {
     int                margin_bottom;
     int                margin_left;
     int                margin_right;
+    bool               margin_left_auto;
+    bool               margin_right_auto;
     int                padding_top;
     int                padding_bottom;
     int                padding_left;
     int                padding_right;
     int                width;       /* -1 = auto */
+    bool               width_is_pct;
+    float              width_pct;
     int                height;      /* -1 = auto */
     int                min_width;   /* 0 = default */
     int                max_width;   /* -1 = none */
@@ -164,13 +170,18 @@ typedef struct {
     int                row_gap;     /* grid/flex row gap in px */
     int                flex_grow;   /* flex-grow factor >= 0 */
     int                flex_shrink; /* flex-shrink factor >= 0 (default 1) */
+    int                order;       /* CSS flex/grid order property (default 0) */
     css_flex_dir_t     flex_direction;
     bool               flex_wrap;
     bool               align_items_center;
-    int                grid_col_widths[16]; /* >0 = px, <=0 = -fr weight */
+    int                grid_col_widths[16]; /* >0 = px, 0 = auto, <0 = -fr weight */
     int                grid_col_min[16];    /* >=0 min track px for minmax() */
     int                num_grid_cols;
     int                grid_col_span;       /* >=1 from grid-column: span K */
+    int                aspect_ratio_w;      /* aspect-ratio numerator (0 if unconstrained) */
+    int                aspect_ratio_h;      /* aspect-ratio denominator (0 if unconstrained) */
+    char               grid_template[128];  /* grid-template raw spec */
+    char               grid_area[48];       /* grid-area raw or named identifier */
     float              line_height;
     css_align_t        text_align;
 
@@ -286,6 +297,9 @@ typedef struct dom_node {
     blink_inline_frag_t* inline_frags;
     int                  num_inline_frags;
 
+    /* Decoded raster image buffer (for <img> elements) */
+    void*                image_data; /* pointer to blink_image_t if decoded */
+
     struct dom_node*  parent;
     struct dom_node** children;
     int               num_children;
@@ -396,7 +410,7 @@ typedef struct {
 
 typedef struct {
     char prop[48];
-    char value[192];
+    char value[512];
     bool important;
 } blink_css_decl_t;
 

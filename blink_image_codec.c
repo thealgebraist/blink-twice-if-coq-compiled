@@ -12,6 +12,12 @@
 #include <ctype.h>
 #include <math.h>
 
+#ifdef __APPLE__
+#include <CoreGraphics/CoreGraphics.h>
+#include <ImageIO/ImageIO.h>
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 /* ========================================================================= */
 /* Internal Helper Utilities                                                 */
 /* ========================================================================= */
@@ -480,6 +486,51 @@ blink_image_t* blink_image_load_raw(const char* filepath, int width, int height)
     }
 
     return img;
+}
+
+blink_image_t* blink_image_load_memory(const uint8_t* data, size_t size) {
+    if (!data || size == 0) return NULL;
+
+#ifdef __APPLE__
+    CFDataRef cf_data = CFDataCreate(kCFAllocatorDefault, data, (CFIndex)size);
+    if (!cf_data) return NULL;
+
+    CGImageSourceRef src = CGImageSourceCreateWithData(cf_data, NULL);
+    CFRelease(cf_data);
+    if (!src) return NULL;
+
+    CGImageRef cg_img = CGImageSourceCreateImageAtIndex(src, 0, NULL);
+    CFRelease(src);
+    if (!cg_img) return NULL;
+
+    size_t w = CGImageGetWidth(cg_img);
+    size_t h = CGImageGetHeight(cg_img);
+    if (w == 0 || h == 0 || w > BLINK_IMAGE_MAX_DIM || h > BLINK_IMAGE_MAX_DIM) {
+        CGImageRelease(cg_img);
+        return NULL;
+    }
+
+    blink_image_t* img = blink_image_create((int)w, (int)h);
+    if (!img) {
+        CGImageRelease(cg_img);
+        return NULL;
+    }
+
+    CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(img->pixels, w, h, 8, w * 4,
+                                             color_space,
+                                             kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+    CGColorSpaceRelease(color_space);
+
+    if (ctx) {
+        CGContextDrawImage(ctx, CGRectMake(0, 0, w, h), cg_img);
+        CGContextRelease(ctx);
+    }
+    CGImageRelease(cg_img);
+    return img;
+#else
+    return NULL;
+#endif
 }
 
 /* ========================================================================= */

@@ -11,6 +11,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "blink_layout_paint_formal.h"
 #include "blink_skia_font_engine.h"
+#include "blink_image_codec.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -126,6 +127,117 @@ int32_t blink_sdf_alpha_255(int32_t sd_q8) {
     if (sd_q8 <= -128) return 255;
     if (sd_q8 >= 128) return 0;
     return ((128 - sd_q8) * 255) / 256;
+}
+
+static int resolve_named_grid_row(const char* tmpl, const char* area_name) {
+    if (!tmpl || !tmpl[0] || !area_name || !area_name[0]) return -1;
+    const char* p = tmpl;
+    int row_idx = 0;
+    while (*p && *p != '/') {
+        while (*p && *p != '"' && *p != '\'' && *p != '/') {
+            if (strncmp(p, "&quot;", 6) == 0) { p += 6; break; }
+            p++;
+        }
+        if (*p == '/' || !*p) break;
+        char quote = *p;
+        if (quote == '"' || quote == '\'') p++;
+
+        int found = 0;
+        while (*p && *p != quote && *p != '/') {
+            if (strncmp(p, "&quot;", 6) == 0) { p += 6; break; }
+            while (*p && isspace((unsigned char)*p)) p++;
+            if (!*p || *p == quote || *p == '/' || strncmp(p, "&quot;", 6) == 0) break;
+            const char* ts = p;
+            while (*p && !isspace((unsigned char)*p) && *p != quote && *p != '/' && strncmp(p, "&quot;", 6) != 0) p++;
+            size_t tlen = (size_t)(p - ts);
+            char tok[32];
+            if (tlen >= sizeof(tok)) tlen = sizeof(tok) - 1;
+            memcpy(tok, ts, tlen);
+            tok[tlen] = '\0';
+            if (strcmp(tok, area_name) == 0) found = 1;
+        }
+        if (found) return row_idx;
+        row_idx++;
+        if (*p == quote) p++;
+    }
+    return -1;
+}
+
+static void resolve_grid_item_placement(const char* template_str,
+                                        const char* item_area,
+                                        int n_cols,
+                                        int* io_col_start,
+                                        int* io_col_span) {
+    (void)n_cols;
+    if (!item_area || !item_area[0]) return;
+
+    /* Check numeric syntax: "1 / 1" or "1 / span 2" or "2" */
+    const char* slash = strchr(item_area, '/');
+    if (slash) {
+        int col_start = atoi(slash + 1);
+        if (col_start > 0) {
+            *io_col_start = col_start - 1;
+            const char* slash2 = strchr(slash + 1, '/');
+            if (slash2) {
+                const char* slash3 = strchr(slash2 + 1, '/');
+                if (slash3) {
+                    int col_end = atoi(slash3 + 1);
+                    if (col_end > col_start) *io_col_span = col_end - col_start;
+                }
+            }
+            return;
+        }
+    }
+
+    /* Named area lookup in template_str */
+    if (!template_str || !template_str[0]) return;
+    char target[32];
+    strncpy(target, item_area, sizeof(target) - 1);
+    target[sizeof(target) - 1] = '\0';
+    char* s = strchr(target, '/');
+    if (s) *s = '\0';
+    char* t = target;
+    while (*t && isspace((unsigned char)*t)) t++;
+    char* tend = t + strlen(t) - 1;
+    while (tend >= t && isspace((unsigned char)*tend)) *tend-- = '\0';
+    if (!*t) return;
+
+    const char* p = template_str;
+    while (*p && *p != '/') {
+        while (*p && *p != '"' && *p != '\'' && *p != '/') {
+            if (strncmp(p, "&quot;", 6) == 0) { p += 6; break; }
+            p++;
+        }
+        if (*p == '/' || !*p) break;
+        if (*p == '"' || *p == '\'') p++;
+
+        int col = 0;
+        int found_start = -1;
+        int span = 0;
+        while (*p && *p != '"' && *p != '\'' && *p != '/') {
+            if (strncmp(p, "&quot;", 6) == 0) { p += 6; break; }
+            while (*p && isspace((unsigned char)*p)) p++;
+            if (!*p || *p == '"' || *p == '\'' || strncmp(p, "&quot;", 6) == 0) break;
+            const char* ts = p;
+            while (*p && !isspace((unsigned char)*p) && *p != '"' && *p != '\'' && strncmp(p, "&quot;", 6) != 0) p++;
+            size_t tlen = (size_t)(p - ts);
+            char tok[32];
+            if (tlen >= sizeof(tok)) tlen = sizeof(tok) - 1;
+            memcpy(tok, ts, tlen);
+            tok[tlen] = '\0';
+
+            if (strcmp(tok, t) == 0) {
+                if (found_start < 0) found_start = col;
+                span++;
+            }
+            col++;
+        }
+        if (found_start >= 0) {
+            *io_col_start = found_start;
+            if (span > 0) *io_col_span = span;
+            return;
+        }
+    }
 }
 
 void blink_intersect_scissor(int px0, int py0, int px1, int py1,
@@ -499,7 +611,8 @@ static dom_node_t* find_descendant_img(dom_node_t* n) {
 
 void blink_normalize_dom_for_layout(dom_node_t* node) {
     if (!node) return;
-    if (has_hidden_class(node->class_name) ||
+    if (strcmp(node->tag, "template") == 0 ||
+        has_hidden_class(node->class_name) ||
         (strcmp(node->tag, "sup") == 0 && node->class_name && strstr(node->class_name, "reference") != NULL)) {
         node->style.display = DISPLAY_NONE;
         return;
@@ -521,6 +634,11 @@ void blink_normalize_dom_for_layout(dom_node_t* node) {
                 if (img && img != ch) {
                     dom_node_t* cloned_img = dom_node_create("img");
                     cloned_img->style = img->style;
+                    cloned_img->style.has_bg = true;
+                    cloned_img->style.bg_color = 0xFFEAECF0u;
+                    cloned_img->style.border_width = 1;
+                    cloned_img->style.border_style = BDR_STYLE_SOLID;
+                    cloned_img->style.border_color = 0xFFA2A9B1u;
                     cloned_img->dom_order = img->dom_order;
                     if (img->src) cloned_img->src = strdup(img->src);
                     dom_node_free(ch);
@@ -533,6 +651,45 @@ void blink_normalize_dom_for_layout(dom_node_t* node) {
 
     for (int i = 0; i < node->num_children; i++) {
         blink_normalize_dom_for_layout(node->children[i]);
+    }
+
+    /* Flatten elements with `display: contents`: splice their children into the parent */
+    bool has_contents_child = false;
+    for (int i = 0; i < node->num_children; i++) {
+        if (node->children[i] && node->children[i]->style.display == DISPLAY_CONTENTS) {
+            has_contents_child = true;
+            break;
+        }
+    }
+    if (has_contents_child) {
+        int new_cap = node->num_children + 16;
+        dom_node_t** new_children = (dom_node_t**)malloc(new_cap * sizeof(dom_node_t*));
+        int new_count = 0;
+        for (int i = 0; i < node->num_children; i++) {
+            dom_node_t* ch = node->children[i];
+            if (ch && ch->style.display == DISPLAY_CONTENTS) {
+                for (int j = 0; j < ch->num_children; j++) {
+                    if (new_count == new_cap) {
+                        new_cap *= 2;
+                        new_children = (dom_node_t**)realloc(new_children, new_cap * sizeof(dom_node_t*));
+                    }
+                    ch->children[j]->parent = node;
+                    new_children[new_count++] = ch->children[j];
+                }
+                ch->num_children = 0;
+                dom_node_free(ch);
+            } else {
+                if (new_count == new_cap) {
+                    new_cap *= 2;
+                    new_children = (dom_node_t**)realloc(new_children, new_cap * sizeof(dom_node_t*));
+                }
+                new_children[new_count++] = ch;
+            }
+        }
+        free(node->children);
+        node->children = new_children;
+        node->num_children = new_count;
+        node->cap_children = new_cap;
     }
 }
 
@@ -744,7 +901,7 @@ static bool subtree_is_pure_inline(const dom_node_t* n) {
         strcmp(n->tag, "ol") == 0 || strcmp(n->tag, "blockquote") == 0 ||
         strcmp(n->tag, "pre") == 0) return false;
     if (n->style.css_float != FLOAT_NONE) return false;
-    if (n->style.display != DISPLAY_INLINE) return false;
+    if (n->style.display != DISPLAY_INLINE && n->style.display != DISPLAY_INLINE_BLOCK) return false;
     for (int i = 0; i < n->num_children; i++) {
         if (!subtree_is_pure_inline(n->children[i])) return false;
     }
@@ -1049,8 +1206,12 @@ static int layout_inline_formatting_context(dom_node_t* container,
     container->num_inline_frags = 0;
 
     inline_tok_vec_t vec = { NULL, 0, 0, false };
-    for (int i = 0; i < container->num_children; i++) {
-        collect_inline_tokens(container->children[i], container, &vec);
+    if (strcmp(container->tag, "#text") == 0) {
+        collect_inline_tokens(container, container, &vec);
+    } else {
+        for (int i = 0; i < container->num_children; i++) {
+            collect_inline_tokens(container->children[i], container, &vec);
+        }
     }
 
     if (vec.count == 0) {
@@ -1387,10 +1548,15 @@ static int layout_node_internal(dom_node_t* node,
 
     node->x = container_x + node->style.margin_left;
     int content_w = 0;
-    if (node->style.width > 0) {
-        content_w = blink_css_resolve_content_inline_size(node->style.box_sizing, node->style.width, pad_h, bdr_h);
+    int resolved_style_w = node->style.width;
+    if (node->style.width_is_pct && container_w > 0) {
+        int avail_for_pct = container_w - node->style.margin_left - node->style.margin_right;
+        resolved_style_w = (int)lroundf((float)avail_for_pct * node->style.width_pct / 100.0f);
+    }
+    if (resolved_style_w > 0) {
+        content_w = blink_css_resolve_content_inline_size(node->style.box_sizing, resolved_style_w, pad_h, bdr_h);
         node->w = (node->style.box_sizing == BOX_SIZING_BORDER_BOX)
-                      ? node->style.width
+                      ? resolved_style_w
                       : (content_w + pad_h + bdr_h);
     } else {
         node->w = container_w - node->style.margin_left - node->style.margin_right;
@@ -1413,6 +1579,21 @@ static int layout_node_internal(dom_node_t* node,
                             : 0;
         node->w = clamp_size_min_max(node->w, min_outer, max_outer);
         content_w = (node->w > pad_h + bdr_h) ? (node->w - pad_h - bdr_h) : 0;
+    }
+
+    /* Resolve automatic horizontal margins (`margin-left: auto` / `margin-right: auto`) */
+    if (container_w > node->w) {
+        int free_w = container_w - node->w;
+        if (node->style.margin_left_auto && node->style.margin_right_auto) {
+            int auto_m = free_w / 2;
+            node->x = container_x + auto_m;
+        } else if (node->style.margin_left_auto) {
+            int auto_m = free_w - node->style.margin_right;
+            if (auto_m < 0) auto_m = 0;
+            node->x = container_x + auto_m;
+        } else if (node->style.margin_right_auto) {
+            node->x = container_x + node->style.margin_left;
+        }
     }
 
     /* Standalone `#text` fallback */
@@ -1444,6 +1625,17 @@ static int layout_node_internal(dom_node_t* node,
                 continue;
             }
             items[n_items++] = ch;
+        }
+
+        /* CSS Flexible Box Layout §5.4: Re-order flex items by `order` property (stable sort preserving DOM order) */
+        for (int i = 1; i < n_items; i++) {
+            dom_node_t* key = items[i];
+            int j = i - 1;
+            while (j >= 0 && items[j]->style.order > key->style.order) {
+                items[j + 1] = items[j];
+                j--;
+            }
+            items[j + 1] = key;
         }
 
         int flex_content_h = 0;
@@ -1702,7 +1894,16 @@ static int layout_node_internal(dom_node_t* node,
                     line_y += (node->style.row_gap > 0) ? node->style.row_gap : node->style.gap;
                 }
             }
-            flex_content_h = line_y - child_start_y;
+            if (n_items == 0) {
+                /* Anonymous flex item for inline text sequence (CSS Flexbox §4) */
+                int end_inline_y = layout_inline_formatting_context(node, child_x, child_start_y, content_w, active_fspace);
+                flex_content_h = end_inline_y - child_start_y;
+                if (flex_content_h <= 0 && node->num_children > 0) {
+                    flex_content_h = (node->style.line_height > 0) ? (int)lroundf(node->style.line_height) : (int)lroundf(node->style.font_size * 1.25f);
+                }
+            } else {
+                flex_content_h = line_y - child_start_y;
+            }
         }
 
         if (node->style.height >= 0) {
@@ -1725,15 +1926,90 @@ static int layout_node_internal(dom_node_t* node,
         int n_cols = (node->style.num_grid_cols > 0) ? node->style.num_grid_cols : 1;
         if (n_cols > 16) n_cols = 16;
 
+        dom_node_t* gitems[128];
+        int n_gitems = 0;
+        for (int i = 0; i < node->num_children && n_gitems < 128; i++) {
+            dom_node_t* ch = node->children[i];
+            if (!ch || ch->style.display == DISPLAY_NONE || strcmp(ch->tag, "#text") == 0 || is_out_of_flow(ch)) {
+                continue;
+            }
+            gitems[n_gitems++] = ch;
+        }
+
+        /* 0b. If named rows/columns are present in grid_template, sort items in row-major order:
+           first by template row index, then by start column index */
+        if (node->style.grid_template[0]) {
+            for (int i = 0; i < n_gitems - 1; i++) {
+                for (int j = i + 1; j < n_gitems; j++) {
+                    int r_i = resolve_named_grid_row(node->style.grid_template, gitems[i]->style.grid_area);
+                    int r_j = resolve_named_grid_row(node->style.grid_template, gitems[j]->style.grid_area);
+                    int c_i = -1, sp_i = 1;
+                    int c_j = -1, sp_j = 1;
+                    resolve_grid_item_placement(node->style.grid_template, gitems[i]->style.grid_area, n_cols, &c_i, &sp_i);
+                    resolve_grid_item_placement(node->style.grid_template, gitems[j]->style.grid_area, n_cols, &c_j, &sp_j);
+
+                    bool swap = false;
+                    if (r_i >= 0 && r_j >= 0) {
+                        if (r_i > r_j) {
+                            swap = true;
+                        } else if (r_i == r_j && c_i >= 0 && c_j >= 0 && c_i > c_j) {
+                            swap = true;
+                        }
+                    } else if (c_i >= 0 && c_j >= 0 && c_i > c_j) {
+                        swap = true;
+                    }
+
+                    if (swap) {
+                        dom_node_t* tmp = gitems[i];
+                        gitems[i] = gitems[j];
+                        gitems[j] = tmp;
+                    }
+                }
+            }
+        }
+
+        /* 1. Track sizing: resolve auto tracks using intrinsic width of placed items */
+        int auto_track_w[16] = {0};
+        int auto_col_cursor = 0;
+        for (int idx = 0; idx < n_gitems; idx++) {
+            dom_node_t* it = gitems[idx];
+            int span = it->style.grid_col_span;
+            int start_col = -1;
+            if (it->style.grid_area[0] && node->style.grid_template[0]) {
+                resolve_grid_item_placement(node->style.grid_template, it->style.grid_area, n_cols, &start_col, &span);
+            } else if (it->style.grid_area[0]) {
+                resolve_grid_item_placement(NULL, it->style.grid_area, n_cols, &start_col, &span);
+            }
+            if (start_col < 0) {
+                if (auto_col_cursor >= n_cols) auto_col_cursor = 0;
+                start_col = auto_col_cursor;
+                auto_col_cursor += (span > 0 ? span : 1);
+            } else {
+                auto_col_cursor = start_col + (span > 0 ? span : 1);
+            }
+            if (start_col >= 0 && start_col < n_cols && span <= 1) {
+                int spec = (start_col < node->style.num_grid_cols) ? node->style.grid_col_widths[start_col] : -1;
+                if (spec == 0) {
+                    int iw = measure_intrinsic_outer_width(it, content_w);
+                    if (iw > auto_track_w[start_col]) auto_track_w[start_col] = iw;
+                }
+            }
+        }
+
         int track_w[16];
         int fixed_sum = (n_cols > 1) ? (n_cols - 1) * node->style.gap : 0;
         int fr_sum = 0;
+        int auto_count = 0;
         for (int c = 0; c < n_cols; c++) {
             int spec = (c < node->style.num_grid_cols) ? node->style.grid_col_widths[c] : -1;
             int min_px = (c < node->style.num_grid_cols) ? node->style.grid_col_min[c] : 0;
             if (spec > 0) {
                 track_w[c] = (spec > min_px) ? spec : min_px;
                 fixed_sum += track_w[c];
+            } else if (spec == 0) {
+                track_w[c] = min_px;
+                fixed_sum += track_w[c];
+                auto_count++;
             } else {
                 track_w[c] = min_px;
                 fr_sum += (-spec > 0) ? (-spec) : 1;
@@ -1746,7 +2022,7 @@ static int layout_node_internal(dom_node_t* node,
             for (int c = 0; c < n_cols; c++) {
                 int spec = (c < node->style.num_grid_cols) ? node->style.grid_col_widths[c] : -1;
                 int min_px = (c < node->style.num_grid_cols) ? node->style.grid_col_min[c] : 0;
-                if (spec <= 0) {
+                if (spec < 0) {
                     int w_fr = (-spec > 0) ? (-spec) : 1;
                     int raw = (rem_w * w_fr) / fr_sum;
                     track_w[c] = (raw > min_px) ? raw : min_px;
@@ -1757,6 +2033,27 @@ static int layout_node_internal(dom_node_t* node,
             if (last_fr >= 0 && rem_w > acc) {
                 track_w[last_fr] += (rem_w - acc);
             }
+        } else if (auto_count > 0) {
+            /* CSS Grid §7.2: If there are no fr tracks, free space expands auto tracks up to container_w */
+            if (rem_w > 0) {
+                int per_auto = rem_w / auto_count;
+                int rem_extra = rem_w % auto_count;
+                for (int c = 0; c < n_cols; c++) {
+                    int spec = (c < node->style.num_grid_cols) ? node->style.grid_col_widths[c] : -1;
+                    if (spec == 0) {
+                        track_w[c] += per_auto + (rem_extra > 0 ? 1 : 0);
+                        if (rem_extra > 0) rem_extra--;
+                    }
+                }
+            } else {
+                for (int c = 0; c < n_cols; c++) {
+                    int spec = (c < node->style.num_grid_cols) ? node->style.grid_col_widths[c] : -1;
+                    if (spec == 0) {
+                        int aw = auto_track_w[c];
+                        if (aw > track_w[c]) track_w[c] = aw;
+                    }
+                }
+            }
         }
 
         int track_x[16];
@@ -1764,16 +2061,6 @@ static int layout_node_internal(dom_node_t* node,
         for (int c = 0; c < n_cols; c++) {
             track_x[c] = cx;
             cx += track_w[c] + node->style.gap;
-        }
-
-        dom_node_t* gitems[128];
-        int n_gitems = 0;
-        for (int i = 0; i < node->num_children && n_gitems < 128; i++) {
-            dom_node_t* ch = node->children[i];
-            if (!ch || ch->style.display == DISPLAY_NONE || strcmp(ch->tag, "#text") == 0 || is_out_of_flow(ch)) {
-                continue;
-            }
-            gitems[n_gitems++] = ch;
         }
 
         int row_y = child_start_y;
@@ -1785,10 +2072,29 @@ static int layout_node_internal(dom_node_t* node,
         for (int idx = 0; idx < n_gitems; idx++) {
             dom_node_t* it = gitems[idx];
             int span = it->style.grid_col_span;
+            int start_col = -1;
+            if (it->style.grid_area[0] && node->style.grid_template[0]) {
+                resolve_grid_item_placement(node->style.grid_template, it->style.grid_area, n_cols, &start_col, &span);
+            } else if (it->style.grid_area[0]) {
+                resolve_grid_item_placement(NULL, it->style.grid_area, n_cols, &start_col, &span);
+            }
             if (span < 1) span = 1;
             if (span > n_cols) span = n_cols;
 
-            if (cur_col > 0 && cur_col + span > n_cols) {
+            if (start_col >= 0 && start_col < n_cols) {
+                if (start_col < cur_col) {
+                    for (int r = 0; r < n_row_items; r++) {
+                        if (row_items[r]->style.height < 0 && row_items[r]->h < row_max_h) {
+                            row_items[r]->h = row_max_h;
+                        }
+                    }
+                    row_y += row_max_h + node->style.row_gap;
+                    cur_col = 0;
+                    row_max_h = 0;
+                    n_row_items = 0;
+                }
+                cur_col = start_col;
+            } else if (cur_col > 0 && cur_col + span > n_cols) {
                 for (int r = 0; r < n_row_items; r++) {
                     if (row_items[r]->style.height < 0 && row_items[r]->h < row_max_h) {
                         row_items[r]->h = row_max_h;
@@ -2095,6 +2401,8 @@ static int layout_node_internal(dom_node_t* node,
                                              ? (node->style.height - node->style.padding_top - node->style.padding_bottom - node->style.border_width * 2)
                                              : 0)
                                       : node->style.height;
+            } else if (node->style.aspect_ratio_w > 0 && node->style.aspect_ratio_h > 0 && content_w > 0) {
+                node->content_h = (int)lroundf((float)content_w * (float)node->style.aspect_ratio_h / (float)node->style.aspect_ratio_w);
             } else {
                 node->content_h = measured_h;
             }
@@ -2115,6 +2423,9 @@ static int layout_node_internal(dom_node_t* node,
         int active_cursor_y = child_start_y;
         int running_margin_pos = 0;
         int running_margin_neg = 0;
+        bool is_first_inflow = true;
+        bool collapses_top_with_parent = (!establishes_bfc && node->style.padding_top == 0 &&
+                                          node->style.border_width == 0);
 
         for (int i = 0; i < node->num_children; i++) {
             dom_node_t* ch = node->children[i];
@@ -2142,11 +2453,19 @@ static int layout_node_internal(dom_node_t* node,
             int eff_neg = (top_neg < running_margin_neg) ? top_neg : running_margin_neg;
             int collapsed_margin = eff_pos + eff_neg;
 
-            int child_y = active_cursor_y + collapsed_margin;
+            int child_y;
+            if (is_first_inflow && collapses_top_with_parent) {
+                child_y = active_cursor_y;
+            } else {
+                child_y = active_cursor_y + collapsed_margin;
+            }
+            is_first_inflow = false;
+
             bool child_bfc = (ch->style.display == DISPLAY_FLEX ||
                               ch->style.display == DISPLAY_GRID ||
                               ch->style.display == DISPLAY_TABLE ||
                               ch->style.display == DISPLAY_INLINE_BLOCK ||
+                              ch->style.display == DISPLAY_FLOW_ROOT ||
                               ch->style.overflow_hidden);
             int child_end_y = layout_node_internal(ch, child_x, child_y, content_w,
                                                    child_bfc, active_fspace, env, out_max_y);
@@ -2154,6 +2473,9 @@ static int layout_node_internal(dom_node_t* node,
 
             running_margin_pos = (ch->style.margin_bottom > 0) ? ch->style.margin_bottom : 0;
             running_margin_neg = (ch->style.margin_bottom < 0) ? ch->style.margin_bottom : 0;
+            if (ch->style.margin_bottom < 0) {
+                active_cursor_y += ch->style.margin_bottom;
+            }
         }
 
         if (establishes_bfc) {
@@ -2161,6 +2483,7 @@ static int layout_node_internal(dom_node_t* node,
         }
 
         int measured_h = active_cursor_y - child_start_y;
+        if (measured_h < 0) measured_h = 0;
         if (node->style.height >= 0) {
             if (node->style.box_sizing == BOX_SIZING_BORDER_BOX) {
                 int ch = node->style.height - node->style.padding_top - node->style.padding_bottom - node->style.border_width * 2;
@@ -2168,6 +2491,8 @@ static int layout_node_internal(dom_node_t* node,
             } else {
                 node->content_h = node->style.height;
             }
+        } else if (node->style.aspect_ratio_w > 0 && node->style.aspect_ratio_h > 0 && content_w > 0) {
+            node->content_h = (int)lroundf((float)content_w * (float)node->style.aspect_ratio_h / (float)node->style.aspect_ratio_w);
         } else {
             node->content_h = measured_h;
         }
@@ -2222,6 +2547,24 @@ static void apply_transforms_post_layout(dom_node_t* node, int* out_max_y) {
     }
 }
 
+/* Helper to find in-flow first child margin-top collapsing up through ancestors without padding/border/BFC (W3C CSS 2.1 §8.3.1) */
+static int find_first_inflow_margin_top(const dom_node_t* node) {
+    if (!node) return 0;
+    for (int i = 0; i < node->num_children; i++) {
+        const dom_node_t* ch = node->children[i];
+        if (!ch || ch->style.display == DISPLAY_NONE || ch->style.position == POS_ABSOLUTE || ch->style.position == POS_FIXED) continue;
+        int m = ch->style.margin_top;
+        if (ch->style.padding_top == 0 && ch->style.border_width == 0 && ch->style.border_bottom_width == 0 &&
+            ch->style.display == DISPLAY_BLOCK && !ch->style.overflow_hidden &&
+            ch->style.display != DISPLAY_FLOW_ROOT) {
+            int sub_m = find_first_inflow_margin_top(ch);
+            if (sub_m > m) m = sub_m;
+        }
+        return m;
+    }
+    return 0;
+}
+
 int blink_layout_dom_tree(dom_node_t* root,
                           int viewport_x,
                           int viewport_y,
@@ -2235,7 +2578,19 @@ int blink_layout_dom_tree(dom_node_t* root,
     env.viewport_w = viewport_w + viewport_x * 2;
     env.viewport_h = viewport_h;
     env.mode = mode;
-    int end_y = layout_node_internal(root, viewport_x, viewport_y, viewport_w, true, NULL, &env, target_max);
+
+    /* Collapsing margin between root/body and its first in-flow child (W3C CSS 2.1 §8.3.1) */
+    int start_y = viewport_y;
+    if (root && root->style.padding_top == 0 && root->style.border_width == 0) {
+        int first_m = find_first_inflow_margin_top(root);
+        if (first_m > root->style.margin_top) {
+            start_y += first_m;
+        } else if (root->style.margin_top > 0) {
+            start_y += root->style.margin_top;
+        }
+    }
+
+    int end_y = layout_node_internal(root, viewport_x, start_y, viewport_w, true, NULL, &env, target_max);
     apply_transforms_post_layout(root, target_max);
     return end_y;
 }
@@ -2311,18 +2666,24 @@ static void paint_box_decoration(dom_node_t* node, blink_framebuffer_t* fb, bool
         blink_fb_draw_bullet(fb, node->x - 12, node->y + (int)(node->style.font_size * 0.55f), 3, node->style.color);
     }
 
-    /* 4. Shaded pyramid emblem for <img> thumbnails */
-    if (strcmp(node->tag, "img") == 0 && node->w > 24 && node->h > 24) {
-        int apex_x = node->x + node->w / 2;
-        int apex_y = node->y + 14;
-        int base_y = node->y + node->h - 16;
-        int half_b = (node->w - 36) / 2;
-        if (half_b > (base_y - apex_y)) half_b = (base_y - apex_y);
-        for (int py = apex_y; py <= base_y; py++) {
-            float t = (base_y > apex_y) ? (float)(py - apex_y) / (float)(base_y - apex_y) : 0.0f;
-            int span = (int)(t * (float)half_b);
-            blink_fb_fill_rect(fb, apex_x - span, py, span, 1, 0xFFD9B36Cu);
-            blink_fb_fill_rect(fb, apex_x, py, span * 3 / 4 + 1, 1, 0xFFA67C37u);
+    /* 4. Real Image or Shaded pyramid emblem for <img> elements */
+    if (strcmp(node->tag, "img") == 0 && node->w > 0 && node->h > 0) {
+        if (node->image_data != NULL) {
+            blink_image_t* img = (blink_image_t*)node->image_data;
+            blink_image_blit_bilinear(img, fb->pixels, fb->width, fb->height,
+                                      node->x, node->y, node->w, node->h);
+        } else if (!node->style.has_bg && node->w > 24 && node->h > 24) {
+            int apex_x = node->x + node->w / 2;
+            int apex_y = node->y + 14;
+            int base_y = node->y + node->h - 16;
+            int half_b = (node->w - 36) / 2;
+            if (half_b > (base_y - apex_y)) half_b = (base_y - apex_y);
+            for (int py = apex_y; py <= base_y; py++) {
+                float t = (base_y > apex_y) ? (float)(py - apex_y) / (float)(base_y - apex_y) : 0.0f;
+                int span = (int)(t * (float)half_b);
+                blink_fb_fill_rect(fb, apex_x - span, py, span, 1, 0xFFD9B36Cu);
+                blink_fb_fill_rect(fb, apex_x, py, span * 3 / 4 + 1, 1, 0xFFA67C37u);
+            }
         }
     }
 }

@@ -289,8 +289,12 @@ static void extract_parent_dir(const char* path_or_url, char* out_dir, size_t ca
     }
 }
 
-static char* url2png_stylesheet_loader(const char* href, void* user_data, char* out_dir, size_t out_dir_cap) {
-    if (!href || !href[0]) return NULL;
+static char* url2png_stylesheet_loader(const char* raw_href, void* user_data, char* out_dir, size_t out_dir_cap) {
+    if (!raw_href || !raw_href[0]) return NULL;
+
+    /* Decode HTML entities in stylesheet URL (e.g. &amp; -> &) */
+    char* href = blink_unescape_html(raw_href);
+    if (!href) href = strdup(raw_href);
 
     const char* base_url = (const char*)user_data;
     char target_url[2048];
@@ -319,8 +323,10 @@ static char* url2png_stylesheet_loader(const char* href, void* user_data, char* 
             snprintf(target_url, sizeof(target_url), "%s/%s", pdir, href);
         }
     } else {
+        free(href);
         return NULL; /* Fallback to local file loader */
     }
+    free(href);
 
     size_t sz = 0;
     char* eff = NULL;
@@ -335,8 +341,204 @@ static char* url2png_stylesheet_loader(const char* href, void* user_data, char* 
 }
 
 /* ------------------------------------------------------------------------- */
+/* Image Caching and Fetching Pipeline                                       */
+/* ------------------------------------------------------------------------- */
+typedef struct {
+    char*          url;
+    blink_image_t* image;
+} image_cache_entry_t;
+
+typedef struct {
+    image_cache_entry_t* entries;
+    int                  count;
+    int                  capacity;
+} image_cache_t;
+
+static blink_image_t* image_cache_get(image_cache_t* cache, const char* url) {
+    if (!cache || !url) return NULL;
+    for (int i = 0; i < cache->count; i++) {
+        if (strcmp(cache->entries[i].url, url) == 0) {
+            return cache->entries[i].image;
+        }
+    }
+    return NULL;
+}
+
+static void image_cache_put(image_cache_t* cache, const char* url, blink_image_t* img) {
+    if (!cache || !url) return;
+    if (cache->count >= cache->capacity) {
+        cache->capacity = (cache->capacity == 0) ? 64 : cache->capacity * 2;
+        cache->entries = (image_cache_entry_t*)realloc(cache->entries, sizeof(image_cache_entry_t) * cache->capacity);
+    }
+    cache->entries[cache->count].url = strdup(url);
+    cache->entries[cache->count].image = img;
+    cache->count++;
+}
+
+static void image_cache_destroy(image_cache_t* cache) {
+    if (!cache) return;
+    for (int i = 0; i < cache->count; i++) {
+        free(cache->entries[i].url);
+        if (cache->entries[i].image) {
+            blink_image_free(cache->entries[i].image);
+        }
+    }
+    free(cache->entries);
+    cache->entries = NULL;
+    cache->count = 0;
+    cache->capacity = 0;
+}
+
+static void url_hash_hex(const char* str, char* out_hex) {
+    uint64_t h1 = 14695981039346656037ULL;
+    uint64_t h2 = 1099511628211ULL;
+    const unsigned char* p = (const unsigned char*)str;
+    while (*p) {
+        h1 = (h1 ^ *p) * 1099511628211ULL;
+        h2 = (h2 * 14695981039346656037ULL) ^ *p;
+        p++;
+    }
+    snprintf(out_hex, 33, "%016llx%016llx", (unsigned long long)h1, (unsigned long long)h2);
+}
+
+static blink_image_t* load_or_fetch_image(const char* raw_src, const char* base_url, image_cache_t* cache) {
+    if (!raw_src || !raw_src[0]) return NULL;
+
+    blink_image_t* cached = image_cache_get(cache, raw_src);
+    if (cached) return cached;
+
+    /* Decode HTML entities in image src (e.g. &amp; -> &) */
+    char* clean_src = blink_unescape_html(raw_src);
+    const char* src_to_use = clean_src ? clean_src : raw_src;
+
+    /* Trim leading and trailing whitespace */
+    while (*src_to_use && isspace((unsigned char)*src_to_use)) src_to_use++;
+    char trimmed_src[1024];
+    strncpy(trimmed_src, src_to_use, sizeof(trimmed_src) - 1);
+    trimmed_src[sizeof(trimmed_src) - 1] = '\0';
+    char* end_p = trimmed_src + strlen(trimmed_src) - 1;
+    while (end_p >= trimmed_src && isspace((unsigned char)*end_p)) {
+        *end_p = '\0';
+        end_p--;
+    }
+
+    /* Resolve relative URL against base_url */
+    char full_url[2048];
+    if (strncmp(trimmed_src, "//", 2) == 0) {
+        snprintf(full_url, sizeof(full_url), "https:%s", trimmed_src);
+    } else if (strncmp(trimmed_src, "http://", 7) == 0 || strncmp(trimmed_src, "https://", 8) == 0 ||
+               strncmp(trimmed_src, "file://", 7) == 0) {
+        snprintf(full_url, sizeof(full_url), "%s", trimmed_src);
+    } else if (trimmed_src[0] == '/' && base_url && (strncmp(base_url, "http://", 7) == 0 || strncmp(base_url, "https://", 8) == 0)) {
+        char origin[1024];
+        const char* p = strstr(base_url, "://");
+        if (p) {
+            const char* slash = strchr(p + 3, '/');
+            size_t olen = slash ? (size_t)(slash - base_url) : strlen(base_url);
+            if (olen >= sizeof(origin)) olen = sizeof(origin) - 1;
+            memcpy(origin, base_url, olen);
+            origin[olen] = '\0';
+            snprintf(full_url, sizeof(full_url), "%s%s", origin, trimmed_src);
+        } else {
+            snprintf(full_url, sizeof(full_url), "%s", trimmed_src);
+        }
+    } else if (base_url && (strncmp(base_url, "http://", 7) == 0 || strncmp(base_url, "https://", 8) == 0)) {
+        char pdir[1024];
+        extract_parent_dir(base_url, pdir, sizeof(pdir));
+        snprintf(full_url, sizeof(full_url), "%s/%s", pdir, trimmed_src);
+    } else if (base_url && base_url[0]) {
+        snprintf(full_url, sizeof(full_url), "%s/%s", base_url, trimmed_src);
+    } else {
+        snprintf(full_url, sizeof(full_url), "%s", trimmed_src);
+    }
+    if (clean_src) free(clean_src);
+
+    /* 1. Check disk cache if available in /tmp/blink_img_cache */
+    blink_image_t* img = NULL;
+    char disk_cache_path[512];
+    char hash_str[33];
+    url_hash_hex(full_url, hash_str);
+    snprintf(disk_cache_path, sizeof(disk_cache_path), "/tmp/blink_img_cache/%s", hash_str);
+
+    FILE* fp = fopen(disk_cache_path, "rb");
+    if (!fp) {
+        /* Check if local file exists by raw path or file:// */
+        const char* local_path = full_url;
+        if (strncmp(full_url, "file://", 7) == 0) local_path = full_url + 7;
+        fp = fopen(local_path, "rb");
+    }
+
+    if (fp) {
+        fseek(fp, 0, SEEK_END);
+        long sz = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+        if (sz > 0 && sz < 64 * 1024 * 1024) {
+            uint8_t* buf = (uint8_t*)malloc(sz);
+            if (buf) {
+                size_t rd = fread(buf, 1, sz, fp);
+                if (rd == (size_t)sz) {
+                    img = blink_image_load_memory(buf, sz);
+                }
+                free(buf);
+            }
+        }
+        fclose(fp);
+    }
+
+    /* 2. If not on disk, fetch via libcurl */
+    if (!img) {
+        size_t sz = 0;
+        char* eff = NULL;
+        char* net_data = fetch_url_data(full_url, &sz, &eff);
+        free(eff);
+        if (net_data && sz > 0) {
+            img = blink_image_load_memory((const uint8_t*)net_data, sz);
+            /* Save to disk cache for subsequent lightning-fast runs */
+            FILE* wfp = fopen(disk_cache_path, "wb");
+            if (wfp) {
+                fwrite(net_data, 1, sz, wfp);
+                fclose(wfp);
+            }
+            free(net_data);
+        }
+    }
+
+    if (img) {
+        image_cache_put(cache, raw_src, img);
+    }
+    return img;
+}
+
+static void bind_images_to_dom(dom_node_t* node, const char* base_url, image_cache_t* cache, int* out_count) {
+    if (!node) return;
+    if (strcmp(node->tag, "img") == 0 && node->src) {
+        blink_image_t* img = load_or_fetch_image(node->src, base_url, cache);
+        if (img) {
+            node->image_data = img;
+            if (out_count) (*out_count)++;
+        }
+    }
+    for (int i = 0; i < node->num_children; i++) {
+        bind_images_to_dom(node->children[i], base_url, cache, out_count);
+    }
+}
+
+/* ------------------------------------------------------------------------- */
 /* Command-Line Driver & Main Pipeline                                       */
 /* ------------------------------------------------------------------------- */
+static void dump_subtree(dom_node_t* n, int depth) {
+    if (!n || depth > 15) return;
+    for (int i = 0; i < depth; i++) printf("  ");
+    printf("<%s id='%s' class='%.25s'> pos=(%d,%d) size=(%d,%d) pad=(%d,%d) mar=(%d,%d) disp=%d\n",
+           n->tag, n->id ? n->id : "", n->class_name ? n->class_name : "",
+           n->x, n->y, n->w, n->h,
+           n->style.padding_top, n->style.padding_bottom,
+           n->style.margin_top, n->style.margin_bottom, n->style.display);
+    for (int i = 0; i < n->num_children; i++) {
+        dump_subtree(n->children[i], depth + 1);
+    }
+}
+
 static void print_usage(const char* prog) {
     printf("===============================================================================\n");
     printf("Blink Formal Engine: Standalone URL to PNG Multi-Page Renderer (C99)\n");
@@ -438,11 +640,32 @@ int main(int argc, char* argv[]) {
            dom->num_children, stylesheet->num_rules, t_parse_1 - t_parse_0);
     free(stylesheet);
 
+    // 2b. Fetch and bind raster images to <img> DOM elements
+    image_cache_t image_cache = {0};
+    int images_bound = 0;
+    bind_images_to_dom(dom, effective_url ? effective_url : target_url, &image_cache, &images_bound);
+    if (images_bound > 0) {
+        printf("      Image Pipeline: %d raster images loaded and bound to DOM (cached: %d)\n",
+               images_bound, image_cache.count);
+    }
+
     // 3. Formal Layout Execution (Multi-Span Inline + Floats + Positioned + Flex/Grid/2D-Table + Dual-Mode Z)
     double t_layout_0 = get_time_ms();
     int max_y = 0;
     blink_layout_dom_tree(dom, 0, 0, viewport_w, page_h, layout_mode, &max_y);
     double t_layout_1 = get_time_ms();
+
+    if (verbose) {
+        printf("--- VERBOSE LAYOUT: %d DOM ROOT CHILDREN ---\n", dom->num_children);
+        for (int c = 0; c < dom->num_children; c++) {
+            printf("[Root Child %d] tag='%s' id='%s' class='%.30s' pos=(%d,%d) size=(%d,%d) bg=0x%08X has_bg=%d\n",
+                   c, dom->children[c]->tag, dom->children[c]->id ? dom->children[c]->id : "",
+                   dom->children[c]->class_name ? dom->children[c]->class_name : "",
+                   dom->children[c]->x, dom->children[c]->y, dom->children[c]->w, dom->children[c]->h,
+                   dom->children[c]->style.bg_color, dom->children[c]->style.has_bg);
+            dump_subtree(dom->children[c], 1);
+        }
+    }
 
     int total_canvas_h = max_y;
     if (total_canvas_h < page_h) total_canvas_h = page_h;
@@ -515,6 +738,7 @@ int main(int argc, char* argv[]) {
     printf("===============================================================================\n\n");
 
     blink_fb_destroy(fb);
+    image_cache_destroy(&image_cache);
     dom_node_free(dom);
     free(effective_url);
     return 0;

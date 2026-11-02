@@ -417,3 +417,91 @@ Proof.
   - exact Htxt.
   - apply skia_gamma_bounds.
 Qed.
+
+(******************************************************************************)
+(* 7. CHROMIUM SKIA LCD RGB SUBPIXEL STRIPE FILTERING                       *)
+(******************************************************************************)
+
+(** Skia FreeType font rasterization applies a 5-tap horizontal low-pass FIR  *)
+(** filter across the RGB subpixel components [sm2, sm1, s0, sp1, sp2] to     *)
+(** eliminate color fringing and chromatic aberration on LCD stripe panels:   *)
+(**   filter = (16 * sm2 + 64 * sm1 + 112 * s0 + 64 * sp1 + 16 * sp2) / 272  *)
+Definition skia_lcd_5tap_filter (sm2 sm1 s0 sp1 sp2 : Z) : Z :=
+  (16 * sm2 + 64 * sm1 + 112 * s0 + 64 * sp1 + 16 * sp2) / 272.
+
+Theorem skia_lcd_5tap_bounds : forall sm2 sm1 s0 sp1 sp2,
+  0 <= sm2 <= 255 ->
+  0 <= sm1 <= 255 ->
+  0 <= s0 <= 255 ->
+  0 <= sp1 <= 255 ->
+  0 <= sp2 <= 255 ->
+  0 <= skia_lcd_5tap_filter sm2 sm1 s0 sp1 sp2 <= 255.
+Proof.
+  intros sm2 sm1 s0 sp1 sp2 Hsm2 Hsm1 Hs0 Hsp1 Hsp2.
+  unfold skia_lcd_5tap_filter.
+  assert (Hpos : 0 <= 16 * sm2 + 64 * sm1 + 112 * s0 + 64 * sp1 + 16 * sp2).
+  { assert (0 <= 16 * sm2) by nia.
+    assert (0 <= 64 * sm1) by nia.
+    assert (0 <= 112 * s0) by nia.
+    assert (0 <= 64 * sp1) by nia.
+    assert (0 <= 16 * sp2) by nia.
+    lia. }
+  assert (Hmax : 16 * sm2 + 64 * sm1 + 112 * s0 + 64 * sp1 + 16 * sp2 <= 255 * 272).
+  { assert (16 * sm2 <= 16 * 255) by lia.
+    assert (64 * sm1 <= 64 * 255) by lia.
+    assert (112 * s0 <= 112 * 255) by lia.
+    assert (64 * sp1 <= 64 * 255) by lia.
+    assert (16 * sp2 <= 16 * 255) by lia.
+    lia. }
+  split.
+  - apply Z.div_pos; lia.
+  - apply Z.div_le_upper_bound; lia.
+Qed.
+
+Theorem skia_lcd_5tap_unity_gain : forall v,
+  0 <= v <= 255 ->
+  skia_lcd_5tap_filter v v v v v = v.
+Proof.
+  intros v Hv.
+  unfold skia_lcd_5tap_filter.
+  assert (16 * v + 64 * v + 112 * v + 64 * v + 16 * v = v * 272) by ring.
+  rewrite H.
+  apply Z.div_mul; lia.
+Qed.
+
+Theorem blit_subpixel_channel_bounds : forall bg text cov,
+  0 <= bg <= 255 ->
+  0 <= text <= 255 ->
+  0 <= cov <= 255 ->
+  0 <= blit_glyph_pixel bg text cov <= 255.
+Proof.
+  intros bg text cov Hbg Htxt Hcov.
+  unfold blit_glyph_pixel.
+  split.
+  - apply Z.div_pos.
+    + nia.
+    + lia.
+  - apply Z.div_le_upper_bound.
+    + lia.
+    + nia.
+Qed.
+
+Theorem blit_subpixel_full_coverage : forall bg text,
+  blit_glyph_pixel bg text 255 = text.
+Proof.
+  intros bg text.
+  unfold blit_glyph_pixel.
+  replace (text * 255 + bg * (255 - 255)) with (text * 255) by ring.
+  apply Z.div_mul.
+  lia.
+Qed.
+
+Theorem blit_subpixel_zero_coverage : forall bg text,
+  blit_glyph_pixel bg text 0 = bg.
+Proof.
+  intros bg text.
+  unfold blit_glyph_pixel.
+  replace (text * 0 + bg * (255 - 0)) with (bg * 255) by ring.
+  apply Z.div_mul.
+  lia.
+Qed.

@@ -59,6 +59,9 @@ blink_image_t* blink_image_load_bmp(const char* filepath);
 /* Raw RGBA loader from binary file */
 blink_image_t* blink_image_load_raw(const char* filepath, int width, int height);
 
+/* Universal Memory Loader: decodes JPEG, PNG, WebP, GIF, BMP, Netpbm from memory buffer */
+blink_image_t* blink_image_load_memory(const uint8_t* data, size_t size);
+
 /* Encoders / Exporters */
 bool blink_image_save_ppm(const blink_image_t* img, const char* filepath);
 bool blink_image_save_bmp(const blink_image_t* img, const char* filepath);
